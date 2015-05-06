@@ -13,9 +13,9 @@ jQuery.fn.scrollTo = function(elem, speed) {
 };
 function setSplashMessage( msg ) {
     if ( msg === undefined || msg === '' ) {
-        if( $('#splash').hasClass('show') ) { $('#splash').removeClass('show').addClass('hide'); }
+        toggleClassIfExists('splash','show','hide');
     } else {
-        if( $('#splash').hasClass('hide') ) { $('#splash').removeClass('hide').addClass('show'); }
+        toggleClassIfExists('splash','hide','show');
         document.getElementById('prog-msg').innerHTML = msg;
     }
 }
@@ -146,7 +146,7 @@ function sendPost() {
             saveData('msgTitle', 'Post Too Long');
             saveData('msgText', 'This Post Is a Bit Too Long. Please Keep It Within 256 Characters.');
         }
-        if ( constructDialog('okbox') ) { if( $('#okbox').hasClass('hide') ) { $('#okbox').removeClass('hide').addClass('show'); } }
+        if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
     }
 }
 function writePost( text, in_reply_to ) {
@@ -182,7 +182,7 @@ function writePost( text, in_reply_to ) {
                 } else {
                     saveData('msgText', 'There Was a Problem Sending Your Post to ADN.');
                 }
-                if ( constructDialog('okbox') ) { if( $('#okbox').hasClass('hide') ) { $('#okbox').removeClass('hide').addClass('show'); } }
+                if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
             },
             dataType: "json"
         });
@@ -215,7 +215,7 @@ function getUserProfile( user_id ) {
     params['include_html'] = 1;
     params['count'] = 20;
     if ( access_token !== false ) { params['access_token'] = access_token; }
-    if( $('#dialog').hasClass('hide') ) { $('#dialog').removeClass('hide').addClass('show'); }
+    toggleClassIfExists('dialog','hide','show');
     showWaitState('usr-info', 'Accessing App.Net');
 
     $.ajax({
@@ -273,7 +273,7 @@ function parseUserProfile( data ) {
                     '</div>';
         }
         document.getElementById( 'user_posts' ).innerHTML = html;
-        if( $('#dialog').hasClass('hide') ) { $('#dialog').removeClass( "hide" ).addClass( "show" ); }
+        toggleClassIfExists('dialog','hide','show');
     }
 }
 function getTimeline() {
@@ -522,7 +522,6 @@ function parseText( post ) {
     var html = post.html.replaceAll('<a href=', '<a target="_blank" href=', '') + ' ',
         name = '',
         cStr = ' style="color: #333; font-weight: bold; cursor: pointer;"';
-
     if ( post.entities.mentions.length > 0 ) {
         for ( var i = 0; i < post.entities.mentions.length; i++ ) {
             name = '>@' + post.entities.mentions[i].name + '<';
@@ -884,7 +883,7 @@ function doShowChan( chan_id ) {
     if ( chan_id === '' || chan_id === undefined ) {
         $('#conversation').removeClass('show').addClass('hide');
     } else {
-        if( $('#conversation').hasClass('hide') ) { $('#conversation').removeClass('hide').addClass('show'); }
+        toggleClassIfExists('conversation','hide','show');
         if ( constructDialog('conversation') ) {
             showWaitState('chat_posts', 'Collecting Private Conversation');
             getChannelMessages(chan_id);
@@ -944,7 +943,7 @@ function parseChannel( data ) {
                     '</div>';
         }
         document.getElementById( 'chat_posts' ).innerHTML = html;
-        if( $('#conversation').hasClass('hide') ) { $('#conversation').removeClass( "hide" ).addClass( "show" ); }
+        toggleClassIfExists('conversation','hide','show');
     }
 }
 function parseAccountNames( data ) {
@@ -989,9 +988,9 @@ function listNames( startWith ) {
 
     if ( _html != '' ) {
         document.getElementById( 'autocomp' ).innerHTML = '<div class="autobox">' + _html + '</div>';
-        if( $('#autocomp').hasClass('hide') ) { $('#autocomp').removeClass('hide').addClass('show'); }
+        toggleClassIfExists('autocomp','hide','show');
     } else {
-        if( $('#autocomp').hasClass('show') ) { $('#autocomp').removeClass('show').addClass('hide'); }
+        toggleClassIfExists('autocomp','show','hide');
     }
 }
 function doCompleteName( fragment, name ) {
@@ -1005,7 +1004,7 @@ function doCompleteName( fragment, name ) {
         caret_pos = caret_pos - fragment.length + name.length + 2;
         setCaretToPos(document.getElementById('rpy-text'), caret_pos);
     }
-    if( $('#autocomp').hasClass('show') ) { $('#autocomp').removeClass('show').addClass('hide'); }
+    toggleClassIfExists('autocomp','show','hide');
     calcReplyCharacters();
 }
 function setNotification( title, message, sound ) {
@@ -1211,9 +1210,9 @@ function setRepost( post_id ) {
 
         for ( var i = 0; i < itms.length; i++ ) {
             if ( window.posts[post_id].reposted ) {
-                if( $('#' + itms[i].id).hasClass('plain') ) { $('#' + itms[i].id).removeClass('plain').addClass('highlight'); }
+                toggleClassIfExists(itms[i].id,'plain','highlight');
             } else {
-                if( $('#' + itms[i].id).hasClass('highlight') ) { $('#' + itms[i].id).removeClass('highlight').addClass('plain'); }
+                toggleClassIfExists(itms[i].id,'highlight','plain');
             }
         }
     }
@@ -1313,7 +1312,7 @@ function doShowConv( post_id ) {
     if ( post_id === '' || post_id === undefined ) {
         $('#conversation').removeClass('show').addClass('hide');
     } else {
-        if( $('#conversation').hasClass('hide') ) { $('#conversation').removeClass('hide').addClass('show'); }
+        toggleClassIfExists('conversation','hide','show');
         if ( constructDialog('conversation') ) {
             showWaitState('chat_posts', 'Collecting Conversation');
             getConversation(post_id);
@@ -1416,7 +1415,7 @@ function parseConversation( data, post_id ) {
                          post_mentions, post_reposted, post_starred, true, post_client );
         }
         document.getElementById( 'chat_posts' ).innerHTML = html;
-        if( $('#conversation').hasClass('hide') ) { $('#conversation').removeClass( "hide" ).addClass( "show" ); }
+        toggleClassIfExists('conversation','hide','show');
     }
 }
 
@@ -1447,18 +1446,10 @@ function showHideActivity( active ) {
 }
 
 function showHideDialog() {
-    if( $('#dialog').hasClass('hide') ) {
-        $('#dialog').removeClass( "hide" ).addClass( "show" );
-    } else {
-        $('#dialog').removeClass( "show" ).addClass( "hide" );
-    }
+    toggleClassIfExists('dialog','hide','show',true);
 }
 function showHideGallery() {
-    if( $('#gallery').hasClass('hide') ) {
-        $('#gallery').removeClass( "hide" ).addClass( "show" );
-    } else {
-        $('#gallery').removeClass( "show" ).addClass( "hide" );
-    }
+    toggleClassIfExists('gallery','hide','show',true);
 }
 function showHideActions( post_id, tl ) {
     if ( tl === '*' ) {
@@ -1467,15 +1458,11 @@ function showHideActions( post_id, tl ) {
         for ( var i = 0; i <= tls.length; i++ ) {
             div = '#' + post_id + '-rsp-' + tls[i];
             if ($(div).length) {
-                if( $(div).hasClass('show') ) { $(div).removeClass( "show" ).addClass( "hide" ); }
+                toggleClassIfExists(div,'show','hide');
             }
         }
     } else {
-        if( $('#' + post_id + '-rsp' + tl).hasClass('hide') ) {
-            $('#' + post_id + '-rsp' + tl).removeClass( "hide" ).addClass( "show" );
-        } else {
-            $('#' + post_id + '-rsp' + tl).removeClass( "show" ).addClass( "hide" );
-        }
+        toggleClassIfExists(post_id + '-rsp' + tl,'hide','show',true);
     }
 }
 function showHideResponse() {
@@ -1496,7 +1483,7 @@ function showHideResponse() {
         calcReplyCharacters();
 
     } else {
-        if( $('#autocomp').hasClass('show') ) { $('#autocomp').removeClass('show').addClass('hide'); }
+        toggleClassIfExists('autocomp','show','hide');        
         $('#response').removeClass('show').addClass('hide');
         saveData('in_reply_to', '0');
     }
@@ -1795,7 +1782,7 @@ function doShowUser( user_id ) {
     if ( user_id === '' || user_id === undefined ) {
         $('#dialog').removeClass('show').addClass('hide');
     } else {
-        if( $('#dialog').hasClass('hide') ) { $('#dialog').removeClass('hide').addClass('show'); }
+        toggleClassIfExists('dialog','hide','show');        
         if ( constructDialog('dialog') ) {
             showWaitState('user_posts', 'Collecting User Information');
             getUserProfile( user_id );
@@ -1806,7 +1793,7 @@ function doShowHash( name ) {
     if ( name === '' || name === undefined ) {
         $('#hashbox').removeClass('show').addClass('hide');
     } else {
-        if( $('#hashbox').hasClass('hide') ) { $('#hashbox').removeClass('hide').addClass('show'); }
+        toggleClassIfExists('hashbox','hide','show');                
         if ( constructDialog('hashbox') ) {
             showWaitState('hash_posts', 'Collecting Posts With #' + name);
             getHashDetails(name);
@@ -1899,7 +1886,7 @@ function parseHashDetails( data, name ) {
                          post_mentions, post_reposted, post_starred, true, post_client );
         }
         document.getElementById( 'hash_posts' ).innerHTML = html;
-        if( $('#hashbox').hasClass('hide') ) { $('#hashbox').removeClass( "hide" ).addClass( "show" ); }
+        toggleClassIfExists('hashbox','hide','show');        
     }
 }
 function getReplyCharCount() {
@@ -1916,11 +1903,11 @@ function calcReplyCharacters() {
 
     if ( rpy_length >= 0 && rpy_length <= max_length ) {
         if( $('#rpy-length').hasClass('red') ) { $('#rpy-length').removeClass('red'); }
-        if ( rpy_length <= max_length ) { if( $('#rpy-send').hasClass('btn-grey') ) { $('#rpy-send').removeClass('btn-grey').addClass('btn-green'); } }
-        if ( rpy_length == max_length ) { if( $('#rpy-send').hasClass('btn-green') ) { $('#rpy-send').removeClass('btn-green').addClass('btn-grey'); } }
+        if ( rpy_length <= max_length ) { toggleClassIfExists('rpy-send','btn-grey','btn-green'); }
+        if ( rpy_length == max_length ) { toggleClassIfExists('rpy-send','btn-green','btn-grey'); }
     } else {
         if( $('#rpy-length').hasClass('red') === false ) { $('#rpy-length').addClass('red'); }
-        if( $('#rpy-send').hasClass('btn-green') ) { $('#rpy-send').removeClass('btn-green').addClass('btn-grey'); }
+        toggleClassIfExists('rpy-send','btn-green','btn-grey');        
     }
 }
 function doMuteHash( name ) { muteHashtag(name); }
@@ -2192,7 +2179,7 @@ function muteHashtag( name ) {
 
     saveData('msgTitle', 'Muted #' + name);
     saveData('msgText', 'Posts with a hashtag of "' + name + '" will now be muted.');
-    if ( constructDialog('okbox') ) { if( $('#okbox').hasClass('hide') ) { $('#okbox').removeClass('hide').addClass('show'); } }
+    if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
     return true;
 }
 function readMutedClients() {
@@ -2211,7 +2198,7 @@ function muteClient( name ) {
 
     saveData('msgTitle', 'Muted ' + name);
     saveData('msgText', 'Posts from "' + name + '" will now be muted.');
-    if ( constructDialog('okbox') ) { if( $('#okbox').hasClass('hide') ) { $('#okbox').removeClass('hide').addClass('show'); } }
+    if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
     return true;
 }
 function isMutedClient( name ) {

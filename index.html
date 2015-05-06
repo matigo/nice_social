@@ -153,13 +153,15 @@
             <div id="dialog" class="dialog hide"></div>
             <div id="okbox" class="dialog hide"></div>
         </div>
+        <script type="text/javascript" src="config.js"></script>
+        <script type="text/javascript" src="js/dom.js"></script>
         <script type="text/javascript" src="js/core.js"></script>
         <script>
             jQuery(function($) {
-                window.apiToken = '[YOUR_CLIENT_ID]';
-                window.redirect = '[YOUR_REDIRECT_URI]';
-                window.niceURL = 'https://api.nice.social';
-                window.apiURL = 'https://api.app.net';
+                window.apiToken = niceConfig.apiToken;
+                window.redirect = niceConfig.redirect;
+                window.niceURL = niceConfig.niceURL;
+                window.apiURL = niceConfig.apiURL;
                 window.store = new Object();
                 window.chans = {};
                 window.posts = {};

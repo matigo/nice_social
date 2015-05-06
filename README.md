@@ -31,15 +31,12 @@ The third and final screen will give you the necessary `client_id` to interact w
 
 On this third screen you will also see a place for "Redirect URIs". You will need a good URI in this area before you can log in to App.net. If you are running the web application from a web server, enter the website address here. If you're running it from your computer, you can enter a `file:///` URI. For example: `file:///Users/jason/Git/nice_social/index.html`.
 
-Finally, copy your `client_id` and edit the `index.html` file. On line 159 you'll find the following:
+Now, copy the file `config.sample.js` to `config.js` and edit it.
 
-    `window.apiToken = '[YOUR_CLIENT_ID]';`
-    `window.redirect = '[YOUR_REDIRECT_URI]';`
+Replace `[YOUR_API_TOKEN]` with the API Token (Client ID) granted by App.net, and `[YOUR_REDIRECT_URI]` with the URI where `index.html` can be accessed. For example:
 
-Replace `[YOUR_API_TOKEN]` with the API Token granted by App.net, and `[YOUR_REDIRECT_URI]` with the URI where `index.html` can be accessed. For example:
-
-    `window.apiToken = 'abcdefghijklmnopqrstuvwxyz0123456789';`
-    `window.redirect = 'http://my.nice.app'; //You can use your 'file:///' URI here, too`
+    `apiToken: 'abcdefghijklmnopqrstuvwxyz0123456789',`
+    `redirect: 'http://my.nice.app', //You can use your 'file:///' URI here, too`
 
 That's all there is to it. No special libraries, compiling, or other complex steps are required. Heck, this alone was complicated enough.
 
