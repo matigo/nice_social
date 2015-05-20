@@ -40,7 +40,7 @@
     </head>
     <body>
         <div id="page">
-            <div class="header fixed">
+            <div id="header_bar" class="header fixed">
                 <a id="mnu-avatar" href="#menu"></a>
                 <span id="hd-activity" class="hide"><i class="fa fa-refresh fa-spin"></i></span>
                 <span id="hd-spacer" class="show">&nbsp;</span>
@@ -171,7 +171,6 @@
                 window.posts = {};
                 window.users = {};
                 window.activate = false;
-                window.is_private = false;
                 window.timelines = { home     : false,
                                      mentions : false,
                                      global   : true,
@@ -223,6 +222,7 @@
             });
             window.addEventListener('load', function(){
                 var touchsurface = document.getElementById('rpy-text'),
+                    touchMenu = document.getElementById('header_bar'),
                     startX,
                     startY,
                     dist,
@@ -234,11 +234,60 @@
                     if ( isRightSwipe === true ) { setCursorPosition( 1 ); }
                     if ( isLeftSwipe === true ) { setCursorPosition( -1 ); }
                 }
+                function handleMenuSwipe(isRightSwipe, isLeftSwipe) {
+                    if ( isRightSwipe === true ) { rotateTimelines(); }
+                    if ( isLeftSwipe === true ) { rotateTimelines(); }
+                }
+                function rotateTimelines() {
+                    var els = document.getElementsByClassName("post-list");
+                    var showNext = false;
+                    var cnt = 0;
+
+                    for (i in window.timelines) {
+                        if ( showNext ) {
+                            if ( window.timelines.hasOwnProperty(i) ) {
+                                window.timelines[i] = true;
+                                if ( window.timelines[i] ) { saveStorage('tl_' + i, 'Y'); } else { saveStorage('tl_' + i, 'N'); }
+                                break;
+                            }
+                        }
+                        if ( els[0].id === i ) {
+                            if ( window.timelines.hasOwnProperty(i) ) {
+                                window.timelines[i] = !window.timelines[i];
+                                if ( window.timelines[i] ) { saveStorage('tl_' + i, 'Y'); } else { saveStorage('tl_' + i, 'N'); }
+                                showNext = true;
+                            }
+                        } else {
+                            window.timelines[i] = false;
+                        }
+                    }
+                    for (i in window.timelines) { if ( window.timelines[i] ) { cnt++; } }
+                    if ( cnt == 0 ) { window.timelines['home'] = true; }
+                    showTimelines();
+                }
                 function setCursorPosition( PlusMinus ) {
                     var txtBox = document.getElementById('rpy-text');
                     setCaretToPos(txtBox, txtBox.selectionEnd + PlusMinus);
                 }
-                touchsurface.addEventListener('touchstart', function(e){
+                touchMenu.addEventListener('touchstart', function(e) {
+                    var touchobj = e.changedTouches[0];
+                    dist = 0;
+                    startX = touchobj.pageX;
+                    startY = touchobj.pageY;
+                    startTime = new Date().getTime();
+                }, false);
+                touchMenu.addEventListener('touchend', function(e){
+                    var touchobj = e.changedTouches[0];
+                    dist_r = touchobj.pageX - startX;
+                    dist_l = startX - touchobj.pageX;
+                    elapsedTime = new Date().getTime() - startTime;
+                    var isRightSwipe = (elapsedTime <= allowedTime && dist_r >= threshold && Math.abs(touchobj.pageY - startY) <= 100),
+                        isLeftSwipe = (elapsedTime <= allowedTime && dist_l >= threshold && Math.abs(touchobj.pageY - startY) <= 100);
+                    handleMenuSwipe(isRightSwipe, isLeftSwipe);
+                    if ( isRightSwipe || isLeftSwipe ) { e.preventDefault(); }
+                }, false);
+
+                touchsurface.addEventListener('touchstart', function(e) {
                     touchsurface.innerHTML = '';
                     var touchobj = e.changedTouches[0];
                     dist = 0;
