@@ -68,12 +68,12 @@ function getURLHash(name) {
     if ( items[0] === name ) { return items[1] || false; } else { return false; }
 }
 function doPostOrAuth() {
-    var isGood = readData('isGood');
+    var isGood = readStorage('isGood', true);
     if ( isGood === 'Y' ) { showHideResponse(); } else { getAuthorisation(); }
 }
 function doReply( post_id ) {
     var _id = parseInt(post_id);
-    if ( _id > 0 ) { saveData('in_reply_to', _id); }
+    if ( _id > 0 ) { saveStorage('in_reply_to', _id, true); }
     doPostOrAuth();
 }
 function testADNAccessToken() {
@@ -95,9 +95,9 @@ function parseMyToken( data ) {
         document.getElementById('mnu-avatar').style.backgroundImage = 'url("' + data.avatar_image.url + '")';
         document.getElementById('doAction').innerHTML = 'New Post';
         setSplashMessage('Parsing Token Information');
-        saveData('chan_length', 2048);
-        saveData('post_length', 256);
-        saveData('isGood', 'Y');
+        saveStorage('chan_length', 2048, true);
+        saveStorage('post_length', 256, true);
+        saveStorage('isGood', 'Y', true);
 
         saveStorage('username', data.username);
         saveStorage('locale', data.locale);
@@ -106,9 +106,9 @@ function parseMyToken( data ) {
 
         if ( readStorage('tl_home') === 'N' && readStorage('tl_mentions') === 'N' ) {
             window.timelines.mentions = true;
-            saveStorage('tl_mentions', 'Y');
+            saveStorage('tl_mentions', 'Y', true);
             window.timelines.home = true;
-            saveStorage('tl_home', 'Y');
+            saveStorage('tl_home', 'Y', true);
         }
         showTimelines();
     }
@@ -142,11 +142,11 @@ function prepApp() {
     if ( !readStorage('column_max') ) { saveStorage('column_max', 250); }
     if ( !readStorage('hide_images') ) { saveStorage('hide_images', 'N'); }
     if ( !readStorage('font_size') ) { saveStorage('font_size', 14); }
-    if ( !readData('refresh_last') ) { saveData('refresh_last', seconds); }
-    if ( !readData('post_length') ) { saveData('post_length', 256); }
-    if ( !readData('min_rank') ) { saveData('min_rank', 2.1); }
-    if ( !readData('limit') ) { saveData('limit', 250); }
-    if ( !readData('since') ) { saveData('since', 0); }
+    if ( !readStorage('refresh_last', true) ) { saveStorage('refresh_last', seconds, true); }
+    if ( !readStorage('post_length', true) ) { saveStorage('post_length', 256, true); }
+    if ( !readStorage('min_rank', true) ) { saveStorage('min_rank', 2.1, true); }
+    if ( !readStorage('limit', true) ) { saveStorage('limit', 250, true); }
+    if ( !readStorage('since', true) ) { saveStorage('since', 0, true); }
 
     if ( !readStorage('tl_home') ) {
         for (i in window.timelines) {
@@ -180,26 +180,26 @@ function prepApp() {
     return true;
 }
 function sendPost() {
-    var max_length = parseInt( readData('post_length') ),
+    var max_length = parseInt( readStorage('post_length', true) ),
         rpy_length = getReplyCharCount();
-    var reply_to = parseInt(readData('in_reply_to'));
+    var reply_to = parseInt(readStorage('in_reply_to', true));
 
     if ( rpy_length > 0 && rpy_length <= max_length ) {
         writePost( document.getElementById('rpy-text').value.trim(), reply_to );
     } else {
         if ( rpy_length === 0 ) {
-            saveData('msgTitle', 'Umm ...');
-            saveData('msgText', 'There Doesn&apos;t Seem To Be a Message. Please Write at Least One Character.');
+            saveStorage('msgTitle', 'Umm ...', true);
+            saveStorage('msgText', 'There Doesn&apos;t Seem To Be a Message. Please Write at Least One Character.', true);
         } else {
-            saveData('msgTitle', 'Post Too Long');
-            saveData('msgText', 'This Post Is a Bit Too Long. Please Keep It Within 256 Characters.');
+            saveStorage('msgTitle', 'Post Too Long', true);
+            saveStorage('msgText', 'This Post Is a Bit Too Long. Please Keep It Within 256 Characters.', true);
         }
         if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
     }
 }
 function writePost( text, in_reply_to ) {
     var access_token = readStorage('access_token');
-    saveData('in_reply_to', '0');
+    saveStorage('in_reply_to', '0', true);
 
     if ( access_token !== false ) {
         $.ajaxSetup({
@@ -223,12 +223,12 @@ function writePost( text, in_reply_to ) {
                 }
             },
             error: function (xhr, ajaxOptions, thrownError){
-                saveData('msgTitle', 'Post Error');
+                saveStorage('msgTitle', 'Post Error', true);
                 if ( xhr.status > 0 ) {
-                    saveData('msgText', 'App.Net Returned a ' + xhr.status + ' Error (' + thrownError + ').<br>' +
-                                        'Please let @matigo know if this problem persists more than a few minutes.');
+                    saveStorage('msgText', 'App.Net Returned a ' + xhr.status + ' Error (' + thrownError + ').<br>' +
+                                        'Please let @matigo know if this problem persists more than a few minutes.', true);
                 } else {
-                    saveData('msgText', 'There Was a Problem Sending Your Post to ADN.');
+                    saveStorage('msgText', 'There Was a Problem Sending Your Post to ADN.', true);
                 }
                 if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
             },
@@ -346,7 +346,7 @@ function getTimeline() {
             crossDomain: true,
             data: params,
             type: 'GET',
-            success: function( data ) { parseItems( data.data ); saveData('home_done', 'Y'); },
+            success: function( data ) { parseItems( data.data ); saveStorage('home_done', 'Y',true); },
             error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
             dataType: "json"
         });
@@ -370,7 +370,7 @@ function getMentions() {
             crossDomain: true,
             data: params,
             type: 'GET',
-            success: function( data ) { parseItems( data.data ); saveData('ment_done', 'Y'); },
+            success: function( data ) { parseItems( data.data ); saveStorage('ment_done', 'Y', true); },
             error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
             dataType: "json"
         });
@@ -378,18 +378,18 @@ function getMentions() {
 }
 function canRefreshGlobal() {
     var rrate = parseInt(readStorage('refresh_rate')),
-        rlast = parseInt(readData('refresh_last'));
+        rlast = parseInt(readStorage('refresh_last', true));
     var seconds = new Date().getTime() / 1000;
     var rVal = false;
     if ( rlast === undefined || isNaN(rlast) ) { rlast = 0; }
-    if ( (seconds-rlast) >= rrate ) { saveData('refresh_last', seconds); rVal = true; }
+    if ( (seconds-rlast) >= rrate ) { saveStorage('refresh_last', seconds, true); rVal = true; }
     return rVal;
 }
 function getGlobalRecents( since_id ) {
     if ( since_id === undefined || isNaN(since_id) ) { since_id = 0; }
-    var recents = parseInt(readData('recents'));
+    var recents = parseInt(readStorage('recents', true));
     if ( recents === undefined || isNaN(recents) ) { recents = 0; }
-    saveData('recents', (recents + 1) );
+    saveStorage('recents', (recents + 1) , true);
     if ( recents >= 10 ) { return false; }
 
     var access_token = readStorage('access_token');
@@ -426,7 +426,7 @@ function parseSinceID( meta ) {
 function getGlobalItems() {
     if ( window.activate === false ) { return false; }
     if ( canRefreshGlobal() === false ) { return false; }
-    if ( readData('adn_action') === 'Y' ) { return false; }
+    if ( readStorage('adn_action', true) === 'Y' ) { return false; }
 
     var access_token = readStorage('access_token');
     var params = {
@@ -434,11 +434,11 @@ function getGlobalItems() {
         include_deleted: 0,
         include_machine: 0,
         include_html: 1,
-        since_id: readData( 'since' ),
+        since_id: readStorage( 'since', true),
         count: 200        
     };
     if ( access_token !== false ) { params.access_token = access_token; }
-    saveData('adn_action', 'Y');
+    saveStorage('adn_action', 'Y', true);
     showHideActivity(true);
 
     $.ajax({
@@ -467,14 +467,14 @@ function parseMeta( meta ) {
 function parseItems( data ) {
     if ( data ) {
         data = sortByKey(data, "id");
-        saveData('adn_action', 'N');
+        saveStorage('adn_action', 'N', true);
 
         var html = '';
         var is_mention = false,
             followed = false;
         var account_rank = 0,
             show_time = readStorage('show_live_timestamps'),
-            min_rank = parseInt( readData('min_rank') );
+            min_rank = parseInt( readStorage('min_rank', true) );
         var post_mentions = [],
             post_reposted = false,
             post_starred = false,
@@ -490,9 +490,9 @@ function parseItems( data ) {
         for ( var i = 0; i < data.length; i++ ) {
             if ( gTL === 0 ) { setSplashMessage('Reading Posts (' + (i + 1) + '/' + data.length + ')'); }
             followed = data[i].user.you_follow || (data[i].user.id === my_id) || false;
-            account_rank = parseInt( readData( data[i].user.id + '_rank' ) );
-            is_human = readData( data[i].user.id + '_human' );
-            saveData( 'since', data[i].id );
+            account_rank = parseInt( readStorage( data[i].user.id + '_rank', true) );
+            is_human = readStorage( data[i].user.id + '_human', true);
+            saveStorage( 'since', data[i].id, true);
             write_post = true;
 
             if ( (account_rank >= min_rank && is_human == 'Y') || (data[i].user.id === my_id) || followed ) {
@@ -663,8 +663,8 @@ function showMutedPost( post_id, tl ) {
 function redrawList() {
     var global_showall = ( readStorage('global_show') === 'e' ) ? true : false;
     if ( window.activate === false ) {
-        var _home = readData('home_done'),
-            _ment = readData('ment_done');
+        var _home = readStorage('home_done', true),
+            _ment = readStorage('ment_done', true);
 
         if ( _home === 'Y' && _ment === 'Y' ) {
             window.activate = true;
@@ -926,8 +926,8 @@ function constructDialog( dialog_id ) {
 
         case 'okbox':
             _html = '<div class="msgbox">' +
-                        '<div class="title">' + readData('msgTitle') + '</div>' +
-                        '<div id="msg" class="message">' + readData('msgText') + '</div>' +
+                        '<div class="title">' + readStorage('msgTitle', true) + '</div>' +
+                        '<div id="msg" class="message">' + readStorage('msgText', true) + '</div>' +
                         '<div class="buttons">' +
                             '<button onclick="dismissOKbox();" class="btn-green">OK</button>' +
                         '</div>' +
@@ -1205,8 +1205,8 @@ function collectRankSummary() {
                 var ds = data.data;
                 for ( var i = 0; i < ds.length; i++ ) {
                     setSplashMessage('Reading Scores (' + (i + 1) + '/' + ds.length + ')');
-                    saveData( ds[i].user_id + '_rank', ds[i].rank );
-                    saveData( ds[i].user_id + '_human', ds[i].is_human );
+                    saveStorage( ds[i].user_id + '_rank', ds[i].rank, true );
+                    saveStorage( ds[i].user_id + '_human', ds[i].is_human, true );
                 }
 
                 getTimeline();
@@ -1544,7 +1544,7 @@ function showHideResponse() {
             draft_text = readStorage('draft');
 
         document.getElementById('rpy-draft').innerHTML = ( draft_text ) ? '<i class="fa fa-inbox"></i>' : '&nbsp;';
-        document.getElementById('rpy-length').innerHTML = readData('post_length');
+        document.getElementById('rpy-length').innerHTML = readStorage('post_length', true);
         document.getElementById('rpy-text').value = reply_text;
         document.getElementById('rpy-text').focus();
         if ( reply_text !== '' ) {
@@ -1557,7 +1557,7 @@ function showHideResponse() {
     } else {
         toggleClassIfExists('autocomp','show','hide'); 
         toggleClass('response','show','hide');        
-        saveData('in_reply_to', '0');
+        saveStorage('in_reply_to', '0', true);
     }
 }
 function getNewPostCount() {
@@ -1570,7 +1570,7 @@ function getNewPostCount() {
     return i;
 }
 function getReplyText() {
-    var _id = readData('in_reply_to');
+    var _id = readStorage('in_reply_to', true);
     var txt = '';
 
     if ( _id > 0 ) {
@@ -1619,7 +1619,7 @@ function loadDraft() {
     if ( draft_text ) {
         document.getElementById('rpy-draft').innerHTML = '&nbsp;';
         document.getElementById('rpy-text').value = draft_text;
-        saveData('in_reply_to', reply_to);
+        saveStorage('in_reply_to', reply_to, true);
 
         deleteStorage('draft_reply_to');
         deleteStorage('draft');
@@ -1967,7 +1967,7 @@ function getReplyCharCount() {
     return post_text.length;        
 }
 function calcReplyCharacters() {
-    var max_length = parseInt( readData('post_length') ),
+    var max_length = parseInt( readStorage('post_length', true) ),
         txt_length = getReplyCharCount();
     if ( max_length === NaN || max_length === undefined ) { max_length = 256; }
     var rpy_length = (max_length - txt_length);
@@ -1995,7 +1995,7 @@ function showSaveDraft() {
 function saveDraft() {
     var post_text = document.getElementById('rpy-text').value.trim();
     if ( post_text !== '' ) {
-        saveStorage( 'draft_reply_to', readData('in_reply_to') )
+        saveStorage( 'draft_reply_to', readStorage('in_reply_to', true) )
         saveStorage( 'draft', post_text );
     }
     showSaveDraft();
@@ -2262,8 +2262,8 @@ function muteHashtag( name ) {
     hashes.push(name);
     saveStorage('muted_hashes', JSON.stringify(hashes));
 
-    saveData('msgTitle', 'Muted #' + name);
-    saveData('msgText', 'Posts with a hashtag of "' + name + '" will now be muted.');
+    saveStorage('msgTitle', 'Muted #' + name, true);
+    saveStorage('msgText', 'Posts with a hashtag of "' + name + '" will now be muted.', true);
     if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
     return true;
 }
@@ -2281,8 +2281,8 @@ function muteClient( name ) {
     clients.push(name);
     saveStorage('muted_clients', JSON.stringify(clients));
 
-    saveData('msgTitle', 'Muted ' + name);
-    saveData('msgText', 'Posts from "' + name + '" will now be muted.');
+    saveStorage('msgTitle', 'Muted ' + name, true);
+    saveStorage('msgText', 'Posts from "' + name + '" will now be muted.', true);
     if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
     return true;
 }
@@ -2293,35 +2293,4 @@ function isMutedClient( name ) {
 
     for ( var idx = 0; idx <= clients.length; idx++ ) { if ( clients[idx] === name ) { return true; } }
     return false;    
-}
-function saveStorage( key, value ) {
-    if ( !key || !value ) { return false; }
-    if ( value === null ) { return false; }
-    if ( hasStorage() ) { localStorage.setItem( key, value ); } else { window.store[key] = value; }
-}
-function readStorage( key ) {
-    if ( !key ) { return false; }
-    if ( hasStorage() ) { return localStorage.getItem(key) || false; }
-        else { if ( window.store.hasOwnProperty(key) ) { return window.store[key]; } else { return false; }
-    }
-}
-function deleteStorage( key ) {
-    if ( !key ) { return false; }
-    if ( hasStorage() ) { localStorage.removeItem(key); } else { window.store[key] = false; }
-}
-function hasStorage() {
-    try {
-        return 'localStorage' in window && window['localStorage'] !== null;
-    } catch (e) {
-        return false;
-    }
-}
-function saveData( key, value ) {
-    if ( !key || !value ) { return false; }
-    if (value === null) { return false; }
-    window.store[key] = value;
-}
-function readData( key ) {
-    if ( !key ) { return false; }
-    if ( window.store.hasOwnProperty(key) ) { return window.store[key]; } else { return false; }
 }

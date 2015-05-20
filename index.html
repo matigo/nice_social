@@ -163,6 +163,7 @@
         </div>
         <script type="text/javascript" src="js/dom.js"></script>
         <script type="text/javascript" src="js/core.js"></script>
+        <script type="text/javascript" src="js/storage.js"></script>
         <script>
             jQuery(function($) {
                 window.store = new Object();
@@ -177,6 +178,12 @@
                                      pms      : false
                 }
                 loadConfigFile();
+                window.KEY_ENTER = 13;
+                window.KEY_ESCAPE = 27;
+                window.KEY_N = 78;
+                window.KEY_K = 75;
+                window.KEY_F2 = 113;
+                window.KEY_DOWNARROW = 40;
 
                 $('#doAction').click(function() { doPostOrAuth(); });
                 $('#rpy-kill').click(function() { killPost(); });
@@ -189,20 +196,27 @@
                         if ( lastWord.length >= 4 && lastWord.charAt(0) === '@' ) {
                             listNames( lastWord );
                         } else {
-                            if( $('#autocomp').hasClass('show') ) { $('#autocomp').removeClass('show').addClass('hide'); }
+                            if( $('#autocomp').hasClass('show') ) { $('#autocomp').removeClass('show').addClass('hide') }
                         }
                     }
 
                     doHandyTextSwitch();
                 });
-                $("#rpy-text").keydown(function (event) { if ( (event.metaKey || event.ctrlKey) && event.keyCode == 13 ) { sendPost(); } });
+                $("#rpy-text").keydown(function (event) { 
+                    if ( (event.metaKey || event.ctrlKey) && event.keyCode == KEY_ENTER ) { 
+                        sendPost();
+                    }
+                    if ( $('#autocomp').hasClass('show') && event.keyCode == KEY_DOWNARROW) {
+                        $('#autocomp > .autobox > span:first-child').trigger("click");
+                    } 
+                });
                 $(document).keyup(function(e) {
-                    if( $('#response').hasClass('hide') ) { if ( event.keyCode == 78 ) { showHideResponse(); } }
-                    if ( event.keyCode == 113 ) { $('#autocomp').removeClass('show').addClass('hide'); }
+                    if( $('#response').hasClass('hide') ) { if ( event.keyCode == KEY_N ) { showHideResponse(); } }
+                    if ( event.keyCode == KEY_F2 ) { $('#autocomp').removeClass('show').addClass('hide'); }
                 });
                 $(document).keydown(function(e) { 
-                    if ( (e.metaKey || e.ctrlKey) && e.keyCode == 75 ) { clearTimelines(); }
-                    if (e.keyCode == 27) { killPost(); }
+                    if ( (e.metaKey || e.ctrlKey) && e.keyCode == KEY_K ) { clearTimelines(); }
+                    if (e.keyCode == KEY_ESCAPE) { killPost(); }
                 });
                 document.addEventListener('focusout', function(e) {window.scrollTo(0, 0)});
                 $( window ).resize(function() { setWindowConstraints(); });
