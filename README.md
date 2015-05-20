@@ -11,7 +11,7 @@ Want to see this code in action? Drop it in at directory on your computer or hea
 
 Want to see some documentation? Visit the Wiki or, if you'd rather have it local, clone the documentation to your computer:
 
-    `git clone https://github.com/matigo/nice_social.wiki.git`
+    `$git clone https://github.com/matigo/nice_social.wiki.git`
 
 ###Usage
 
