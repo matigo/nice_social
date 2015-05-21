@@ -4,8 +4,6 @@ html, body {
     height: 100%;
 }
 body {
-    background-color: #fff;
-    color: #666;
     font-family: Arial, Helvetica, Verdana;
     font-size: 14px;
     line-height: 22px;
@@ -29,7 +27,6 @@ nav:not(.mm-menu) { display: none; }
 
 .header, .content, .footer { text-align: center; }
 .header, .footer {
-    background: #777;
     font-size: 16px;
     font-weight: bold;
     color: #fff;
@@ -637,7 +634,6 @@ nav:not(.mm-menu) { display: none; }
 .chat .post-item.post-grey { background: #eee; }
 .post-list .post-item .post-content a,
 .chat .post-item .post-content a {
-    color: #333;
     font-weight: bold;
     text-decoration: none;
 }
@@ -647,12 +643,10 @@ nav:not(.mm-menu) { display: none; }
 }
 .post-list .post-item .post-content span,
 .chat .post-item .post-content span {
-    color: #000;
     font-weight: normal;
 }
 .post-list .post-item .post-content em,
 .chat .post-item .post-content em {
-    color: #333;
     cursor: pointer;
     font-weight: bold;
     font-style: normal;
@@ -660,7 +654,6 @@ nav:not(.mm-menu) { display: none; }
 .post-list .post-item .post-content .post-name,
 .chat .post-item .post-content .post-name {
     background: transparent;
-    color: #333;
     margin: 5px 0;
     text-align: left;
     text-decoration: none;
@@ -668,7 +661,6 @@ nav:not(.mm-menu) { display: none; }
 .post-list .post-item .post-content .post-time,
 .chat .post-item .post-content .post-time {
     background: transparent;
-    color: #00f;
     text-align: right;
     text-decoration: none;
 }
@@ -784,3 +776,46 @@ nav:not(.mm-menu) { display: none; }
 @media all and (max-device-width:600px) {
     #site-name { display: none; }
 }
+.chatbox div#pref-list.chat {
+    padding: 40px 10px 10px;
+}
+.chatbox div#pref-list.chat strong {
+    display: block;
+    width: 80%;
+}
+.chatbox div#pref-list.chat label {
+    display: inline-block;
+    margin-right: 10px;
+    padding: 7px 0 5px;
+    text-align: right;
+    width: 40%;
+}
+.chatbox div#pref-list.chat input {
+    display: inline-block;
+    font-size: 125%;
+    height: 22px;
+    margin-right: 10px;
+    text-align: center;
+    width: 25%;
+}
+.chatbox div#pref-list.chat ex {
+    border: 1px solid #000;
+    display: inline-block;
+    height: 20px;
+    width: 20%;
+}
+.chatbox div#pref-list.chat button {
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    color: #fff;
+    float: right;
+    font-size: 100%;
+    font-weight: bold;
+    margin: 25px 15px 0 0;
+    padding: 5px 25px;
+    cursor: pointer;
+    min-width: 100px;
+}
+.chatbox div#pref-list.chat button.btn-red { background: #d9534f; }
+.chatbox div#pref-list.chat button.btn-grey { background: #ccc; }
+.chatbox div#pref-list.chat button.btn-green { background: #5ba525; }

@@ -148,6 +148,15 @@ function prepApp() {
     if ( !readStorage('limit', true) ) { saveStorage('limit', 250, true); }
     if ( !readStorage('since', true) ) { saveStorage('since', 0, true); }
 
+    /* Set the CSS Color Preferences */
+    if ( !readStorage('body_background') ) { saveStorage('body_background', 'fff'); }
+    if ( !readStorage('header_background') ) { saveStorage('header_background', '777'); }
+    if ( !readStorage('header_color') ) { saveStorage('header_color', 'fff'); }
+    if ( !readStorage('post-name_color') ) { saveStorage('post-name_color', '333'); }
+    if ( !readStorage('post-content_color') ) { saveStorage('post-content_color', '000'); }
+    if ( !readStorage('post-mention_color') ) { saveStorage('post-mention_color', '333'); }
+    setCSSPreferences();
+
     if ( !readStorage('tl_home') ) {
         for (i in window.timelines) {
             if ( window.timelines.hasOwnProperty(i) ) {
@@ -598,7 +607,7 @@ function addPostItem( post_id, created_at, html, is_mention, followed, post_by, 
 function parseText( post ) {
     var html = post.html.replaceAll('<a href=', '<a target="_blank" href=', '') + ' ',
         name = '',
-        cStr = ' style="color: #333; font-weight: bold; cursor: pointer;"';
+        cStr = ' class="post-mention" style="font-weight: bold; cursor: pointer;"';
     if ( post.entities.mentions.length > 0 ) {
         for ( var i = 0; i < post.entities.mentions.length; i++ ) {
             name = '>@' + post.entities.mentions[i].name + '<';
@@ -915,9 +924,9 @@ function constructDialog( dialog_id ) {
 
         case 'hashbox':
             _html = '<div class="chatbox">' +
-                        '<div class="title">' +
+                        '<div class="title" onclick="doShowHash();">' +
                             'Hashtag View <em id="hash_count">&nbsp;</em>' +
-                            '<span onclick="doShowHash();"><i class="fa fa-times-circle-o"></i></span>' +
+                            '<span><i class="fa fa-times-circle-o"></i></span>' +
                         '</div>' +
                         '<div id="mute_hash" class="title_btn"><button onclick="doMuteHash(\'hashtag\');">Mute Hashtag</button></div>' +
                         '<div id="hash_posts" class="chat"></div>' +
@@ -930,6 +939,55 @@ function constructDialog( dialog_id ) {
                         '<div id="msg" class="message">' + readStorage('msgText', true) + '</div>' +
                         '<div class="buttons">' +
                             '<button onclick="dismissOKbox();" class="btn-green">OK</button>' +
+                        '</div>' +
+                    '</div>';
+            break;
+
+        case 'prefs':
+            _html = '<div class="chatbox">' +
+                        '<div class="title" onclick="doShowPrefs();">' +
+                            'Settings <em id="hash_count">&nbsp;</em>' +
+                            '<span><i class="fa fa-times-circle-o"></i></span>' +
+                        '</div>' +
+                        '<div id="pref-list" class="chat">' +
+                            '<strong>Interface Colors</strong>' +
+                            '<label for="body_background">Background Color:</label>' +
+                            '<input type="text" id="body_background" value="' + readStorage('body_background') + '"' +
+                                  ' onkeyup="validateHexColorAndPreview(\'body_background\');"' +
+                                  ' onchange="validateHexColorAndPreview(\'body_background\');">' +
+                            '<ex id="prevbody_background" style="background-color: #' + readStorage('body_background') + '">&nbsp;</ex>' +
+
+                            '<label for="header_background">Header Color:</label>' +
+                            '<input type="text" id="header_background" value="' + readStorage('header_background') + '"' +
+                                  ' onkeyup="validateHexColorAndPreview(\'header_background\');"' +
+                                  ' onchange="validateHexColorAndPreview(\'header_background\');">' +
+                            '<ex id="prevheader_background"style="background-color: #' + readStorage('header_background') +'">&nbsp;</ex>' +
+
+                            '<label for="header_color">Header Text:</label>' +
+                            '<input type="text" id="header_color" value="' + readStorage('header_color') + '"' +
+                                  ' onkeyup="validateHexColorAndPreview(\'header_color\');"' +
+                                  ' onchange="validateHexColorAndPreview(\'header_color\');">' +
+                            '<ex id="prevheader_color" style="background-color: #' + readStorage('header_color') +'">&nbsp;</ex>' +
+
+                            '<strong>Post Colors</strong>' +
+                            '<label for="post-name_color">Account Name Text:</label>' +
+                            '<input type="text" id="post-name_color" value="' + readStorage('post-name_color') + '"' +
+                                  ' onkeyup="validateHexColorAndPreview(\'post-name_color\');"' +
+                                  ' onchange="validateHexColorAndPreview(\'post-name_color\');">' +
+                            '<ex id="prevpost-name_color" style="background-color: #' + readStorage('post-name_color') +'">&nbsp;</ex>' +
+
+                            '<label for="post-content_color">Post Content Text:</label>' +
+                            '<input type="text" id="post-content_color" value="' + readStorage('post-content_color') + '"' +
+                                  ' onkeyup="validateHexColorAndPreview(\'post-content_color\');"' +
+                                  ' onchange="validateHexColorAndPreview(\'post-content_color\');">' +
+                            '<ex id="prevpost-content_color" style="background-color: #' + readStorage('post-content_color') +'">&nbsp;</ex>' +
+
+                            '<label for="post-mention_color">Post Mentions Text:</label>' +
+                            '<input type="text" id="post-mention_color" value="' + readStorage('post-mention_color') + '"' +
+                                  ' onkeyup="validateHexColorAndPreview(\'post-mention_color\');"' +
+                                  ' onchange="validateHexColorAndPreview(\'post-mention_color\');">' +
+                            '<ex id="prevpost-mention_color" style="background-color: #' + readStorage('post-mention_color') +'">&nbsp;</ex>' +
+                            '<button class="btn-green" onClick="saveCSSPreferences();">Save</button>' +
                         '</div>' +
                     '</div>';
             break;
@@ -950,6 +1008,28 @@ function constructDialog( dialog_id ) {
     }
     document.getElementById(dialog_id).innerHTML = _html;
     return true;
+}
+function setCSSPreferences() {
+    jss.set('body', { 'background-color': '#' + readStorage('body_background') });
+    jss.set('.header', { 'background-color': '#' + readStorage('header_background') });
+    jss.set('.header', { 'color': '#' + readStorage('header_color') });
+    jss.set('.post-name', { 'color': '#' + readStorage('post-name_color') });
+    jss.set('.post-content', { 'color': '#' + readStorage('post-content_color') });
+    jss.set('.post-mention', { 'color': '#' + readStorage('post-mention_color') });
+}
+function saveCSSPreferences() {
+    var items = ['body_background', 'header_background', 'header_color', 'post-name_color', 'post-content_color', 'post-mention_color'];
+    for ( var i = 0; i < items.length; i++ ) {
+        var hex = document.getElementById(items[i]).value.replaceAll('#', '');
+        var isOk  = /(^[0-9A-F]{6}$)|(^[0-9A-F]{3}$)/i.test(hex);
+        if ( isOk ) { saveStorage( items[i], hex ); }
+    }
+    setCSSPreferences();
+}
+function validateHexColorAndPreview( elID ) {
+    var hex = document.getElementById(elID).value.replaceAll('#', '');
+    var isOk  = /(^[0-9A-F]{6}$)|(^[0-9A-F]{3}$)/i.test(hex);
+    if ( isOk ) { document.getElementById('prev' + elID).style.backgroundColor = '#' + hex; }
 }
 function dismissOKbox() {
     document.getElementById('okbox').innerHTML = '';
@@ -1793,7 +1873,7 @@ function parsePMData( data ) {
                                     ' src="' + data[i].recent_message.user.avatar_image.url + '">' +
                             '</div>' +
                             '<div id="' + data[i].id + '-dtl" class="post-content">' +
-                                '<h5 class="post-name" style="color: #333; cursor: pointer;" onClick="doShowChan(' + data[i].id + ');">' +
+                                '<h5 class="post-name" style="cursor: pointer;" onClick="doShowChan(' + data[i].id + ');">' +
                                     '<span id="' + data[i].id + '-ni">[NAME_INFO] (' + data[i].counts.messages + ' Messages)</span>' +
                                 '</h5>' +
                                 parseRecentText( data[i] ) +
@@ -1836,7 +1916,7 @@ function sortPMList() {
 function parseRecentText( post ) {
     var html = post.recent_message.html + ' ',
         name = '',
-        cStr = ' style="color: #333; font-weight: bold; cursor: pointer;"';
+        cStr = ' style="font-weight: bold; cursor: pointer;"';
 
     // Let's see if There Is Anything Here
     if ( post.recent_message.entities.mentions.length > 0 ) {
@@ -1866,11 +1946,19 @@ function doShowUser( user_id ) {
         }
     }
 }
+function doShowPrefs(pref) {
+    if ( pref === '' || pref === undefined ) {
+        toggleClass('prefs','show','hide');
+    } else {
+        toggleClassIfExists('prefs','hide','show');
+        constructDialog('prefs');
+    }
+}
 function doShowHash( name ) {
     if ( name === '' || name === undefined ) {
         toggleClass('hashbox','show','hide');
     } else {
-        toggleClassIfExists('hashbox','hide','show');                
+        toggleClassIfExists('hashbox','hide','show');
         if ( constructDialog('hashbox') ) {
             showWaitState('hash_posts', 'Collecting Posts With #' + name);
             getHashDetails(name);
