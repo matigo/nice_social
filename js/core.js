@@ -1610,7 +1610,12 @@ function doLogout() {
     deleteStorage( 'user_id' );
     deleteStorage( 'name' );
 
-    window.location = window.redirect;
+    for ( i in window.timelines ) {
+        window.timelines[i] = ( i === 'global' );
+        saveStorage('tl_' + i, (( i === 'global' ) ? 'Y' : 'N'));
+    }
+
+    window.location = window.location.protocol + '//' + window.location.hostname;
 }
 function loadDraft() {
     var draft_text = readStorage('draft'),
