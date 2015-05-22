@@ -173,11 +173,6 @@ function prepApp() {
     }
 
     /* Set the Navigation Checkmarks Where Appropriate */
-    var nav_text = document.getElementById("show_live").innerHTML,
-        chk_icon = ' <i class="fa fa-check"></i>';
-    nav_text = nav_text.replace(chk_icon, '');
-    if ( readStorage('show_live_timestamps') === 'Y' ) { nav_text += chk_icon; }
-    document.getElementById("show_live").innerHTML = nav_text;
     setRefreshInterval( readStorage('refresh_rate') );
     setPostsPerColumn( readStorage('column_max') );
     setHideImages( readStorage('hide_images') );
@@ -635,19 +630,6 @@ function showHideTL( tl ) {
 function showTimelines() {
     var buffer = '<div id="0[TL]" class="post-item" style="border: 0; min-height: 75px;"></div>';
     document.getElementById('tl-space').innerHTML = '';
-    setSplashMessage('Preparing Timelines');
-
-    /* Set the Menu Checkboxes */
-    for (i in window.timelines) {
-        if ( window.timelines.hasOwnProperty(i) ) {
-            var nav_text = document.getElementById("list-" + i).innerHTML,
-                chk_icon = ' <i class="fa fa-check"></i>';
-            nav_text = nav_text.replace(chk_icon, '');
-            if ( window.timelines[i] ) { nav_text += chk_icon; }
-            document.getElementById("list-" + i).innerHTML = nav_text;
-        }
-    }
-
     setSplashMessage('Reading Posts List');
     for (i in window.timelines) {
         if ( window.timelines.hasOwnProperty(i) ) {
@@ -859,21 +841,6 @@ function setColumnsWidth( cWidth, cCount ) {
         }
     }
 }
-
-function setGlobalShow( type ) {
-    var options = ['e', 'n'];
-    var show_type = ( type === 'n' ) ? 'n' : 'e';
-    saveStorage('global_show', show_type);
-
-    /* Set the Menu Checkboxes */
-    for ( var i = 0; i < options.length; i++ ) {
-        var nav_text = document.getElementById("gshow-" + options[i]).innerHTML,
-            chk_icon = ' <i class="fa fa-check"></i>';
-        nav_text = nav_text.replace(chk_icon, '');
-        if ( options[i] === show_type ) { nav_text += chk_icon; }
-        document.getElementById("gshow-" + options[i]).innerHTML = nav_text;
-    }
-}
 function constructDialog( dialog_id ) {
     var _html = '';
     switch ( dialog_id ) {
@@ -949,46 +916,7 @@ function constructDialog( dialog_id ) {
                             'Settings <em id="hash_count">&nbsp;</em>' +
                             '<span><i class="fa fa-times-circle-o"></i></span>' +
                         '</div>' +
-                        '<div id="pref-list" class="chat">' +
-                            '<strong>Interface Colors</strong>' +
-                            '<label for="body_background">Background Color:</label>' +
-                            '<input type="text" id="body_background" value="' + readStorage('body_background') + '"' +
-                                  ' onkeyup="validateHexColorAndPreview(\'body_background\');"' +
-                                  ' onchange="validateHexColorAndPreview(\'body_background\');">' +
-                            '<ex id="prevbody_background" style="background-color: #' + readStorage('body_background') + '">&nbsp;</ex>' +
-
-                            '<label for="header_background">Header Color:</label>' +
-                            '<input type="text" id="header_background" value="' + readStorage('header_background') + '"' +
-                                  ' onkeyup="validateHexColorAndPreview(\'header_background\');"' +
-                                  ' onchange="validateHexColorAndPreview(\'header_background\');">' +
-                            '<ex id="prevheader_background"style="background-color: #' + readStorage('header_background') +'">&nbsp;</ex>' +
-
-                            '<label for="header_color">Header Text:</label>' +
-                            '<input type="text" id="header_color" value="' + readStorage('header_color') + '"' +
-                                  ' onkeyup="validateHexColorAndPreview(\'header_color\');"' +
-                                  ' onchange="validateHexColorAndPreview(\'header_color\');">' +
-                            '<ex id="prevheader_color" style="background-color: #' + readStorage('header_color') +'">&nbsp;</ex>' +
-
-                            '<strong>Post Colors</strong>' +
-                            '<label for="post-name_color">Account Name Text:</label>' +
-                            '<input type="text" id="post-name_color" value="' + readStorage('post-name_color') + '"' +
-                                  ' onkeyup="validateHexColorAndPreview(\'post-name_color\');"' +
-                                  ' onchange="validateHexColorAndPreview(\'post-name_color\');">' +
-                            '<ex id="prevpost-name_color" style="background-color: #' + readStorage('post-name_color') +'">&nbsp;</ex>' +
-
-                            '<label for="post-content_color">Post Content Text:</label>' +
-                            '<input type="text" id="post-content_color" value="' + readStorage('post-content_color') + '"' +
-                                  ' onkeyup="validateHexColorAndPreview(\'post-content_color\');"' +
-                                  ' onchange="validateHexColorAndPreview(\'post-content_color\');">' +
-                            '<ex id="prevpost-content_color" style="background-color: #' + readStorage('post-content_color') +'">&nbsp;</ex>' +
-
-                            '<label for="post-mention_color">Post Mentions Text:</label>' +
-                            '<input type="text" id="post-mention_color" value="' + readStorage('post-mention_color') + '"' +
-                                  ' onkeyup="validateHexColorAndPreview(\'post-mention_color\');"' +
-                                  ' onchange="validateHexColorAndPreview(\'post-mention_color\');">' +
-                            '<ex id="prevpost-mention_color" style="background-color: #' + readStorage('post-mention_color') +'">&nbsp;</ex>' +
-                            '<button class="btn-green" onClick="saveCSSPreferences();">Save</button>' +
-                        '</div>' +
+                        '<div id="pref-list" class="chat"></div>' +
                     '</div>';
             break;
 
@@ -1008,28 +936,6 @@ function constructDialog( dialog_id ) {
     }
     document.getElementById(dialog_id).innerHTML = _html;
     return true;
-}
-function setCSSPreferences() {
-    jss.set('body', { 'background-color': '#' + readStorage('body_background') });
-    jss.set('.header', { 'background-color': '#' + readStorage('header_background') });
-    jss.set('.header', { 'color': '#' + readStorage('header_color') });
-    jss.set('.post-name', { 'color': '#' + readStorage('post-name_color') });
-    jss.set('.post-content', { 'color': '#' + readStorage('post-content_color') });
-    jss.set('.post-mention', { 'color': '#' + readStorage('post-mention_color') });
-}
-function saveCSSPreferences() {
-    var items = ['body_background', 'header_background', 'header_color', 'post-name_color', 'post-content_color', 'post-mention_color'];
-    for ( var i = 0; i < items.length; i++ ) {
-        var hex = document.getElementById(items[i]).value.replaceAll('#', '');
-        var isOk  = /(^[0-9A-F]{6}$)|(^[0-9A-F]{3}$)/i.test(hex);
-        if ( isOk ) { saveStorage( items[i], hex ); }
-    }
-    setCSSPreferences();
-}
-function validateHexColorAndPreview( elID ) {
-    var hex = document.getElementById(elID).value.replaceAll('#', '');
-    var isOk  = /(^[0-9A-F]{6}$)|(^[0-9A-F]{3}$)/i.test(hex);
-    if ( isOk ) { document.getElementById('prev' + elID).style.backgroundColor = '#' + hex; }
 }
 function dismissOKbox() {
     document.getElementById('okbox').innerHTML = '';
@@ -1745,12 +1651,6 @@ function setHideImages( do_hide ) {
     } else {
         hide_img = ( do_hide === 'Y' ) ? 'Y' : 'N';
     }
-
-    var nav_text = document.getElementById("show_hideimg").innerHTML,
-        chk_icon = ' <i class="fa fa-check"></i>';
-    nav_text = nav_text.replace(chk_icon, '');
-    if ( readStorage('hide_images') === 'Y' ) { nav_text += chk_icon; }
-    document.getElementById("show_hideimg").innerHTML = nav_text;
 }
 function parseEmbedded( post ) {
     var html = '';
@@ -1944,14 +1844,6 @@ function doShowUser( user_id ) {
             showWaitState('user_posts', 'Collecting User Information');
             getUserProfile( user_id );
         }
-    }
-}
-function doShowPrefs(pref) {
-    if ( pref === '' || pref === undefined ) {
-        toggleClass('prefs','show','hide');
-    } else {
-        toggleClassIfExists('prefs','hide','show');
-        constructDialog('prefs');
     }
 }
 function doShowHash( name ) {
@@ -2158,53 +2050,6 @@ function trimPosts() {
                 }
             }
         }
-    }
-}
-function setRefreshInterval( interval ) {
-    var options = [5, 15, 60, 10000];
-    var rrate = parseInt(interval);
-    if ( rrate === undefined || isNaN(interval) ) { rrate = 15; }
-    saveStorage('refresh_rate', rrate);
-
-    /* Set the Menu Checkboxes */
-    for ( var i = 0; i < options.length; i++ ) {
-        var nav_text = document.getElementById("ref-" + options[i]).innerHTML,
-            chk_icon = ' <i class="fa fa-check"></i>';
-        nav_text = nav_text.replace(chk_icon, '');
-        if ( options[i] === rrate ) { nav_text += chk_icon; }
-        document.getElementById("ref-" + options[i]).innerHTML = nav_text;
-    }
-}
-function setPostsPerColumn( posts ) {
-    var options = [50, 250, 500, 1000, 99999];
-    var pcnt = parseInt(posts);
-    if ( pcnt === undefined || isNaN(pcnt) ) { pcnt = 250; }
-    saveStorage('column_max', pcnt);
-
-    /* Set the Menu Checkboxes */
-    for ( var i = 0; i < options.length; i++ ) {
-        var nav_text = document.getElementById("ppc-" + options[i]).innerHTML,
-            chk_icon = ' <i class="fa fa-check"></i>';
-        nav_text = nav_text.replace(chk_icon, '');
-        if ( options[i] === pcnt ) { nav_text += chk_icon; }
-        document.getElementById("ppc-" + options[i]).innerHTML = nav_text;
-    }
-    trimPosts();
-}
-function setFontSize( size_px ) {
-    var options = [12, 14, 16, 20];
-    size_px = parseInt(size_px);
-    if ( size_px === undefined || isNaN(size_px) ) { size_px = 14; }
-    document.body.style.fontSize = size_px + "px";
-    saveStorage('font_size', size_px);
-
-    /* Set the Menu Checkboxes */
-    for ( var i = 0; i < options.length; i++ ) {
-        var nav_text = document.getElementById("fs-" + options[i]).innerHTML,
-            chk_icon = ' <i class="fa fa-check"></i>';
-        nav_text = nav_text.replace(chk_icon, '');
-        if ( options[i] === size_px ) { nav_text += chk_icon; }
-        document.getElementById("fs-" + options[i]).innerHTML = nav_text;
     }
 }
 function showWaitState( div_id, msg ) {

@@ -23,103 +23,17 @@
         <link href="img/icon-normal.png" rel="icon" sizes="128x128" />
 
         <script type="text/javascript" src="js/jquery.min.js"></script>
-        <script type="text/javascript" src="js/jquery.mmenu.min.all.js"></script>
         <script type="text/javascript" src="js/jss.min.js"></script>
-        <script type="text/javascript">
-            $(function() {
-                $('nav#menu').mmenu({
-                    extensions  : [ 'effect-slide', 'pageshadow' ],
-                    header      : true,
-                    searchfield : true,
-                    counters    : false,
-                    footer      : { add     : true,
-                                    content : '<a href="https://app.net/">Join App.Net Today!</a>'
-                                  }
-                });
-            });
-        </script>
     </head>
     <body>
         <div id="page">
             <div id="header_bar" class="header fixed">
-                <a id="mnu-avatar" href="#menu"></a>
+                <a id="mnu-avatar" onclick="doShowPrefs('main');"></a>
                 <span id="hd-activity" class="hide"><i class="fa fa-refresh fa-spin"></i></span>
                 <span id="hd-spacer" class="show">&nbsp;</span>
                 <strong id="site-name">{Don&apos;t Forget To Set a Site Name}</strong>
                 <button id="doAction">Sign In</button>
             </div>
-            <nav id="menu">
-                <ul>
-                    <li><span>Streams</span>
-                        <ul>
-                            <li><span id="list-home" onClick="showHideTL('home');">Home</span></li>
-                            <li><span id="list-mentions"onClick="showHideTL('mentions');">Mentions</span></li>
-                            <li><span id="list-global" onClick="showHideTL('global');">Global</span></li>
-                            <li><span id="list-pms" onClick="showHideTL('pms');">PMs</span></li>
-                        </ul>
-                    </li>
-                    <li><span>Preferences</span>
-                        <ul>
-                            <li><span>General</span>
-                                <ul>
-                                    <li><span id="show_live" onclick="setLiveTimestamps();">Show Live Timestamps <i class="fa fa-check"></i></span></li>
-                                    <li><span>Refresh Rate</span>
-                                        <ul>
-                                            <li><span id="ref-5" onclick="setRefreshInterval(5);">Every 5 Seconds</span></li>
-                                            <li><span id="ref-15" onclick="setRefreshInterval(15);">Every 15 Seconds</span></li>
-                                            <li><span id="ref-60" onclick="setRefreshInterval(60);">Every Minute</span></li>
-                                            <li><span id="ref-10000" onclick="setRefreshInterval(10000);">Never (Manual)</span></li>
-                                        </ul>
-                                    </li>
-                                    <li><span>Posts Per Column</span>
-                                        <ul>
-                                            <li><span id="ppc-50" onclick="setPostsPerColumn(50);">50 Posts</span></li>
-                                            <li><span id="ppc-250" onclick="setPostsPerColumn(250);">250 Posts</span></li>
-                                            <li><span id="ppc-500" onclick="setPostsPerColumn(500);">500 Posts</span></li>
-                                            <li><span id="ppc-1000" onclick="setPostsPerColumn(1000);">1000 Posts</span></li>
-                                            <li><span id="ppc-99999" onclick="setPostsPerColumn(99999);">Unlimited</span></li>
-                                        </ul>
-                                    </li>
-                                    <li><span>Font Size</span>
-                                        <ul>
-                                            <li><span id="fs-12" onclick="setFontSize(12);">Smaller</span></li>
-                                            <li><span id="fs-14" onclick="setFontSize(14);">Normal</span></li>
-                                            <li><span id="fs-16" onclick="setFontSize(16);">Larger</span></li>
-                                            <li><span id="fs-20" onclick="setFontSize(20);">Largest</span></li>
-                                        </ul>
-                                    </li>
-                                    <li><span id="show_hideimg" onclick="setHideImages();">Don&apos;t Load Images</span></li>
-                                </ul>
-                            </li>
-                            <li><span>Global Timeline</span>
-                                <ul>
-                                    <li><span>Show ...</span>
-                                        <ul>
-                                            <li><span id="gshow-e" onclick="setGlobalShow('e');">Everyone</span></li>
-                                            <li><span id="gshow-n" onclick="setGlobalShow('n');">Only Accounts I Don&apos;t Follow</span></li>
-                                        </ul>
-                                    </li>
-                                    <li><span>Include Website Feeds (Coming Soon)</span></li>
-                                </ul>
-                            </li>
-                            <li><span>Language (Coming Soon)</span>
-                                <ul>
-                                    <li><span id="lang_de" onclick="switchLanguage('de');">Deutsch</span></li>
-                                    <li><span id="lang_en" onclick="switchLanguage('en');">English <i class="fa fa-check"></i></span></li>
-                                    <li><span id="lang_es" onclick="switchLanguage('es');">Español</span></li>
-                                    <li><span id="lang_fr" onclick="switchLanguage('fr');">Français</span></li>
-                                    <li><span id="lang_pr" onclick="switchLanguage('pr');">Português</span></li>
-                                    <li><span id="lang_ru" onclick="switchLanguage('ru');">русский</span></li>
-                                    <li><span id="lang_sv" onclick="switchLanguage('sv');">svenska</span></li>
-                                    <li><span id="lang_ja" onclick="switchLanguage('ja');">日本語</span></li>
-                                    <li><span id="lang_ko" onclick="switchLanguage('ko');">한국어</span></li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </li>
-                    <li><span onClick="doLogout();">Logout</span></li>
-                </ul>
-            </nav>
             <div id="tl-content" class="content">
                 <div id="tl-space" class="timelines"></div>
             </div>
@@ -164,8 +78,9 @@
             <div id="prefs" class="dialog hide"></div>
         </div>
         <script type="text/javascript" src="js/dom.js"></script>
-        <script type="text/javascript" src="js/core.js"></script>
         <script type="text/javascript" src="js/storage.js"></script>
+        <script type="text/javascript" src="js/prefs.js"></script>
+        <script type="text/javascript" src="js/core.js"></script>
         <script>
             jQuery(function($) {
                 window.store = new Object();
@@ -219,7 +134,7 @@
                 $(document).keydown(function(e) { 
                     if ( (e.metaKey || e.ctrlKey) && e.keyCode == KEY_K ) { clearTimelines(); }
                     if (e.keyCode === KEY_ESCAPE) { killPost(); }
-                    if ( e.keyCode === KEY_F3 ) { doShowPrefs('color'); }
+                    if ( e.keyCode === KEY_F3 ) { doShowPrefs('main'); }
                 });
                 document.addEventListener('focusout', function(e) {window.scrollTo(0, 0)});
                 $( window ).resize(function() { setWindowConstraints(); });
