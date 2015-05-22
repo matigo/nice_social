@@ -2272,7 +2272,7 @@ function humanized_time_span(date, ref_date, date_formats, time_units) {
             { ceiling: null, text: "$years years ago" }
         ],
         future: [
-            { ceiling: 60, text: "in $seconds seconds" },
+            { ceiling: 60, text: "Less than a minute ago" },
             { ceiling: 3600, text: "in $minutes minutes" },
             { ceiling: 86400, text: "in $hours hours" },
             { ceiling: 2629744, text: "in $days days" },
