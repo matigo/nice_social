@@ -125,16 +125,23 @@
                     }
                     if ( $('#autocomp').hasClass('show') && event.keyCode === KEY_DOWNARROW) {
                         $('#autocomp > .autobox > span:first-child').trigger("click");
+                        return false;
                     } 
                 });
                 $(document).keyup(function(e) {
                     if( $('#response').hasClass('hide') ) { if ( event.keyCode === KEY_N ) { showHideResponse(); } }
                     if ( event.keyCode === KEY_F2 ) { $('#autocomp').removeClass('show').addClass('hide'); }
                 });
-                $(document).keydown(function(e) { 
-                    if ( (e.metaKey || e.ctrlKey) && e.keyCode == KEY_K ) { clearTimelines(); }
-                    if (e.keyCode === KEY_ESCAPE) { killPost(); }
-                    if ( e.keyCode === KEY_F3 ) { doShowPrefs('main'); }
+                $(document).keydown(function(e) {
+                    var cancelKeyPress = false;
+                    if ( (e.metaKey || e.ctrlKey) && e.keyCode == KEY_K ) { clearTimelines(); cancelKeyPress = true; }
+                    if (e.keyCode === KEY_ESCAPE) {
+                        toggleClassIfExists('gallery', 'show', 'hide');
+                        cancelKeyPress = true;
+                        killPost();
+                    }
+                    if ( e.keyCode === KEY_F3 ) { doShowPrefs('main'); cancelKeyPress = true; }
+                    if (cancelKeyPress) { return false; }
                 });
                 document.addEventListener('focusout', function(e) {window.scrollTo(0, 0)});
                 $( window ).resize(function() { setWindowConstraints(); });

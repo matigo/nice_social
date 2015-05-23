@@ -141,6 +141,7 @@ function prepApp() {
     if ( !readStorage('global_show') ) { saveStorage('global_show', 'e'); }
     if ( !readStorage('column_max') ) { saveStorage('column_max', 250); }
     if ( !readStorage('hide_images') ) { saveStorage('hide_images', 'N'); }
+    if ( !readStorage('font_family') ) { saveStorage('font_family', 'Helvetica'); }
     if ( !readStorage('font_size') ) { saveStorage('font_size', 14); }
     if ( !readStorage('refresh_last', true) ) { saveStorage('refresh_last', seconds, true); }
     if ( !readStorage('post_length', true) ) { saveStorage('post_length', 256, true); }
@@ -155,6 +156,11 @@ function prepApp() {
     if ( !readStorage('post-name_color') ) { saveStorage('post-name_color', '333'); }
     if ( !readStorage('post-content_color') ) { saveStorage('post-content_color', '000'); }
     if ( !readStorage('post-mention_color') ) { saveStorage('post-mention_color', '333'); }
+    if ( !readStorage('post-highlight_color') ) { saveStorage('post-highlight_color', 'eee'); }
+    if ( !readStorage('mention_color') ) { saveStorage('mention_color', '00f'); }
+    if ( !readStorage('one-week_color') ) { saveStorage('one-week_color', 'd9534f'); }
+    if ( !readStorage('one-day_color') ) { saveStorage('one-day_color', 'ff0'); }
+    if ( !readStorage('avatar_color') ) { saveStorage('avatar_color', 'ccc'); }
     setCSSPreferences();
 
     if ( !readStorage('tl_home') ) {
@@ -630,7 +636,6 @@ function showHideTL( tl ) {
 function showTimelines() {
     var buffer = '<div id="0[TL]" class="post-item" style="border: 0; min-height: 75px;"></div>';
     document.getElementById('tl-space').innerHTML = '';
-    setSplashMessage('Reading Posts List');
     for (i in window.timelines) {
         if ( window.timelines.hasOwnProperty(i) ) {
             if ( window.timelines[i] === true ) {
@@ -657,10 +662,8 @@ function redrawList() {
         var _home = readStorage('home_done', true),
             _ment = readStorage('ment_done', true);
 
-        if ( _home === 'Y' && _ment === 'Y' ) {
-            window.activate = true;
-            setSplashMessage('');
-        }
+        if ( _home === 'Y' && _ment === 'Y' ) { setSplashMessage(''); }
+        window.activate = true;
     }
     
     if ( window.timelines.pms === true ) {
@@ -2203,6 +2206,20 @@ function muteHashtag( name ) {
     saveStorage('msgTitle', 'Muted #' + name, true);
     saveStorage('msgText', 'Posts with a hashtag of "' + name + '" will now be muted.', true);
     if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
+    return true;
+}
+function unmuteHashtag( name ) {
+    var hashes = readMutedHashtags();
+    var name = name.trim();
+    if ( name === undefined || name === '' ) { return false; }
+
+    for ( var idx = 0; idx <= hashes.length; idx++ ) {
+        if ( hashes[idx] === name ) {
+            hashes.splice(idx, 1);
+            saveStorage('muted_hashes', JSON.stringify(hashes));
+            break;
+        }
+    }
     return true;
 }
 function readMutedClients() {

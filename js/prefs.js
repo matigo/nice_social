@@ -15,6 +15,7 @@ function fillPrefsWindow( opt ) {
         case 'main':
             var items = { 'streams': { 'label': "Streams", 'icon': "fa-bullhorn", 'action': "fillPrefsWindow('streams');" },
                           'prefs': { 'label': "Preferences", 'icon': "fa-sliders", 'action': "fillPrefsWindow('prefs');" },
+                          'mutes': { 'label': "Muted Items", 'icon': "fa-microphone-slash", 'action': "fillPrefsWindow('mutes');" },
                           'logout': { 'label': "Log Out", 'icon': "fa-sign-out", 'action': "doLogout();" }
                         };
             for ( item in items ) {
@@ -32,12 +33,16 @@ function fillPrefsWindow( opt ) {
                                                  'header_color': "Header Colour" },
                           'Post Colours': { 'post-name_color': "Account Name Text",
                                             'post-content_color': "Post Content Text",
-                                            'post-mention_color': "Post Mentions Text" }
+                                            'post-mention_color': "Post Mentions Text",
+                                            'post-highlight_color': "Post Hightlight Colour" },
+                          'Avatar Colours': { 'one-day_color': "Brand New Ring",
+                                              'one-week_color': "New Account Ring",
+                                              'mention_color': "Mentions Ring",
+                                              'avatar_color': "Regular Ring" }
                          };
-
-            html = '<strong>Preset</strong>' +
-                   '<label for="preset">Presets:</label>' +
-                   '<select id="color_themes" onChange="loadCSSPreset(this.value);">' +
+            html = '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">Choose a Colour Scheme You Like:</strong>' +
+                   '<label class="lbltxt" for="preset">Presets:</label>' +
+                   '<select id="preset" onChange="loadCSSPreset(this.value);">' +
                         '<option value="default">Default</option>' +
                         '<option value="jextxadore">@jextxadore Dark</option>' +
                         '<option value="pme">@pme Preferred</option>' +
@@ -45,9 +50,9 @@ function fillPrefsWindow( opt ) {
                    '</select>';
 
             for ( item in items ) {
-                html += '<strong>' + item + '</strong>';
+                html += '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' + item + '</strong>';
                 for ( itm in items[item] ) {
-                    html += '<label for="body_background">' + items[item][itm] + ':</label>' +
+                    html += '<label class="lbltxt" for="' + itm + '">' + items[item][itm] + ':</label>' +
                             '<input type="text" id="' + itm + '" value="' + readStorage( itm ) + '"' +
                                   ' onkeyup="validateHexColorAndPreview(\'' + itm + '\');"' +
                                   ' onchange="validateHexColorAndPreview(\'' + itm + '\');">' +
@@ -55,9 +60,47 @@ function fillPrefsWindow( opt ) {
 
                 }
             }
+            html += '<button style="float: right;" class="btn-green" onClick="saveCSSPreferences();">Set</button>' +
+                    '<button style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
+                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
+            break;
+        
+        case 'font':
+            var items = { '10': { 'label': "Tiny", 'icon': "fa-font" },
+                          '12': { 'label': "Small", 'icon': "fa-font" },
+                          '14': { 'label': "Normal", 'icon': "fa-font" },
+                          '16': { 'label': "Larger", 'icon': "fa-font" },
+                          '18': { 'label': "Bigger", 'icon': "fa-font" },
+                          '20': { 'label': "HUGE!", 'icon': "fa-font" }
+                        };
+            var families = ['Helvetica', 'Arial', 'Comic Sans MS', 'Courier New', 'Geneva', 'Georgia', 'Monospace',
+                            'Palatino Linotype', 'Sans Serif', 'Serif', 'Tahoma', 'Times New Roman', 'Verdana'];
+            var size_px = readStorage('font_size');
+            var ff = readStorage('font_family');
+            html = '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">Choose Your Text Preferences.</strong>' +
+                   '<label class="lbltxt" for="preset">Font Family:</label>' +
+                   '<select id="preset" onChange="setFontFamily(this.value);">';
+            for ( idx in families ) {
+                var selText = ( families[idx] === ff ) ? ' selected' : '';
+                html += '<option value="' + families[idx] + '" style="font-family: ' + families[idx] + ';"' + selText + '>' + families[idx] + '</option>';
+            }
+            html += '</select>';
+            for ( item in items ) {
+                if ( item === size_px ) {
+                    var bg = '#' + readStorage('header_color'),
+                        fr = '#' + readStorage('header_background');
+                } else {
+                    var bg = '#' + readStorage('header_background'),
+                        fr = '#' + readStorage('header_color');
+                }
+                html += '<button id="btn-pt-' + item + '" class="btn btn-prefs" style="background-color: ' + bg + '; color: ' + fr + '"' +
+                               ' onClick="setFontSize(' + item + ')">' +
+                            '<i class="fa ' + items[item].icon + '" style="font-size: ' + item + 'px;"></i>' +
+                            '<span>' + items[item].label + '</span>' +
+                        '</button>';
+            }
             html += '<button style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
-                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>' +
-                    '<button style="float: right;" class="btn-green" onClick="saveCSSPreferences();">Save</button>';
+                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
             break;
 
         case 'language':
@@ -91,11 +134,97 @@ function fillPrefsWindow( opt ) {
                            ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
             break;
         
+        case 'mutes':
+            var clients = readMutedClients();
+            var hashes = readMutedHashtags();
+            html += '<strong class="lbltxt" style="display: block; width: 95%; text-align: justify; padding: 0 2.5%;">Muted Hashtags:</strong>';
+            for ( idx in hashes ) {
+                html += '<button name="hashes" class="btn btn-half" style="background-color: ' + frColor + '; color: ' + bgColor + '"' +
+                               ' value="' + hashes[idx] + '" onClick="removeHashFilter(\'' + hashes[idx] + '\');">' +
+                            hashes[idx] + ' <i class="fa fa-times"></i>' +
+                        '</button>';
+            }
+            if ( hashes.length === 0 ) {
+                html += '<em class="lbltxt" style="display: block; width: 90%; text-align: center; padding: 15px 5%;">' +
+                            'You Have Not Muted Any Hashtags' +
+                        '</em>';
+            }
+            html += '<strong class="lbltxt" style="display: block; margin-top: 15px; width: 95%; text-align: justify; padding: 0 2.5%;">Muted Clients:</strong>';
+            for ( idx in clients ) {
+                html += '<button name="hashes" class="btn btn-half" style="background-color: ' + frColor + '; color: ' + bgColor + '"' +
+                               ' onClick="removeHashFilter(\'' + clients[idx] + '\');">' +
+                            clients[idx] + ' <i class="fa fa-times"></i>' +
+                        '</button>';
+            }
+            if ( clients.length === 0 ) {
+                html += '<em class="lbltxt" style="display: block; width: 90%; text-align: center; padding: 15px 5%;">' +
+                            'You Have Not Muted Any Clients' +
+                        '</em>';
+            }
+            html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
+                           ' onClick="fillPrefsWindow(\'main\');"><i class="fa fa-reply"></i> Back</button>';
+            break;
+
         case 'other':
-            var items = { 'livetime': { 'label': "Show Live Timestamps", 'icon': "fa-toggle-off" },
-                          'hide_img': { 'label': "Show Inline Images", 'icon': "fa-toggle-off" },
-                          'nicerank': { 'label': "Use NiceRank Global Filter", 'icon': "fa-toggle-on" }
-                        };
+            var spacer = '';
+            var items = { 0: { 'label': "Basic Global Timeline Filters",
+                               'notes': "Customise How You See the Global Timeline",
+                               'items': { 'nicerank': { 'label': "NiceRank", 'style':'a', 'type': "ed" },
+                                          'feeds_show': { 'label': "Feed Accounts", 'style':'a', 'type': "vh" },
+                                          'global_show': { 'label': "Accounts I Follow", 'style':'a', 'type': "vh" },
+                                         }
+                              },
+                          1: { 'label': "Language Filters",
+                               'notes': "Please be advised that only a handful of posts include a language code. There is a high probability you will still see posts in certain languages.",
+                               'items': { 'showlang_en': { 'label': "English", 'style':'lang', 'type': "vh" },
+                                          'showlang_de': { 'label': "Deutsch", 'style':'lang', 'type': "vh" },
+                                          'showlang_es': { 'label': "Español", 'style':'lang', 'type': "vh" },
+                                          'showlang_fr': { 'label': "Français", 'style':'lang', 'type': "vh" },
+                                          'showlang_it': { 'label': "Italiano", 'style':'lang', 'type': "vh" },
+                                          'showlang_pr': { 'label': "Português", 'style':'lang', 'type': "vh" },
+                                          'showlang_ru': { 'label': "русский", 'style':'lang', 'type': "vh" },
+                                          'showlang_sv': { 'label': "svenska", 'style':'lang', 'type': "vh" },
+                                          'showlang_ar': { 'label': "العربية", 'style':'lang', 'type': "vh" },
+                                          'showlang_ja': { 'label': "日本語", 'style':'lang', 'type': "vh" },
+                                          'showlang_ko': { 'label': "한국어", 'style':'lang', 'type': "vh" },
+                                          'showlang_cnm': { 'label': "普通话", 'style':'lang', 'type': "vh" },
+                                          'showlang_cnc': { 'label': "粤语", 'style':'lang', 'type': "vh" },
+                                          'showlang_other': { 'label': "All Others", 'style':'lang', 'type': "vh" }
+                                         }
+                              }
+                         };
+            for ( idx in items ) {
+                html += spacer +
+                        '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' +
+                            '<i class="fa fa-filter"></i> ' + items[idx].label +
+                        '</strong>';
+                if ( items[idx].notes !== '' ) {
+                    html += '<em class="lbltxt" style="display: block; width: 95%; text-align: justify; padding: 0 2.5%;">' +
+                                items[idx].notes +
+                            '</em>';
+                }
+                for ( i in items[idx].items ) {
+                    switch ( items[idx].items[i].style ) {
+                        case 'lang':
+                            html += '<button id="btn-opt-' + i + '" class="btn btn-half" style="background-color: ' + frColor + '; color: ' + bgColor + '"' +
+                                           ' onClick="toggleOption(\'' + i + '\', \'' + items[idx].items[i].type + '\');">' +
+                                        '<i class="fa fa-circle"></i> ' + items[idx].items[i].label +
+                                    '</button>';
+                            break;
+                            
+                        default:
+                            html += '<label class="lbltxt">' + items[idx].items[i].label + '</label>' +
+                                    '<button id="btn-opt-' + i + '" class="btn" style="background-color: ' + frColor + '; color: ' + bgColor + '"' +
+                                           ' onClick="toggleOption(\'' + i + '\', \'' + items[idx].items[i].type + '\');">' +
+                                        '<i class="fa fa-circle"></i> Enabled' +
+                                    '</button>';
+                    }
+                }
+                spacer = '<br><br>';
+            }
+
+            html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
+                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
             break;
 
         case 'ppcolumn':
@@ -107,7 +236,7 @@ function fillPrefsWindow( opt ) {
                           '99999': { 'label': "Posts", 'icon': "&infin;" },
                         };
             var ppc = readStorage('column_max');
-            html += '<strong style="width: 95%; text-align: justify; padding: 0 2.5%;">' +
+            html += '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' +
                         'What&apos;s The Maximum Number of Posts You Want in Each Column?' +
                     '</strong>';
             for ( item in items ) {
@@ -124,17 +253,19 @@ function fillPrefsWindow( opt ) {
                             '<span>' + items[item].label + '</span>' +
                         '</button>';
             }
-            html += '<button style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
+            html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
                            ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
             break;
 
         case 'prefs':
             var items = { 'color': { 'label': "Colours", 'icon': "fa-paint-brush" },
-                          'language': { 'label': "Languages", 'icon': "fa-comments-o" },
                           'ppcolumn': { 'label': "Column Length", 'icon': "fa-columns" },
+                          'font': { 'label': "Fonts", 'icon': "fa-font" },
+                      /*  'other': { 'label': "Filtering", 'icon': "fa-globe" },
+                          'language': { 'label': "Languages", 'icon': "fa-comments-o" }, */
                           'refresh': { 'label': "Refresh Rate", 'icon': "fa-refresh" }
                         };
-            html += '<strong>What Would You Like to Change?</strong>';
+            html += '<strong class="lbltxt">What Would You Like to Change?</strong>';
             for ( item in items ) {
                 html += '<button id="btn-tl-' + item + '" class="btn btn-prefs" style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
                                ' onClick="fillPrefsWindow(\'' + item + '\')">' +
@@ -142,7 +273,7 @@ function fillPrefsWindow( opt ) {
                             '<span>' + items[item].label + '</span>' +
                         '</button>';
             }
-            html += '<button style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
+            html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
                            ' onClick="fillPrefsWindow(\'main\');"><i class="fa fa-reply"></i> Back</button>';
             break;
         
@@ -155,7 +286,7 @@ function fillPrefsWindow( opt ) {
                           '99999': { 'label': "Never", 'icon': "&infin;" }
                         };
             var rrate = readStorage('refresh_rate');
-            html += '<strong style="width: 95%; text-align: justify; padding: 0 2.5%;">' +
+            html += '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' +
                         'How Often Should the Timelines Be Updated?' +
                     '</strong>';
             for ( item in items ) {
@@ -172,7 +303,7 @@ function fillPrefsWindow( opt ) {
                             '<span>' + items[item].label + '</span>' +
                         '</button>';
             }
-            html += '<button style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
+            html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
                            ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
             break;
 
@@ -180,7 +311,9 @@ function fillPrefsWindow( opt ) {
             var items = { 'home': { 'label': "Home", 'icon': "fa-home" },
                           'mentions': { 'label': "Mentions", 'icon': "fa-comment" },
                           'global': { 'label': "Filtered Global", 'icon': "fa-globe" },
-                          'pms': { 'label': "PMs", 'icon': "fa-lock" }
+                          'pms': { 'label': "PMs", 'icon': "fa-lock" },
+                          'interactions': { 'label': "Interactions", 'icon': "fa-heartbeat" },
+                          'add': { 'label': "Add", 'icon': "fa-plus" }
                         };
             for ( item in items ) {
                 var bg = '#' + readStorage('header_background'),
@@ -195,7 +328,7 @@ function fillPrefsWindow( opt ) {
                             '<span>' + items[item].label + '</span>' +
                         '</button>';
             }
-            html += '<button style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
+            html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
                            ' onClick="fillPrefsWindow(\'main\');"><i class="fa fa-reply"></i> Back</button>';
             break;
 
@@ -208,6 +341,14 @@ function toggleLanguage( la ) {
     alert( "Whoops! This Hasn't Been Completed Yet!" );
 }
 function toggleTimeline( tl ) {
+    if ( tl === 'add' ) {
+        alert("[Debug] Sorry ... just a little more testing to do.");
+        return false;
+    }
+    if ( tl === 'interactions' ) {
+        alert("[Debug] This is *very* close, but not quite ready.");
+        return false;
+    }
     window.timelines[tl] = !window.timelines[tl];
     var bgColor = '#' + readStorage('header_color'),
         frColor = '#' + readStorage('header_background');
@@ -228,25 +369,45 @@ function loadCSSPreset( preset ) {
                                  'header_color': 'fff',
                                  'post-name_color': '333',
                                  'post-content_color': '000',
-                                 'post-mention_color': '333' },
+                                 'post-mention_color': '333',
+                                 'post-highlight_color': 'eee',
+                                 'avatar_color': 'ccc',
+                                 'mention_color': '00f',
+                                 'one-week_color': 'd9534f',
+                                 'one-day_color': 'ff0'},
                     'jextxadore': { 'body_background': '333333',
                                     'header_background': '1f1f1f',
                                     'header_color': 'fff',
                                     'post-name_color': 'd1d1d1',
                                     'post-content_color': 'b4b4b4',
-                                    'post-mention_color': 'd1d1d1' },
+                                    'post-mention_color': 'd1d1d1',
+                                    'post-highlight_color': 'eee',
+                                    'avatar_color': 'ccc',
+                                    'mention_color': '00f',
+                                    'one-week_color': 'd9534f',
+                                    'one-day_color': 'ff0'},
                     'pme': { 'body_background': 'eff',
                              'header_background': '77e',
                              'header_color': 'fff',
                              'post-name_color': '333',
                              'post-content_color': '000',
-                             'post-mention_color': '333' },
+                             'post-mention_color': '333',
+                             'post-highlight_color': 'eee',
+                             'avatar_color': 'ccc',
+                             'mention_color': '00f',
+                             'one-week_color': 'd9534f',
+                             'one-day_color': 'ff0'},
                     'hotdog': { 'body_background': 'f00',
                                 'header_background': '000',
                                 'header_color': 'fff',
                                 'post-name_color': 'ff0',
                                 'post-content_color': '000',
-                                'post-mention_color': 'ff0' }
+                                'post-mention_color': 'ff0',
+                                'post-highlight_color': 'd9534f',
+                                'avatar_color': '000',
+                                'mention_color': 'ff0',
+                                'one-week_color': 'd9534f',
+                                'one-day_color': '0f0'}
                     };
     for ( i in presets[preset] ) {
         document.getElementById(i).value = presets[preset][i];
@@ -260,9 +421,28 @@ function setCSSPreferences() {
     jss.set('.post-name', { 'color': '#' + readStorage('post-name_color') });
     jss.set('.post-content', { 'color': '#' + readStorage('post-content_color') });
     jss.set('.post-mention', { 'color': '#' + readStorage('post-mention_color') });
+    jss.set('.chat .post-item.post-grey', { 'background-color': '#' + readStorage('post-highlight_color') });
+    jss.set('.chatbox', { 'background-color': '#' + readStorage('body_background') });
+    jss.set('.chatbox', { 'border-color': '#' + readStorage('header_background') });
+    jss.set('.chatbox .title', { 'background-color': '#' + readStorage('header_background') });
+    jss.set('.chatbox .title', { 'color': '#' + readStorage('header_color') });
+    jss.set('.chatbox .lbltxt', { 'color': '#' + readStorage('post-content_color') });
+    jss.set('.profile', { 'background-color': '#' + readStorage('body_background') });
+    jss.set('.profile', { 'border-color': '#' + readStorage('header_background') });
+    jss.set('.profile .info', { 'color': '#' + readStorage('post-content_color') });
+    jss.set('.profile .numbers', { 'color': '#' + readStorage('post-content_color') });
+    jss.set('.profile .actions span', { 'color': '#' + readStorage('mention_color') });
+    jss.set('.profile .names h4', { 'color': '#' + readStorage('header_color') });
+    jss.set('.post-list .post-item .post-actions span', { 'color': '#' + readStorage('post-content_color') });
+    jss.set('.post-list .post-item .post-avatar img.avatar-round', { 'border-color': '#' + readStorage('avatar_color') });
+    jss.set('.post-list .post-item .post-avatar img.avatar-round.mention', { 'border-color': '#' + readStorage('mention_color') });
+    jss.set('.post-list .post-item .post-avatar img.avatar-round.recent-acct', { 'border-color': '#' + readStorage('one-week_color') });
+    jss.set('.post-list .post-item .post-avatar img.avatar-round.new-acct', { 'border-color': '#' + readStorage('one-day_color') });
 }
 function saveCSSPreferences() {
-    var items = ['body_background', 'header_background', 'header_color', 'post-name_color', 'post-content_color', 'post-mention_color'];
+    var items = ['body_background', 'header_background', 'header_color',
+                 'post-name_color', 'post-content_color', 'post-mention_color', 'post-highlight_color',
+                 'avatar_color', 'mention_color', 'one-week_color', 'one-day_color'];
     for ( var i = 0; i < items.length; i++ ) {
         var hex = document.getElementById(items[i]).value.replaceAll('#', '');
         var isOk  = /(^[0-9A-F]{6}$)|(^[0-9A-F]{3}$)/i.test(hex);
@@ -310,16 +490,57 @@ function setPostsPerColumn( posts ) {
     }
     trimPosts();
 }
-
+function setFontFamily( family ) {
+    document.body.style.fontFamily = family;
+    saveStorage('font_family', family);
+}
 function setFontSize( size_px ) {
-    var options = [12, 14, 16, 20];
+    var options = [10, 12, 14, 16, 18, 20];
+    var bgColor = '#' + readStorage('header_color'),
+        frColor = '#' + readStorage('header_background');
     size_px = parseInt(size_px);
     if ( size_px === undefined || isNaN(size_px) ) { size_px = 14; }
     document.body.style.fontSize = size_px + "px";
+    document.body.style.lineHeight = (size_px + 6) + "px";
+    var old_val = readStorage('font_size');
     saveStorage('font_size', size_px);
+
+    var elementExists = document.getElementById('btn-pt-' + old_val);
+    if ( elementExists !== null && elementExists !== undefined ) {
+        document.getElementById('btn-pt-' + old_val).style.backgroundColor = frColor;
+        document.getElementById('btn-pt-' + old_val).style.color = bgColor;
+        document.getElementById('btn-pt-' + size_px).style.backgroundColor = bgColor;
+        document.getElementById('btn-pt-' + size_px).style.color = frColor;
+    }
 }
 function setGlobalShow( type ) {
     var options = ['e', 'n'];
     var show_type = ( type === 'n' ) ? 'n' : 'e';
     saveStorage('global_show', show_type);
+}
+function toggleOption( item, txt ) {
+    var bgColor = '#' + readStorage('header_color'),
+        frColor = '#' + readStorage('header_background');
+    var txtOpts = { 'ed': {'enabled': "Enabled", 'disabled': "Disabled"},
+                    'vh': {'enabled': "Hidden", 'disabled': "Visible"}
+                   };
+    var value = readStorage(item);
+    if ( value === 'Y' ) { value = false; } else { value = true; }
+    saveStorage(item, ((value) ? 'Y' : 'N'));
+
+    var elementExists = document.getElementById('btn-opt-' + item);
+    if ( elementExists !== null && elementExists !== undefined ) {
+        document.getElementById('btn-opt-' + item).style.backgroundColor = (( value ) ? bgColor : frColor);
+        document.getElementById('btn-opt-' + item).style.color = (( value ) ? frColor : bgColor);
+        document.getElementById('btn-opt-' + item).innerHTML = (( value ) ? '<i class="fa fa-circle"></i> ' + txtOpts[txt]['enabled']
+                                                                          : '<i class="fa fa-circle-o"></i> ' + txtOpts[txt]['disabled']);
+    }
+}
+function removeHashFilter( name ) {
+    if ( unmuteHashtag(name) ) {
+        var btns = document.getElementsByName('hashes');
+        for ( i in btns ) {
+            if ( btns[i].value === name ) { btns[i].innerHTML = 'Scrubbed'; }
+        }
+    }
 }

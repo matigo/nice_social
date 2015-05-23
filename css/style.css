@@ -783,6 +783,12 @@ nav:not(.mm-menu) { display: none; }
     display: block;
     width: 80%;
 }
+.chatbox div#pref-list.chat b {
+    display: inline-block;
+    width: 25%;
+    text-align: right;
+    margin-right: 5%;
+}
 .chatbox div#pref-list.chat label {
     display: inline-block;
     margin-right: 10px;
@@ -825,6 +831,12 @@ nav:not(.mm-menu) { display: none; }
 .chatbox div#pref-list.chat button.btn-red { background: #d9534f; }
 .chatbox div#pref-list.chat button.btn-grey { background: #ccc; }
 .chatbox div#pref-list.chat button.btn-green { background: #5ba525; }
+.chatbox div#pref-list.chat button.btn-half {
+    background: #5ba525;
+    float: none;
+    margin: 5px 2.5%;
+    width: 45%;
+}
 .chatbox div#pref-list.chat button.btn-prefs {
     background: #5ba525;
     float: none;
