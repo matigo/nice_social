@@ -183,6 +183,7 @@ function prepApp() {
     setPostsPerColumn( readStorage('column_max') );
     setHideImages( readStorage('hide_images') );
     setGlobalShow( readStorage('global_show') );
+    setFontFamily( readStorage('font_family') );
     setFontSize( readStorage('font_size') );
 
     var token = getADNAccessToken();
