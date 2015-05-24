@@ -49,7 +49,11 @@
                         <textarea id="rpy-text" class="mention"></textarea>
                     </div>
                     <div class="actions">
-                        <span id="rpy-length">256</span>
+                        <span id="rpy-length" style="margin-top: 5px;">256</span>
+<div id="whatever" class="fileUpload">
+    <button class="btn-green" style="min-width: 10px;"><i class="fa fa-cloud-upload"></i></buttpn>
+    <input type="file" name="file" id="file" class="upload" />
+</div>
                         <span id="rpy-draft" style="padding-left: 15px; font-size: 150%;" onclick="loadDraft();"></span>
                         <button id="rpy-kill" class="btn-red">Cancel</button>
                         <button id="rpy-send" class="btn-grey">Send</button>
@@ -87,6 +91,7 @@
                 window.chans = {};
                 window.posts = {};
                 window.users = {};
+                window.files = {};
                 window.activate = false;
                 window.timelines = { home     : false,
                                      mentions : false,
@@ -233,6 +238,105 @@
                     if ( isRightSwipe || isLeftSwipe ) { e.preventDefault(); }
                 }, false); 
             }, false);
+
+
+            document.getElementById('file').addEventListener('change', function(e) {
+                var access_token = readStorage('access_token');
+                if ( access_token === undefined || access_token === false || access_token === '' ) { return false; }
+
+                var file = this.files[0];
+                var xhr = new XMLHttpRequest();
+                var url = window.apiURL + '/files';
+
+                var fileObj = { 'kind': "image",
+                                'type': "social.nice.image",
+                                'mime_type': file.type,
+                                'name': file.name,
+                                'public': true
+                               };
+
+                xhr.onreadystatechange = function(e) { if ( 4 == this.readyState ) { parseFileUpload( e.target.response, file ); } };
+                xhr.open('post', url, true);
+                xhr.setRequestHeader("Authorization", "Bearer " + access_token);
+                xhr.setRequestHeader("Content-Type", "application/json");
+                xhr.send(JSON.stringify(fileObj));
+            }, false);
+
+            function parseFileUpload( response, file ) {
+                var access_token = readStorage('access_token');
+                if ( access_token === undefined || access_token === false || access_token === '' ) { return false; }
+
+                var rslt = jQuery.parseJSON( response );
+                var meta = rslt.meta;
+                var showMsg = false;
+                switch ( meta.code ) {
+                    case 400:
+                    case 507:
+                        saveStorage('msgText', 'App.Net Returned a ' + meta.code + ' Error:<br>' + meta.error_message, true);
+                        showMsg = true;
+                        break;
+
+                    case 200:
+                        var data = rslt.data;
+                        var xhr = new XMLHttpRequest();
+                        var url = window.apiURL + '/files/' + data.id + '/content';
+
+                        if ( xhr.upload ) {
+                            xhr.upload.onprogress = function(e) {
+                                var done = e.loaded, total = e.total;
+                                var progress = (Math.floor(done/total*1000)/10);
+                                if ( progress > 0 && progress <= 100 ) {
+                                    setSplashMessage('Uploading ... ' + progress + '% Complete');
+                                } else {
+                                    setSplashMessage('');
+                                }
+                            };
+                        }
+                        xhr.onreadystatechange = function(e) {
+                            if ( 4 == this.readyState ) {
+                                switch ( e.target.status ) {
+                                    case 204:
+                                        if ( !window.files.hasOwnProperty( data.id ) ) {
+                                            window.files[data.id] = { id: data.id,
+                                                                      file_token: data.file_token,
+                                                                      name: data.name,
+                                                                      type: data.type,
+                                                                      mime: file.type,
+                                                                      url_permanent: data.url_permanent,
+                                                                      url_short: data.url_short
+                                                                     }
+                                        }
+                                        var txt = document.getElementById('rpy-text').value.trim();
+                                        if ( txt !== '' ) { txt += ' '; }
+                                        txt += '[' + data.name + '](_' + data.id + '_)';
+                                        document.getElementById('rpy-text').value = txt;
+                                        break;
+
+                                    case 507:
+                                        saveStorage('msgText', 'App.Net Returned a ' + meta.code + ' Error:<br>' + meta.error_message, true);
+                                        showMsg = true;
+                                        break;
+
+                                    default:
+                                        /* Do Nothing */
+                                }
+                            }
+                        };
+
+                        xhr.open('put', url, true);
+                        xhr.setRequestHeader("Authorization", "Bearer " + access_token);
+                        xhr.setRequestHeader("Content-Type", file.type);
+                        xhr.send(file);
+                        break;
+
+                    default:
+                        /* Do Nothing */
+                }
+                if ( showMsg ) { if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); } }
+            }
+            function addImageText( file_id ) {
+                
+            }
             function doMore( post_id ) {
                 alert( "[Debug] Let's Show another Modal for Post: " + post_id );
             }

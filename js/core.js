@@ -229,9 +229,8 @@ function writePost( text, in_reply_to ) {
             type: 'POST',
             success: function( data ) {
                 if ( parseMeta(data.meta) ) {
-                    var dArr = [data.data];
-                    parseItems(dArr);
                     showHideResponse();
+                    getTimeline();
                     if ( parseInt(in_reply_to) > 0 ) { showHideActions( in_reply_to, '*' ); }
                 }
             },
@@ -252,17 +251,35 @@ function writePost( text, in_reply_to ) {
 function buildJSONPost( text, in_reply_to ) {
     var access_token = readStorage('access_token');
     var rVal = false;
+    var oembed = false;
 
     if ( access_token !== false ) {
+        // Parse the Text for Images
+        for ( idx in window.files ) {
+            if ( text.indexOf('_' + idx + '_') > -1 ) {
+                text = text.replaceAll('_' + idx + '_', window.files[idx].url_permanent);
+                if ( oembed === false ) { oembed = []; }
+                oembed.push({ "type": "net.app.core.oembed",
+                              "value": { "+net.app.core.file": { "file_id": window.files[idx].id,
+                                                                 "file_token": window.files[idx].file_token,
+                                                                 "format": "oembed" }
+                                        }
+                            });
+            }
+        }
+
         var params = {
             access_token: access_token,
             include_post_annoations: 1,
+            include_annotations: 1,
+            include_html: 1,
             text: text,
             entities: {
                 parse_markdown_links: true,
                 parse_links: true             
             }
         };
+        if ( oembed !== false ) { params['annotations'] = oembed; }
         if ( parseInt(in_reply_to) > 0 ) { params.reply_to = in_reply_to; }
         rVal = JSON.stringify(params);
     }
@@ -344,7 +361,6 @@ function getTimeline() {
     var access_token = readStorage('access_token');
 
     if ( access_token !== false ) {
-        setSplashMessage('Getting Your Timeline');
         var params = {
             include_directed_posts: 1,
             include_annotations: 1,
@@ -2265,8 +2281,8 @@ function muteClient( name ) {
 }
 function isMutedClient( name ) {
     var clients = readMutedClients();
-    var name = name.trim();
     if ( name === undefined || name === '' ) { return false; }
+    var name = name.trim();
 
     for ( var idx = 0; idx <= clients.length; idx++ ) { if ( clients[idx] === name ) { return true; } }
     return false;    

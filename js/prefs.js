@@ -451,7 +451,7 @@ function getCSSPresets() {
                                         'post-name_color': 'd1d1d1',
                                         'post-content_color': 'b4b4b4',
                                         'post-mention_color': 'd1d1d1',
-                                        'post-highlight_color': 'eee',
+                                        'post-highlight_color': '4c4c4c',
                                         'avatar_color': '999999',
                                         'mention_color': '297acc',
                                         'one-week_color': 'd9534f',
