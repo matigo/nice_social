@@ -40,14 +40,14 @@ function fillPrefsWindow( opt ) {
                                               'mention_color': "Mentions Ring",
                                               'avatar_color': "Regular Ring" }
                          };
+            var presets = getCSSPresets();
             html = '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">Choose a Colour Scheme You Like:</strong>' +
                    '<label class="lbltxt" for="preset">Presets:</label>' +
-                   '<select id="preset" onChange="loadCSSPreset(this.value);">' +
-                        '<option value="default">Default</option>' +
-                        '<option value="jextxadore">@jextxadore Dark</option>' +
-                        '<option value="pme">@pme Preferred</option>' +
-                        '<option value="hotdog">Hotdog Stand</option>' +
-                   '</select>';
+                   '<select id="preset" onChange="loadCSSPreset(this.value);">';
+            for ( idx in presets ) {
+                html += '<option value="' + idx + '">' + presets[idx].label + '</option>';
+            }
+            html +='</select>';
 
             for ( item in items ) {
                 html += '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' + item + '</strong>';
@@ -100,6 +100,55 @@ function fillPrefsWindow( opt ) {
                         '</button>';
             }
             html += '<button style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
+                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
+            break;
+
+        case 'hover':
+            var items = { 'label': "Mouse Hover Options",
+                          'notes': "You can have the Interaction buttons appear when your mouse hovers over a post if you&apos;d like.",
+                          'items': { 'show_hover': { 'label': "Show Interactions", 'style': 'bool', 'type': "ed" },
+                                     'show_hover_delay': { 'label': "Hide After (Seconds)", 'style': 'seconds', 'type': '' }
+                                    }
+                              };
+            html += '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' +
+                        '<i class="fa fa-location-arrow"></i> ' + items.label +
+                    '</strong>';
+            if ( items.notes !== '' ) {
+                html += '<em class="lbltxt" style="display: block; width: 95%; text-align: justify; padding: 0 2.5%;">' +
+                            items.notes +
+                        '</em>';
+            }
+            for ( i in items.items ) {
+                var fr = bgColor,
+                    bg = frColor,
+                    tx = '<i class="fa fa-circle"></i> Enabled';
+                switch ( items.items[i].style ) {
+                    case 'bool':
+                        var value = readStorage( i );
+                        if ( value === 'N' ) {
+                            fr = frColor;
+                            bg = bgColor;
+                            tx = '<i class="fa fa-circle-o"></i> Disabled'
+                        }
+                        html += '<label class="lbltxt">' + items.items[i].label + '</label>' +
+                                '<button id="btn-opt-' + i + '" class="btn" style="background-color: ' + bg + '; color: ' + fr + '"' +
+                                       ' onClick="toggleOption(\'' + i + '\', \'' + items.items[i].type + '\');">' + tx + '</button>';
+                        break;
+
+                    case 'seconds':
+                        var value = readStorage( i );
+                        value = parseInt(value) / 1000;
+                        if ( value === undefined || isNaN(value) ) { value = 5; }
+                        html += '<label class="lbltxt">' + items.items[i].label + '</label>' +
+                                '<input type="text" id="' + i + '" value="' + value + '">';
+                        break;
+
+                    default:
+                        /* Do Nothing */
+                }
+            }
+            html += '<button style="float: right;" class="btn-green" onClick="setDelaySeconds();">Set</button>' +
+                    '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
                            ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
             break;
 
@@ -261,6 +310,7 @@ function fillPrefsWindow( opt ) {
             var items = { 'color': { 'label': "Colours", 'icon': "fa-paint-brush" },
                           'ppcolumn': { 'label': "Column Length", 'icon': "fa-columns" },
                           'font': { 'label': "Fonts", 'icon': "fa-font" },
+                          'hover': { 'label': "Hovers", 'icon': "fa-location-arrow" },
                       /*  'other': { 'label': "Filtering", 'icon': "fa-globe" },
                           'language': { 'label': "Languages", 'icon': "fa-comments-o" }, */
                           'refresh': { 'label': "Refresh Rate", 'icon': "fa-refresh" }
@@ -363,54 +413,87 @@ function toggleTimeline( tl ) {
     document.getElementById('btn-tl-' + tl).style.color = frColor;
     showTimelines();
 }
+function getCSSPresets() {
+    return  { 'current': {  'label': "Your Current Theme",
+                            'style': {  'body_background': readStorage('body_background'),
+                                        'header_background': readStorage('header_background'),
+                                        'header_color': readStorage('header_color'),
+                                        'post-name_color': readStorage('post-name_color'),
+                                        'post-content_color': readStorage('post-content_color'),
+                                        'post-mention_color': readStorage('post-mention_color'),
+                                        'post-highlight_color': readStorage('post-highlight_color'),
+                                        'avatar_color': readStorage('avatar_color'),
+                                        'mention_color': readStorage('mention_color'),
+                                        'one-week_color': readStorage('one-week_color'),
+                                        'one-day_color': readStorage('one-day_color')
+                                        }
+                            },
+
+            'default': {  'label': "Default Theme",
+                            'style': {  'body_background': 'fff',
+                                        'header_background': '777',
+                                        'header_color': 'fff',
+                                        'post-name_color': '333',
+                                        'post-content_color': '000',
+                                        'post-mention_color': '333',
+                                        'post-highlight_color': 'eee',
+                                        'avatar_color': 'ccc',
+                                        'mention_color': '00f',
+                                        'one-week_color': 'd9534f',
+                                        'one-day_color': 'ff0'
+                                        }
+                            },
+
+            'jextxadore': { 'label': "@jextxadore Dark",
+                            'style': {  'body_background': '333333',
+                                        'header_background': '1f1f1f',
+                                        'header_color': 'fff',
+                                        'post-name_color': 'd1d1d1',
+                                        'post-content_color': 'b4b4b4',
+                                        'post-mention_color': 'd1d1d1',
+                                        'post-highlight_color': 'eee',
+                                        'avatar_color': '999999',
+                                        'mention_color': '297acc',
+                                        'one-week_color': 'd9534f',
+                                        'one-day_color': 'cc99ff'
+                                        }
+                            },
+
+            'pme': {        'label': "@pme Preferred",
+                            'style': {  'body_background': 'eff',
+                                        'header_background': '77e',
+                                        'header_color': 'fff',
+                                        'post-name_color': '333',
+                                        'post-content_color': '000',
+                                        'post-mention_color': '333',
+                                        'post-highlight_color': 'eee',
+                                        'avatar_color': 'd95',
+                                        'mention_color': '00f',
+                                        'one-week_color': 'd9534f',
+                                        'one-day_color': 'ff0'
+                                        }
+                            },
+
+            'hotdog': {     'label': "Hotdog Stand",
+                            'style': {  'body_background': 'f00',
+                                        'header_background': '000',
+                                        'header_color': 'fff',
+                                        'post-name_color': 'ff0',
+                                        'post-content_color': '000',
+                                        'post-mention_color': 'ff0',
+                                        'post-highlight_color': 'd9534f',
+                                        'avatar_color': '000',
+                                        'mention_color': 'ff0',
+                                        'one-week_color': 'd9534f',
+                                        'one-day_color': '0f0'
+                                        }
+                            }
+            };
+}
 function loadCSSPreset( preset ) {
-    var presets = { 'default': { 'body_background': 'fff',
-                                 'header_background': '777',
-                                 'header_color': 'fff',
-                                 'post-name_color': '333',
-                                 'post-content_color': '000',
-                                 'post-mention_color': '333',
-                                 'post-highlight_color': 'eee',
-                                 'avatar_color': 'ccc',
-                                 'mention_color': '00f',
-                                 'one-week_color': 'd9534f',
-                                 'one-day_color': 'ff0'},
-                    'jextxadore': { 'body_background': '333333',
-                                    'header_background': '1f1f1f',
-                                    'header_color': 'fff',
-                                    'post-name_color': 'd1d1d1',
-                                    'post-content_color': 'b4b4b4',
-                                    'post-mention_color': 'd1d1d1',
-                                    'post-highlight_color': 'eee',
-                                    'avatar_color': 'ccc',
-                                    'mention_color': '00f',
-                                    'one-week_color': 'd9534f',
-                                    'one-day_color': 'ff0'},
-                    'pme': { 'body_background': 'eff',
-                             'header_background': '77e',
-                             'header_color': 'fff',
-                             'post-name_color': '333',
-                             'post-content_color': '000',
-                             'post-mention_color': '333',
-                             'post-highlight_color': 'eee',
-                             'avatar_color': 'ccc',
-                             'mention_color': '00f',
-                             'one-week_color': 'd9534f',
-                             'one-day_color': 'ff0'},
-                    'hotdog': { 'body_background': 'f00',
-                                'header_background': '000',
-                                'header_color': 'fff',
-                                'post-name_color': 'ff0',
-                                'post-content_color': '000',
-                                'post-mention_color': 'ff0',
-                                'post-highlight_color': 'd9534f',
-                                'avatar_color': '000',
-                                'mention_color': 'ff0',
-                                'one-week_color': 'd9534f',
-                                'one-day_color': '0f0'}
-                    };
-    for ( i in presets[preset] ) {
-        document.getElementById(i).value = presets[preset][i];
+    var presets = getCSSPresets();
+    for ( i in presets[preset].style ) {
+        document.getElementById(i).value = presets[preset]['style'][i];
         validateHexColorAndPreview(i);
     }
 }
@@ -517,6 +600,18 @@ function setGlobalShow( type ) {
     var options = ['e', 'n'];
     var show_type = ( type === 'n' ) ? 'n' : 'e';
     saveStorage('global_show', show_type);
+}
+function setDelaySeconds() {
+    var sec = parseInt( document.getElementById('show_hover_delay').value );
+    if ( sec === undefined || isNaN(sec) ) {
+        alert( "Whoops. Please Enter a Value Between 1 and 15." );
+        return false;
+    }
+    if ( sec < 1 || sec > 15 ) {
+        alert( "Whoops. Please Enter a Value Between 1 and 15." );
+        return false;
+    }
+    saveStorage('show_hover_delay', (sec * 1000));
 }
 function toggleOption( item, txt ) {
     var bgColor = '#' + readStorage('header_color'),
