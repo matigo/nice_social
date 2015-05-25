@@ -256,53 +256,38 @@ nav:not(.mm-menu) { display: none; }
     margin: auto;
     overflow-x: hidden;
     overflow-y: auto;
-    padding: 5px 10px;
+    padding: 1% 1.5%;
     position: fixed;
     z-index: 995;
 
     max-height: 150px;
     max-width: 400px;
-    width: 90%;
+    width: 95%;
 
-    top: 0;
+    top: 65px;
     left: 0;
-    bottom: 0;
     right: 0;
 }
-.reply .entry {
+.reply textarea {
     background: #fff;
     background-color: #fff;
     border: 1px solid #333;
     border-radius: 10px;
-    display: block;
-    margin: 5px 0;
-    padding: 0;
-    min-height: 85px;
-    max-width: 395px;
-    width: 100%;
-}
-.reply .entry textarea {
-    background: transparent;
-    background-color: transparent;
-    border: 0;
-    border-radius: 10px;
     font-size: 100%;
+    height: 100px;
+    margin-top: 2px;
     overflow-y: auto;
-    padding: 5px 10px;
-    height: 100%;
-    min-height: 85px;
-    max-width: 375;
-    width: 95%;
+    padding: 1% 2%;
+    text-align: justify;
+    width: 96%;
 }
-@media all and (min-device-width:768px) { .reply .entry textarea { width: 100%; } }
+.reply textarea:focus { outline: 0; }
 .reply .actions {
     display: block;
-    margin: 0;
-    max-width: 380px;
+    margin: 0 0 1%;
     text-align: right;
     width: 100%;
 }
-@media all and (min-device-width:768px) { .reply .actions { margin: 0 10px; } }
 .reply .actions span {
     color: #333;
     float: left;
@@ -320,7 +305,24 @@ nav:not(.mm-menu) { display: none; }
     cursor: pointer;
     min-width: 75px;
 }
-@media all and (min-device-width:768px) { .reply .actions button { min-width: 100px; } }
+@media all and (min-device-width:768px) {
+    .reply {
+        padding: 5px 10px;
+        max-height: 200px;
+        max-width: 475px;
+        width: 90%;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+    }
+    .reply .actions {
+        margin: 0 10px;
+        width: 98%;
+    }
+    .reply .actions button { min-width: 100px; }
+    .reply textarea { height: 150px; }
+}
 .reply .actions button.btn-red { background: #d9534f; }
 .reply .actions button.btn-grey { background: #ccc; }
 .reply .actions button.btn-green { background: #5ba525; }

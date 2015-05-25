@@ -950,10 +950,10 @@ function constructDialog( dialog_id ) {
 
         case 'response':
             _html = '<div class="reply">' +
-                        '<div class="entry"><textarea id="rpy-text" class="mention"></textarea></div>' +
+                        '<textarea id="rpy-text" class="mention"></textarea>' +
                         '<div class="actions">' +
                             '<span id="rpy-length">256</span>' +
-                            '<span id="rpy-draft" style="padding-left: 15px; font-size: 150%;" onclick="loadDraft();"></span>' +
+                            '<span id="rpy-draft" style="display: inline-block; font-size: 160%; margin: 4px 0 0 25px;" onclick="loadDraft();"></span>' +
                             '<button id="rpy-kill" class="btn-red">Cancel</button>' +
                             '<button id="rpy-send" class="btn-grey">Send</button>' +
                         '</div>' +
