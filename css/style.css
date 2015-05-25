@@ -262,7 +262,7 @@ nav:not(.mm-menu) { display: none; }
 
     max-height: 150px;
     max-width: 400px;
-    width: 80%;
+    width: 90%;
 
     top: 0;
     left: 0;
@@ -291,8 +291,8 @@ nav:not(.mm-menu) { display: none; }
     padding: 5px 10px;
     height: 100%;
     min-height: 85px;
-    max-width: 375px;
-    width: 91%;
+    max-width: 375;
+    width: 95%;
 }
 @media all and (min-device-width:768px) { .reply .entry textarea { width: 100%; } }
 .reply .actions {

@@ -313,7 +313,8 @@ function fillPrefsWindow( opt ) {
                           'hover': { 'label': "Hovers", 'icon': "fa-location-arrow" },
                       /*  'other': { 'label': "Filtering", 'icon': "fa-globe" },
                           'language': { 'label': "Languages", 'icon': "fa-comments-o" }, */
-                          'refresh': { 'label': "Refresh Rate", 'icon': "fa-refresh" }
+                          'refresh': { 'label': "Refresh Rate", 'icon': "fa-refresh" },
+                          'scroll': { 'label': "Column Widths", 'icon': "fa-arrows-h" }
                         };
             html += '<strong class="lbltxt">What Would You Like to Change?</strong>';
             for ( item in items ) {
@@ -356,6 +357,19 @@ function fillPrefsWindow( opt ) {
             html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
                            ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
             break;
+        
+        case 'scroll':
+            var sb_adjust = readStorage('scrollbar_adjust');
+            if ( isNaN(sb_adjust) || sb_adjust === false ) { sb_adjust = 0; } else { sb_adjust = parseInt(sb_adjust); }
+            html  = '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' +
+                        'Column Widths Off a Bit? Adjust Them Here.' +
+                    '</strong>' +
+                    '<label class="lbltxt">Width Adjustment</label>' +
+                    '<input type="number" id="scroll_amt" max="50" min="-50" onChange="setColumnWidthAdjustment();" value="' + sb_adjust + '">';
+            html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
+                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
+            break;
+
 
         case 'streams':
             var items = { 'home': { 'label': "Home", 'icon': "fa-home" },
@@ -612,6 +626,12 @@ function setDelaySeconds() {
         return false;
     }
     saveStorage('show_hover_delay', (sec * 1000));
+}
+function setColumnWidthAdjustment() {
+    var px = parseInt( document.getElementById('scroll_amt').value )
+    if ( px === undefined || isNaN(px) || px === false ) { px = 0; }
+    saveStorage('scrollbar_adjust', px);
+    setWindowConstraints();
 }
 function toggleOption( item, txt ) {
     var bgColor = '#' + readStorage('header_color'),

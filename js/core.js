@@ -811,12 +811,16 @@ function setWindowConstraints() {
         if ( sWidth <= 384 && vCols >= 1 ) { vCols = 1; pAdj = 2; }
         cWidth = ( vCols > 1 ) ? Math.floor(sWidth / vCols): sWidth;
     }
+
+    var sb_adjust = readStorage('scrollbar_adjust');
+    if ( isNaN(sb_adjust) || sb_adjust === false ) { sb_adjust = 0; } else { sb_adjust = parseInt(sb_adjust); }
+
     sBar = scrollbarWidth( cWidth );
     if ( sBar > 0 && sBar <= 40 ) {
         sBar = Math.floor(sBar / vCols) + 1;
         cWidth = cWidth - sBar;
     }
-    if ( sBar === 0 ) { cWidth = cWidth - vCols - pAdj; }
+    if ( sBar === 0 ) { cWidth = cWidth - vCols - pAdj - sb_adjust; }
     setColumnsWidth( cWidth, vCols );
 
     var tl = document.getElementById('tl-content');
@@ -829,6 +833,7 @@ function scrollbarWidth( cWidth ) {
         inner = $inner[0],
         outer = $outer[0];
 
+    /* Get the Best Guess from the Browser */
     for (i in window.timelines) {
         if ( window.timelines.hasOwnProperty(i) ) {
             if ( window.timelines[i] ) {
