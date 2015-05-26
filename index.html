@@ -32,7 +32,7 @@
                 <span id="hd-activity" class="hide"><i class="fa fa-refresh fa-spin"></i></span>
                 <span id="hd-spacer" class="show">&nbsp;</span>
                 <strong id="site-name">{Don&apos;t Forget To Set a Site Name}</strong>
-                <button id="doAction">Sign In</button>
+                <button id="doAction" class="show">Sign In</button>
             </div>
             <div id="tl-content" class="content">
                 <div id="tl-space" class="timelines"></div>
@@ -101,6 +101,7 @@
                 window.KEY_ESCAPE = 27;
                 window.KEY_K = 75;
                 window.KEY_N = 78;
+                window.KEY_P = 80;
                 window.KEY_F2 = 113;
                 window.KEY_F3 = 114;
                 window.KEY_DOWNARROW = 40;
@@ -133,6 +134,7 @@
                 });
                 $(document).keyup(function(e) {
                     if( $('#response').hasClass('hide') ) { if ( event.keyCode === KEY_N ) { showHideResponse(); } }
+                    if( $('#response').hasClass('hide') ) { if ( event.keyCode === KEY_P ) { showHidePM(); } }
                     if ( event.keyCode === KEY_F2 ) { $('#autocomp').removeClass('show').addClass('hide'); }
                 });
                 $(document).keydown(function(e) {
@@ -149,6 +151,9 @@
                 document.addEventListener('focusout', function(e) {window.scrollTo(0, 0)});
                 $( window ).resize(function() { setWindowConstraints(); });
             });
+            function showHidePM() {
+                alert( "Let's Send a PM!" );
+            }
             window.addEventListener('load', function(){
                 var touchsurface = document.getElementById('rpy-text'),
                     touchMenu = document.getElementById('header_bar'),
@@ -246,7 +251,7 @@
                 var xhr = new XMLHttpRequest();
                 var url = window.apiURL + '/files';
 
-                var fileObj = { 'kind': "image",
+                var fileObj = { 'kind': "photo",
                                 'type': "social.nice.image",
                                 'mime_type': file.type,
                                 'name': file.name,
@@ -331,9 +336,6 @@
                         /* Do Nothing */
                 }
                 if ( showMsg ) { if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); } }
-            }
-            function addImageText( file_id ) {
-                
             }
             function doMore( post_id ) {
                 alert( "[Debug] Let's Show another Modal for Post: " + post_id );

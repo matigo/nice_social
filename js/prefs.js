@@ -360,12 +360,21 @@ function fillPrefsWindow( opt ) {
         
         case 'scroll':
             var sb_adjust = readStorage('scrollbar_adjust');
+            var sHeight = window.innerHeight || document.body.clientHeight;
+            var sWidth = window.innerWidth || document.body.clientWidth;
+
             if ( isNaN(sb_adjust) || sb_adjust === false ) { sb_adjust = 0; } else { sb_adjust = parseInt(sb_adjust); }
             html  = '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' +
                         'Column Widths Off a Bit? Adjust Them Here.' +
                     '</strong>' +
+                    '<em class="lbltxt" style="display: block; width: 95%; text-align: justify; padding: 0 2.5%;">' +
+                        'Note: Negative Numbers Expand the Columns, Positive Numbers Narrow the Columns' +
+                    '</em>' +
                     '<label class="lbltxt">Width Adjustment</label>' +
-                    '<input type="number" id="scroll_amt" max="50" min="-50" onChange="setColumnWidthAdjustment();" value="' + sb_adjust + '">';
+                    '<input type="number" id="scroll_amt" max="50" min="-50" onChange="setColumnWidthAdjustment();" value="' + sb_adjust + '">' +
+                    '<em class="lbltxt" style="display: block; width: 95%; text-align: justify; margin-top: 25px; padding: 0 2.5%;">' +
+                        'Reported Screen Width: ' + sWidth + 'px / Height: ' + sHeight + 'px' +
+                    '</em>';
             html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
                            ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
             break;

@@ -243,8 +243,7 @@ function writePost( text, in_reply_to ) {
                     saveStorage('msgText', 'There Was a Problem Sending Your Post to ADN.', true);
                 }
                 if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
-            },
-            dataType: "json"
+            }
         });
     }
 }
@@ -1688,9 +1687,10 @@ function parseEmbedded( post ) {
             switch ( post.annotations[i].value.type || post.annotations[i].type ) {
                 case 'net.app.core.oembed':
                 case 'photo':
-                    html += '<div id="' + post.id + '-img-' + i + '" class="post-image">' +
-                                '<img src="' + post.annotations[i].value.url + '" onclick="showImage(\'' + post.annotations[i].value.url + '\');">' +
-                            '</div>';
+                    html += '<div id="' + post.id + '-img-' + i + '" class="post-image"' +
+                                ' style="background: url(\'' + post.annotations[i].value.url + '\');' +
+                                       ' background-size: cover; background-position: center center;"' +
+                                ' onclick="showImage(\'' + post.annotations[i].value.url + '\');">&nbsp;</div>';
                     break;
 
                 case 'net.vidcast-app.track-request':

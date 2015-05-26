@@ -57,7 +57,6 @@ nav:not(.mm-menu) { display: none; }
 }
 .header a {
     background: center center no-repeat transparent;
-    background-image: url( data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAYAAADE6YVjAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAVNJREFUeNq01jFLAzEYxvH2UBCxiIiDUhzcdXCyIk5ufgUXLR37JdxcXBxcuwmOOtml0EKpo04iWIpIQREVEVFLjf9AhoC9e3O5uxd+lMLdPU1yedO8UiqXdQWO122ghi4+8IwGqiiId+uRCHbxqsLrFHNRz5ACSnhTch1EPScQpnIH0w7TWcGiz5rouS45rtkMVnxCJrAQ4yUq+oT8YhAjZOAT8oWHGCE9nxC9H64cA15w4xOiW0HbfErVNhvUa8c3cecQcoZv3xA9z+fCNbe4SNq7jvEUMaUnuE/au7SjkHbSR1G637ULh73Kn+gn7cIBttELGckQh9Jo8iMOrSksYx2b2MKk8FuvUUcHl/9GbiWuooYu3pVf/eARLZQxbp8na2YR0659e+HLmM/geN+z98lSRv8hZu2QQkYh+kzKjZkvHdPahymH6DNp5Cucev0JMAAkKj0NEoYBJwAAAABJRU5ErkJggg== );
     background-size: contain;
     border-radius: 25px;
     display: block;
@@ -78,6 +77,8 @@ nav:not(.mm-menu) { display: none; }
     top: 0;
     right: 10px;
 }
+.header button.show { display: inline-block; }
+.header button.hide { display: none; }
 @media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
     .header button { line-height: 25px; }
 }
@@ -307,6 +308,7 @@ nav:not(.mm-menu) { display: none; }
 }
 @media all and (min-device-width:768px) {
     .reply {
+        overflow: hidden;
         padding: 5px 10px;
         max-height: 200px;
         max-width: 475px;
@@ -393,7 +395,7 @@ nav:not(.mm-menu) { display: none; }
     z-index: 991;
 
     max-height: 80%;
-    max-width: 80%;
+    max-width: 100%;
 
     top: 0;
     left: 0;
@@ -418,19 +420,12 @@ nav:not(.mm-menu) { display: none; }
     width: 50px;
 }
 .photo .panel {
-    display: block;
-    overflow: hidden;
-    padding: 25px 0;
-    margin: 0;
+    margin: 25px auto;
     text-align: center;
-    vertical-align: middle;
 }
 .photo .panel img {
-    max-height: 100%;
     height: auto;
-    width: auto;
 }
-
 .profile {
     background-color: #fff;
     border: 2px solid #ccc;
@@ -594,12 +589,6 @@ nav:not(.mm-menu) { display: none; }
     padding: 5px 0;
     width: 100%;
 }
-@media all and (max-device-width:420px) {
-    .post-list .post-item,
-    .chat .post-item {
-        width: 95%;
-    }
-}
 .post-list .post-item .post-avatar,
 .chat .post-item .post-avatar {
     background: transparent;
@@ -668,20 +657,17 @@ nav:not(.mm-menu) { display: none; }
 }
 .post-list .post-item .post-image {
     background: transparent;
+    height: 100px;
     overflow-x: auto;
     overflow-y: hidden;
-    padding-left: 100px;
-    text-align: left;
 }
 .post-list .post-item .post-image img {
-    background: transparent;
-    display: inline-block;
-    max-width: 25%;
-    max-height: 100px;
-    height: auto;
+    height: 100px;
+    overflow-x: auto;
     overflow-y: hidden;
+    text-align: left;
+    width: 100%;
 }
-
 .chat .post-item .post-image {
     padding: 0 5px 5px;
     display: inline-block;
