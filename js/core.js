@@ -139,12 +139,15 @@ function prepApp() {
     if ( !readStorage('refresh_rate') ) { saveStorage('refresh_rate', 15); }
     if ( !readStorage('max_post_age') ) { saveStorage('max_post_age', 4); }
     if ( !readStorage('global_show') ) { saveStorage('global_show', 'e'); }
+    if ( !readStorage('global_hide') ) { saveStorage('global_hide', 'N'); }
+    if ( !readStorage('feeds_hide') ) { saveStorage('feeds_hide', 'Y'); }
     if ( !readStorage('column_max') ) { saveStorage('column_max', 250); }
     if ( !readStorage('show_hover_delay') ) { saveStorage('show_hover_delay', 5000); }
     if ( !readStorage('show_hover') ) { saveStorage('show_hover', 'N'); }
     if ( !readStorage('hide_images') ) { saveStorage('hide_images', 'N'); }
     if ( !readStorage('font_family') ) { saveStorage('font_family', 'Helvetica'); }
     if ( !readStorage('font_size') ) { saveStorage('font_size', 14); }
+    if ( !readStorage('nicerank') ) { saveStorage('nicerank', 'Y'); }
     if ( !readStorage('refresh_last', true) ) { saveStorage('refresh_last', seconds, true); }
     if ( !readStorage('post_length', true) ) { saveStorage('post_length', 256, true); }
     if ( !readStorage('min_rank', true) ) { saveStorage('min_rank', 2.1, true); }
@@ -502,7 +505,8 @@ function parseItems( data ) {
             followed = false;
         var account_rank = 0,
             show_time = readStorage('show_live_timestamps'),
-            min_rank = parseInt( readStorage('min_rank', true) );
+            use_nice = readStorage('nicerank');
+        var min_rank = (use_nice === 'N') ? 0 : parseInt( readStorage('min_rank', true) );
         var post_mentions = [],
             post_reposted = false,
             post_starred = false,
@@ -519,36 +523,42 @@ function parseItems( data ) {
             if ( gTL === 0 ) { setSplashMessage('Reading Posts (' + (i + 1) + '/' + data.length + ')'); }
             followed = data[i].user.you_follow || (data[i].user.id === my_id) || false;
             account_rank = parseInt( readStorage( data[i].user.id + '_rank', true) );
-            is_human = readStorage( data[i].user.id + '_human', true);
+            if ( isNaN(account_rank) ) { account_rank = 0.1; }
+            is_human = (use_nice === 'N') ? 'Y' : readStorage( data[i].user.id + '_human', true);
+            if ( readStorage('feeds_hide') === 'N' && data[i].user.type === 'feed' ) {
+                account_rank = 2.1;
+                is_human = 'Y';
+            }
             saveStorage( 'since', data[i].id, true);
-            write_post = true;
+            write_post = isValidClient(data[i]);
 
             if ( (account_rank >= min_rank && is_human == 'Y') || (data[i].user.id === my_id) || followed ) {
+                if ( write_post === false && ((data[i].user.id === my_id) || followed) ) { write_post = true; }
                 post_by = data[i].user.username;
                 post_reposted = data[i].you_reposted || false;
                 post_starred = data[i].you_starred || false;
                 post_mentions = [];
 
-                if ( data[i].entities.hasOwnProperty('mentions') ) {
-                    if ( data[i].entities.mentions.length > 0 ) {
-                        for ( var idx = 0; idx < data[i].entities.mentions.length; idx++ ) {
-                            post_mentions.push( data[i].entities.mentions[idx].name );
-                        }
-                    }
-                }
-                if ( data[i].entities.hasOwnProperty('hashtags') ) {
-                    if ( data[i].entities.hashtags.length > 0 ) {
-                        for ( var idx = 0; idx < data[i].entities.hashtags.length; idx++ ) {
-                            if ( muted_hashes.indexOf( data[i].entities.hashtags[idx].name ) >= 0 ) { write_post = false; }
-                        }
-                    }
-                }
-
-                parseAccountNames( data[i].user );
-                post_client = data[i].source.name || 'unknown';
-                is_mention = isMention( data[i] );
-                html = buildHTMLSection( data[i] );
                 if ( write_post ) {
+                    if ( data[i].entities.hasOwnProperty('mentions') ) {
+                        if ( data[i].entities.mentions.length > 0 ) {
+                            for ( var idx = 0; idx < data[i].entities.mentions.length; idx++ ) {
+                                post_mentions.push( data[i].entities.mentions[idx].name );
+                            }
+                        }
+                    }
+                    if ( data[i].entities.hasOwnProperty('hashtags') ) {
+                        if ( data[i].entities.hashtags.length > 0 ) {
+                            for ( var idx = 0; idx < data[i].entities.hashtags.length; idx++ ) {
+                                if ( muted_hashes.indexOf( data[i].entities.hashtags[idx].name ) >= 0 ) { write_post = false; }
+                            }
+                        }
+                    }
+
+                    parseAccountNames( data[i].user );
+                    post_client = data[i].source.name || 'unknown';
+                    is_mention = isMention( data[i] );
+                    html = buildHTMLSection( data[i] );
                     addPostItem( data[i].id, data[i].created_at, html, is_mention, followed, post_by,
                                  post_mentions, post_reposted, post_starred, false, post_client );
                 }
@@ -596,6 +606,19 @@ function buildHTMLSection( post ) {
                 buildRespondBar( data ) +
                 parseEmbedded( data );
     return _html;
+}
+function isValidClient( post ) {
+    var account_age = Math.floor(( new Date() - Date.parse(post.user.created_at) ) / 86400000);
+    var post_client = post.source.name || 'unknown';
+    var mute_client = ['IFTTT', 'Buffer', 'PourOver', 'im-fluss'];
+    var use_nice = readStorage('nicerank');
+    if ( use_nice === 'N' ) { return true; }
+    var rVal = true;
+
+    if ( account_age <= 7 ) {
+        if ( mute_client.indexOf(post_client) >= 0 ) { rVal = false; }
+    }
+    return rVal;
 }
 function buildNode( post_id, tl_ref, html ) {
     var elem = document.createElement("div");
@@ -677,6 +700,7 @@ function showMutedPost( post_id, tl ) {
 }
 function redrawList() {
     var global_showall = ( readStorage('global_show') === 'e' ) ? true : false;
+    if ( readStorage('global_hide') === 'Y' ) { global_showall = false; }
     if ( window.activate === false ) {
         var _home = readStorage('home_done', true),
             _ment = readStorage('ment_done', true);

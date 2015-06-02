@@ -214,31 +214,13 @@ function fillPrefsWindow( opt ) {
                            ' onClick="fillPrefsWindow(\'main\');"><i class="fa fa-reply"></i> Back</button>';
             break;
 
-        case 'other':
+        case 'global':
             var spacer = '';
             var items = { 0: { 'label': "Basic Global Timeline Filters",
                                'notes': "Customise How You See the Global Timeline",
-                               'items': { 'nicerank': { 'label': "NiceRank", 'style':'a', 'type': "ed" },
-                                          'feeds_show': { 'label': "Feed Accounts", 'style':'a', 'type': "vh" },
-                                          'global_show': { 'label': "Accounts I Follow", 'style':'a', 'type': "vh" },
-                                         }
-                              },
-                          1: { 'label': "Language Filters",
-                               'notes': "Please be advised that only a handful of posts include a language code. There is a high probability you will still see posts in certain languages.",
-                               'items': { 'showlang_en': { 'label': "English", 'style':'lang', 'type': "vh" },
-                                          'showlang_de': { 'label': "Deutsch", 'style':'lang', 'type': "vh" },
-                                          'showlang_es': { 'label': "Español", 'style':'lang', 'type': "vh" },
-                                          'showlang_fr': { 'label': "Français", 'style':'lang', 'type': "vh" },
-                                          'showlang_it': { 'label': "Italiano", 'style':'lang', 'type': "vh" },
-                                          'showlang_pr': { 'label': "Português", 'style':'lang', 'type': "vh" },
-                                          'showlang_ru': { 'label': "русский", 'style':'lang', 'type': "vh" },
-                                          'showlang_sv': { 'label': "svenska", 'style':'lang', 'type': "vh" },
-                                          'showlang_ar': { 'label': "العربية", 'style':'lang', 'type': "vh" },
-                                          'showlang_ja': { 'label': "日本語", 'style':'lang', 'type': "vh" },
-                                          'showlang_ko': { 'label': "한국어", 'style':'lang', 'type': "vh" },
-                                          'showlang_cnm': { 'label': "普通话", 'style':'lang', 'type': "vh" },
-                                          'showlang_cnc': { 'label': "粤语", 'style':'lang', 'type': "vh" },
-                                          'showlang_other': { 'label': "All Others", 'style':'lang', 'type': "vh" }
+                               'items': { 'nicerank': { 'label': "NiceRank", 'type': "ed" },
+                                          'feeds_hide': { 'label': "Feed Accounts", 'type': "vh" },
+                                          'global_hide': { 'label': "Accounts I Follow", 'type': "vh" },
                                          }
                               }
                          };
@@ -248,26 +230,15 @@ function fillPrefsWindow( opt ) {
                             '<i class="fa fa-filter"></i> ' + items[idx].label +
                         '</strong>';
                 if ( items[idx].notes !== '' ) {
-                    html += '<em class="lbltxt" style="display: block; width: 95%; text-align: justify; padding: 0 2.5%;">' +
-                                items[idx].notes +
-                            '</em>';
+                    html += '<em class="lbltxt" style="display: block; width: 95%; text-align: justify; padding: 0 2.5%;">' + items[idx].notes + '</em>';
                 }
                 for ( i in items[idx].items ) {
-                    switch ( items[idx].items[i].style ) {
-                        case 'lang':
-                            html += '<button id="btn-opt-' + i + '" class="btn btn-half" style="background-color: ' + frColor + '; color: ' + bgColor + '"' +
-                                           ' onClick="toggleOption(\'' + i + '\', \'' + items[idx].items[i].type + '\');">' +
-                                        '<i class="fa fa-circle"></i> ' + items[idx].items[i].label +
-                                    '</button>';
-                            break;
-                            
-                        default:
-                            html += '<label class="lbltxt">' + items[idx].items[i].label + '</label>' +
-                                    '<button id="btn-opt-' + i + '" class="btn" style="background-color: ' + frColor + '; color: ' + bgColor + '"' +
-                                           ' onClick="toggleOption(\'' + i + '\', \'' + items[idx].items[i].type + '\');">' +
-                                        '<i class="fa fa-circle"></i> Enabled' +
-                                    '</button>';
-                    }
+                    html += '<label class="lbltxt">' + items[idx].items[i].label + '</label>' +
+                            getButtonValue( 'btn-opt-' + i,
+                                            i,
+                                            items[idx].items[i].type,
+                                            'toggleOption(\'' + i + '\', \'' + items[idx].items[i].type + '\');'
+                                           );
                 }
                 spacer = '<br><br>';
             }
@@ -311,8 +282,8 @@ function fillPrefsWindow( opt ) {
                           'ppcolumn': { 'label': "Column Length", 'icon': "fa-columns" },
                           'font': { 'label': "Fonts", 'icon': "fa-font" },
                           'hover': { 'label': "Hovers", 'icon': "fa-location-arrow" },
-                      /*  'other': { 'label': "Filtering", 'icon': "fa-globe" },
-                          'language': { 'label': "Languages", 'icon': "fa-comments-o" }, */
+                          'global': { 'label': "Filtering", 'icon': "fa-globe" },
+                      /*    'language': { 'label': "Languages", 'icon': "fa-comments-o" }, */
                           'refresh': { 'label': "Refresh Rate", 'icon': "fa-refresh" },
                           'scroll': { 'label': "Column Widths", 'icon': "fa-arrows-h" }
                         };
@@ -410,8 +381,28 @@ function fillPrefsWindow( opt ) {
     }
     document.getElementById('pref-list').innerHTML = html;
 }
-function toggleLanguage( la ) {
-    alert( "Whoops! This Hasn't Been Completed Yet!" );
+function getButtonValue( id, item, type, on_click ) {
+    var bgColor = '#' + readStorage('header_background'),
+        frColor = '#' + readStorage('header_color');
+    var strings = { 'ed': { on: "Enabled", off: "Disabled", icon: "fa-circle", icoff: "fa-circle-o" },
+                    'sh': { on: "Hidden", off: "Show", icon: "fa-circle", icoff: "fa-circle-o" },
+                    'vh': { on: "Hidden", off: "Visible", icon: "fa-circle", icoff: "fa-circle-o" }
+                   };
+    var value = readStorage(item);
+    var css = 'background-color: ' + bgColor + '; color: ' + frColor + ';';
+    if ( value === 'Y' || value === true || value === 1 ) { css = 'background-color: ' + frColor + '; color: ' + bgColor + ';'; }
+
+    var _html = '<button id="' + id + '" class="btn" style="' + css + '"';
+    if ( on_click !== false && on_click !== '' ) { _html += ' onClick="' + on_click + '"'; }
+    _html += '>';
+    if ( value === 'Y' || value === true || value === 1 ) {
+        _html += '<i class="fa ' + strings[type].icon + '"></i> ' + strings[type].on;
+    } else {
+        _html += '<i class="fa ' + strings[type].icoff + '"></i> ' + strings[type].off;
+    }
+    _html += '</button>';
+
+    return _html;
 }
 function toggleTimeline( tl ) {
     if ( tl === 'add' ) {
@@ -646,6 +637,7 @@ function toggleOption( item, txt ) {
     var bgColor = '#' + readStorage('header_color'),
         frColor = '#' + readStorage('header_background');
     var txtOpts = { 'ed': {'enabled': "Enabled", 'disabled': "Disabled"},
+                    'sh': {'enabled': "Hidden", 'disabled': "Show"},
                     'vh': {'enabled': "Hidden", 'disabled': "Visible"}
                    };
     var value = readStorage(item);
