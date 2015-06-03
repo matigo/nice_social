@@ -586,12 +586,12 @@ function buildHTMLSection( post ) {
     }
 
     /* Special Handling for /me Posts (See Issue #56) */
-    if ( post.text.indexOf('/me') === 0 ) {
-        var line_text = post.text.replace('/me', '<em onClick="doShowUser(' + data.user.id + ');">' + post.user.username + '</em>' );
-        _html = '<div id="' + post.id + '-dtl" class="post-content" onClick="showHideActions(' + post.id + ', \'[TL]\');"' +
+    if ( data.text.indexOf('/me') === 0 ) {
+        var line_text = data.text.replace('/me', '<em onClick="doShowUser(' + data.user.id + ');">' + data.user.username + '</em>' );
+        _html = '<div id="' + data.id + '-dtl" class="post-content" onClick="showHideActions(' + data.id + ', \'[TL]\');"' +
                     ' onMouseOver="doMouseOver(' + data.id + ', \'[TL]\');" onMouseOut="doMouseOut(' + data.id + ', \'[TL]\');"' +
                     ' style="width: 100%;">' +
-                    '<i class="fa fa-dot-circle-o"></i> ' + line_text +
+                    parseText( data ) +
                 '</div>' +
                 buildRespondBar( data );
     } else {
@@ -610,7 +610,7 @@ function buildHTMLSection( post ) {
                     '<h5 class="post-name"><span>' + data.user.username + repost_by + '</span></h5>' +
                     parseText( data ) +
                     '<p class="post-time">' +
-                        '<em id="' + data.id + '-time[TL]" name="' + data.id + '-time">' + post_time + '</em>' +
+                        '<em id="' + post.id + '-time[TL]" name="' + post.id + '-time">' + post_time + '</em>' +
                     '</p>' +
                 '</div>' +
                 buildRespondBar( data ) +
@@ -664,19 +664,24 @@ function parseText( post ) {
         name = '',
         cStr = ' class="post-mention" style="font-weight: bold; cursor: pointer;"';
     var highlight = readStorage('post-highlight_color');
-    if ( post.entities.mentions.length > 0 ) {
-        for ( var i = 0; i < post.entities.mentions.length; i++ ) {
-            name = '>@' + post.entities.mentions[i].name + '<';
-            html = html.ireplaceAll(name, cStr + ' onClick="doShowUser(' + post.entities.mentions[i].id + ');"' + name);
+
+    if ( post.text.indexOf('/me') === 0 ) {
+        html = '<i class="fa fa-dot-circle-o"></i> ' + html.replace('/me', '<em onClick="doShowUser(' + post.user.id + ');">' + post.user.username + '</em>' );
+    } else {
+        if ( post.entities.mentions.length > 0 ) {
+            for ( var i = 0; i < post.entities.mentions.length; i++ ) {
+                name = '>@' + post.entities.mentions[i].name + '<';
+                html = html.ireplaceAll(name, cStr + ' onClick="doShowUser(' + post.entities.mentions[i].id + ');"' + name);
+            }
+        }
+        if ( post.entities.hashtags.length > 0 ) {
+            for ( var i = 0; i < post.entities.hashtags.length; i++ ) {
+                name = '>#' + post.entities.hashtags[i].name + '<';
+                html = html.ireplaceAll(name, cStr + ' onClick="doShowHash(\'' + post.entities.hashtags[i].name + '\');"' + name);
+            }
         }
     }
-    if ( post.entities.hashtags.length > 0 ) {
-        for ( var i = 0; i < post.entities.hashtags.length; i++ ) {
-            name = '>#' + post.entities.hashtags[i].name + '<';
-            html = html.ireplaceAll(name, cStr + ' onClick="doShowHash(\'' + post.entities.hashtags[i].name + '\');"' + name);
-        }
-    }
-    
+
     /* Parse the Inline Markdown (Only Bold, Italics, Code) */
     html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/\*(.*?)\*/g, '<i>$1</i>');
