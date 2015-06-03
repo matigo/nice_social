@@ -655,27 +655,22 @@ nav:not(.mm-menu) { display: none; }
     text-align: right;
     text-decoration: none;
 }
+.chat .post-item .post-image,
 .post-list .post-item .post-image {
     background: transparent;
+    cursor: pointer;
     height: 100px;
     overflow-x: auto;
     overflow-y: hidden;
 }
+.chat .post-item .post-image img,
 .post-list .post-item .post-image img {
+    cursor: pointer;
     height: 100px;
     overflow-x: auto;
     overflow-y: hidden;
     text-align: left;
     width: 100%;
-}
-.chat .post-item .post-image {
-    padding: 0 5px 5px;
-    display: inline-block;
-    max-width: 100%;
-}
-.chat .post-item .post-image img {
-    max-width: 100%;
-    height: auto;
 }
 .post-list .post-item .post-actions,
 .chat .post-item .post-actions {

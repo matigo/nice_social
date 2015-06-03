@@ -590,7 +590,7 @@ function buildHTMLSection( post ) {
         var line_text = data.text.replace('/me', '<em onClick="doShowUser(' + data.user.id + ');">' + data.user.username + '</em>' );
         _html = '<div id="' + data.id + '-dtl" class="post-content" onClick="showHideActions(' + data.id + ', \'[TL]\');"' +
                     ' onMouseOver="doMouseOver(' + data.id + ', \'[TL]\');" onMouseOut="doMouseOut(' + data.id + ', \'[TL]\');"' +
-                    ' style="width: 100%;">' +
+                    ' style="width: 90%;">' +
                     parseText( data ) +
                 '</div>' +
                 buildRespondBar( data );
