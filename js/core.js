@@ -651,6 +651,7 @@ function parseText( post ) {
     var html = post.html.replaceAll('<a href=', '<a target="_blank" href=', '') + ' ',
         name = '',
         cStr = ' class="post-mention" style="font-weight: bold; cursor: pointer;"';
+    var highlight = readStorage('post-highlight_color');
     if ( post.entities.mentions.length > 0 ) {
         for ( var i = 0; i < post.entities.mentions.length; i++ ) {
             name = '>@' + post.entities.mentions[i].name + '<';
@@ -663,6 +664,11 @@ function parseText( post ) {
             html = html.ireplaceAll(name, cStr + ' onClick="doShowHash(\'' + post.entities.hashtags[i].name + '\');"' + name);
         }
     }
+    
+    /* Parse the Inline Markdown (Only Bold, Italics, Code) */
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*(.*?)\*/g, '<i>$1</i>');
+    html = html.replace(/`(.*?)`/g, '<code style="background-color:#' + highlight + ';padding:0 5px;">$1</code>');
 
     return html;
 }
