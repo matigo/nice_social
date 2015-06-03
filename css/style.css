@@ -490,6 +490,7 @@ nav:not(.mm-menu) { display: none; }
 }
 .profile .names {
     display: inline-block;
+    height: 72px;
     overflow: hidden;
     vertical-align: bottom;
     width: 65%;

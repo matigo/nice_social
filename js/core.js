@@ -316,12 +316,13 @@ function parseUserProfile( data ) {
             action_html = '',
             post_source = '';
         var my_id = readStorage('user_id');
+        var h4color = readStorage('post-content_color');
 
         // Set the Header Information
         document.getElementById( 'usr-banner' ).style.backgroundImage = 'url("' + data[0].user.cover_image.url + '")';
         document.getElementById( 'usr-avatar' ).innerHTML = '<img class="avatar-square" src="' + data[0].user.avatar_image.url + '">';
         document.getElementById( 'usr-names' ).innerHTML = '<h3>' + data[0].user.username + '</h3>' +
-                                                           '<h4>' + data[0].user.name + '</h4>';
+                                                           '<h4 style="color:#' + h4color + '">' + data[0].user.name + '</h4>';
         document.getElementById( 'usr-info' ).innerHTML = ( data[0].user.hasOwnProperty('description') ) ? data[0].user.description.html : '';
         document.getElementById( 'usr-followers' ).innerHTML = addCommas( data[0].user.counts.followers );
         document.getElementById( 'usr-following' ).innerHTML = addCommas( data[0].user.counts.following );
