@@ -667,18 +667,18 @@ function parseText( post ) {
 
     if ( post.text.indexOf('/me') === 0 ) {
         html = '<i class="fa fa-dot-circle-o"></i> ' + html.replace('/me', '<em onClick="doShowUser(' + post.user.id + ');">' + post.user.username + '</em>' );
-    } else {
-        if ( post.entities.mentions.length > 0 ) {
-            for ( var i = 0; i < post.entities.mentions.length; i++ ) {
-                name = '>@' + post.entities.mentions[i].name + '<';
-                html = html.ireplaceAll(name, cStr + ' onClick="doShowUser(' + post.entities.mentions[i].id + ');"' + name);
-            }
+    }
+
+    if ( post.entities.mentions.length > 0 ) {
+        for ( var i = 0; i < post.entities.mentions.length; i++ ) {
+            name = '>@' + post.entities.mentions[i].name + '<';
+            html = html.ireplaceAll(name, cStr + ' onClick="doShowUser(' + post.entities.mentions[i].id + ');"' + name);
         }
-        if ( post.entities.hashtags.length > 0 ) {
-            for ( var i = 0; i < post.entities.hashtags.length; i++ ) {
-                name = '>#' + post.entities.hashtags[i].name + '<';
-                html = html.ireplaceAll(name, cStr + ' onClick="doShowHash(\'' + post.entities.hashtags[i].name + '\');"' + name);
-            }
+    }
+    if ( post.entities.hashtags.length > 0 ) {
+        for ( var i = 0; i < post.entities.hashtags.length; i++ ) {
+            name = '>#' + post.entities.hashtags[i].name + '<';
+            html = html.ireplaceAll(name, cStr + ' onClick="doShowHash(\'' + post.entities.hashtags[i].name + '\');"' + name);
         }
     }
 
