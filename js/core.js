@@ -585,12 +585,22 @@ function buildHTMLSection( post ) {
         is_repost = true;
     }
 
-    post_time = ( show_time === 'Y' ) ? humanized_time_span(data.created_at) : '<em>more...</em>';
-    account_age = Math.floor(( new Date() - Date.parse(data.user.created_at) ) / 86400000);
-    if ( account_age <= 7 ) { avatarClass = 'avatar-round recent-acct'; }
-    if ( account_age <= 1 ) { avatarClass = 'avatar-round new-acct'; }
-    if ( isMention( data ) ) { avatarClass = 'avatar-round mention'; }
-    _html = '<div id="' + data.id + '-po" class="post-avatar">' +
+    /* Special Handling for /me Posts (See Issue #56) */
+    if ( post.text.indexOf('/me') === 0 ) {
+        var line_text = post.text.replace('/me', '<em onClick="doShowUser(' + data.user.id + ');">' + post.user.username + '</em>' );
+        _html = '<div id="' + post.id + '-dtl" class="post-content" onClick="showHideActions(' + post.id + ', \'[TL]\');"' +
+                    ' onMouseOver="doMouseOver(' + data.id + ', \'[TL]\');" onMouseOut="doMouseOut(' + data.id + ', \'[TL]\');"' +
+                    ' style="width: 100%;">' +
+                    '<i class="fa fa-dot-circle-o"></i> ' + line_text +
+                '</div>' +
+                buildRespondBar( data );
+    } else {
+        post_time = ( show_time === 'Y' ) ? humanized_time_span(data.created_at) : '<em>more...</em>';
+        account_age = Math.floor(( new Date() - Date.parse(data.user.created_at) ) / 86400000);
+        if ( account_age <= 7 ) { avatarClass = 'avatar-round recent-acct'; }
+        if ( account_age <= 1 ) { avatarClass = 'avatar-round new-acct'; }
+        if ( isMention( data ) ) { avatarClass = 'avatar-round mention'; }
+        _html = '<div id="' + data.id + '-po" class="post-avatar">' +
                     '<img class="' + avatarClass + '"' +
                         ' onClick="doShowUser(' + data.user.id + ');"' +
                         ' src="' + data.user.avatar_image.url + '">' +
@@ -605,6 +615,8 @@ function buildHTMLSection( post ) {
                 '</div>' +
                 buildRespondBar( data ) +
                 parseEmbedded( data );
+    }
+
     return _html;
 }
 function isValidClient( post ) {
