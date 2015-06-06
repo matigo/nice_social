@@ -44,18 +44,25 @@
                 </div>
             </div>
             <div id="response" class="dialog hide">
-                <div class="reply">
+                <div id="rpy-box" class="reply">
+                    <input id="rpy-title" type="text" maxlength="140" placeholder="(Optional Title)" />
                     <textarea id="rpy-text" class="mention"></textarea>
                     <div class="actions">
-                        <span id="rpy-length" style="margin-top: 5px; min-width: 30px;">256</span>
-                        <div id="whatever" class="fileUpload">
-                            <button class="btn-green" style="min-width: 10px;"><i class="fa fa-cloud-upload"></i></buttpn>
-                            <input type="file" name="file" id="file" class="upload" />
-                        </div>
+                        <span id="rpy-length" style="margin-top: 5px; min-width: 45px;">256</span>
+                        <ul>
+                            <li><i class="fa fa-plus"></i>
+                                <ul>
+                                    <li onclick="triggerFileUpload();"><i class="fa fa-cloud-upload"></i> Upload Image</li>
+                                    <li onclick="triggerGeoTagging();"><i class="fa fa-map-marker"></i> Geo-Tag</li>
+                                    <li onclick="triggerLongPost();"><i class="fa fa-external-link-square"></i> Long Post</li>
+                                </ul>
+                            </li>
+                        </ul>
                         <span id="rpy-draft" style="display: inline-block; font-size: 160%; margin: 4px 0 0 25px;" onclick="loadDraft();"></span>
                         <button id="rpy-kill" class="btn-red">Cancel</button>
                         <button id="rpy-send" class="btn-grey">Send</button>
                     </div>
+                    <input type="file" name="file" id="file" class="upload" style="display: none;" />
                 </div>
             </div>
             <div id="gallery" class="photo hide">
@@ -141,7 +148,10 @@
                     var cancelKeyPress = false;
                     if ( (e.metaKey || e.ctrlKey) && e.keyCode == KEY_K ) { clearTimelines(); cancelKeyPress = true; }
                     if (e.keyCode === KEY_ESCAPE) {
-                        toggleClassIfExists('gallery', 'show', 'hide');
+                        var items = ['conversation', 'gallery', 'hashbox', 'dialog', 'okbox', 'prefs'];
+                        for ( idx in items ) {
+                            toggleClassIfExists(items[idx], 'show', 'hide');
+                        }
                         cancelKeyPress = true;
                         killPost();
                     }
@@ -151,9 +161,6 @@
                 document.addEventListener('focusout', function(e) {window.scrollTo(0, 0)});
                 $( window ).resize(function() { setWindowConstraints(); });
             });
-            function showHidePM() {
-                alert( "Let's Send a PM!" );
-            }
             window.addEventListener('load', function(){
                 var touchsurface = document.getElementById('rpy-text'),
                     touchMenu = document.getElementById('header_bar'),
@@ -241,8 +248,6 @@
                     if ( isRightSwipe || isLeftSwipe ) { e.preventDefault(); }
                 }, false); 
             }, false);
-
-
             document.getElementById('file').addEventListener('change', function(e) {
                 var access_token = readStorage('access_token');
                 if ( access_token === undefined || access_token === false || access_token === '' ) { return false; }
@@ -264,82 +269,12 @@
                 xhr.setRequestHeader("Content-Type", "application/json");
                 xhr.send(JSON.stringify(fileObj));
             }, false);
-
-            function parseFileUpload( response, file ) {
-                var access_token = readStorage('access_token');
-                if ( access_token === undefined || access_token === false || access_token === '' ) { return false; }
-
-                var rslt = jQuery.parseJSON( response );
-                var meta = rslt.meta;
-                var showMsg = false;
-                switch ( meta.code ) {
-                    case 400:
-                    case 507:
-                        saveStorage('msgText', 'App.Net Returned a ' + meta.code + ' Error:<br>' + meta.error_message, true);
-                        showMsg = true;
-                        break;
-
-                    case 200:
-                        var data = rslt.data;
-                        var xhr = new XMLHttpRequest();
-                        var url = window.apiURL + '/files/' + data.id + '/content';
-
-                        if ( xhr.upload ) {
-                            xhr.upload.onprogress = function(e) {
-                                var done = e.loaded, total = e.total;
-                                var progress = (Math.floor(done/total*1000)/10);
-                                if ( progress > 0 && progress <= 100 ) {
-                                    setSplashMessage('Uploading ... ' + progress + '% Complete');
-                                } else {
-                                    setSplashMessage('');
-                                }
-                            };
-                        }
-                        xhr.onreadystatechange = function(e) {
-                            if ( 4 == this.readyState ) {
-                                switch ( e.target.status ) {
-                                    case 204:
-                                        if ( !window.files.hasOwnProperty( data.id ) ) {
-                                            window.files[data.id] = { id: data.id,
-                                                                      file_token: data.file_token,
-                                                                      name: data.name,
-                                                                      type: data.type,
-                                                                      mime: file.type,
-                                                                      url_permanent: data.url_permanent,
-                                                                      url_short: data.url_short
-                                                                     }
-                                        }
-                                        var txt = document.getElementById('rpy-text').value.trim();
-                                        if ( txt !== '' ) { txt += ' '; }
-                                        txt += '[' + data.name + '](_' + data.id + '_)';
-                                        document.getElementById('rpy-text').value = txt;
-                                        break;
-
-                                    case 507:
-                                        saveStorage('msgText', 'App.Net Returned a ' + meta.code + ' Error:<br>' + meta.error_message, true);
-                                        showMsg = true;
-                                        break;
-
-                                    default:
-                                        /* Do Nothing */
-                                }
-                            }
-                        };
-
-                        xhr.open('put', url, true);
-                        xhr.setRequestHeader("Authorization", "Bearer " + access_token);
-                        xhr.setRequestHeader("Content-Type", file.type);
-                        xhr.send(file);
-                        break;
-
-                    default:
-                        /* Do Nothing */
-                }
-                if ( showMsg ) { if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); } }
-            }
             function doMore( post_id ) {
                 alert( "[Debug] Let's Show another Modal for Post: " + post_id );
             }
+            function muteAccount( account_id ) { alert( "[Debug] Let's Mute: " + account_id ); }
+            function blockAccount( account_id ) { alert( "[Debug] Let's Block: " + account_id ); }
+            function reportAccount( account_id ) { alert( "[Debug] Let's Report " + account_id + " as being a spammer."); }
         </script>
     </body>
 </html>

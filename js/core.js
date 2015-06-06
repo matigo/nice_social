@@ -95,6 +95,7 @@ function parseMyToken( data ) {
         document.getElementById('mnu-avatar').style.backgroundImage = 'url("' + data.avatar_image.url + '")';
         document.getElementById('doAction').innerHTML = 'New Post';
         setSplashMessage('Parsing Token Information');
+        saveStorage('long_length', 8000, true );
         saveStorage('chan_length', 2048, true);
         saveStorage('post_length', 256, true);
         saveStorage('isGood', 'Y', true);
@@ -197,7 +198,13 @@ function prepApp() {
 }
 function sendPost() {
     var max_length = parseInt( readStorage('post_length', true) ),
+        max_default = 256,
         rpy_length = getReplyCharCount();
+    if ( checkHasClass('rpy-box', 'longpost') ) {
+        max_length = parseInt( readStorage('long_length', true) );
+        max_default = 2048;
+    }
+    if ( max_length === NaN || max_length === undefined ) { max_length = max_default; }
     var reply_to = parseInt(readStorage('in_reply_to', true));
 
     if ( rpy_length > 0 && rpy_length <= max_length ) {
@@ -207,8 +214,8 @@ function sendPost() {
             saveStorage('msgTitle', 'Umm ...', true);
             saveStorage('msgText', 'There Doesn&apos;t Seem To Be a Message. Please Write at Least One Character.', true);
         } else {
-            saveStorage('msgTitle', 'Post Too Long', true);
-            saveStorage('msgText', 'This Post Is a Bit Too Long. Please Keep It Within 256 Characters.', true);
+            saveStorage('msgTitle', 'Hold On There ...', true);
+            saveStorage('msgText', 'This Post Is a Bit Too Long. Please Keep It Within ' + addCommas(max_length) + ' Characters.', true);
         }
         if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
     }
@@ -235,6 +242,7 @@ function writePost( text, in_reply_to ) {
                     showHideResponse();
                     getTimeline();
                     if ( parseInt(in_reply_to) > 0 ) { showHideActions( in_reply_to, '*' ); }
+                    window.store['location'] = false;
                 }
             },
             error: function (xhr, ajaxOptions, thrownError){
@@ -256,7 +264,7 @@ function buildJSONPost( text, in_reply_to ) {
     var oembed = false;
 
     if ( access_token !== false ) {
-        // Parse the Text for Images
+        /* Parse the Text for Images */
         for ( idx in window.files ) {
             if ( text.indexOf('_' + idx + '_') > -1 ) {
                 text = text.replaceAll('_' + idx + '_', window.files[idx].url_permanent);
@@ -268,6 +276,41 @@ function buildJSONPost( text, in_reply_to ) {
                                         }
                             });
             }
+        }
+
+        /* Is This a LongPost? */
+        if ( checkHasClass('rpy-box', 'longpost') ) {
+            if ( oembed === false ) { oembed = []; }
+            var post_title = document.getElementById('rpy-title').value,
+                post_body = text;
+            oembed.push({ "type": "net.jazzychad.adnblog.post",
+                          "value": { "title": post_title.replace(/^\s+|\s+$/gm,''),
+                                     "body": text,
+                                     "timestamp": (Date.now() | 0)
+                                    }
+                        });
+            
+            /* Build the Public-facing Post */
+            text = '';
+            if ( post_title !== '' ) {
+                text = 'New Post: [' + post_title + '](http://longposts.com/{post_id}) #adnblog';
+            } else {
+                var idx = 0,
+                    max = 235;
+                if ( post_body.length > max ) {
+                    while ( idx < max ) {
+                        if ( post_body.indexOf(' ', idx + 1) < max ) { idx = post_body.indexOf(' ', idx + 1); } else { break; }
+                    }
+                }
+                if ( idx === 0 || idx > max ) { idx = max; }
+                text = post_body.substring(0, idx) + '… [Read More](http://longposts.com/{post_id}) #adnblog';
+            }
+        }
+
+        /* Do We Have Location Data? */
+        if ( window.store['location'] !== undefined && window.store['location'] !== false ) {
+            if ( oembed === false ) { oembed = []; }
+            oembed.push(window.store['location']);
         }
 
         var params = {
@@ -321,8 +364,21 @@ function parseUserProfile( data ) {
         // Set the Header Information
         document.getElementById( 'usr-banner' ).style.backgroundImage = 'url("' + data[0].user.cover_image.url + '")';
         document.getElementById( 'usr-avatar' ).innerHTML = '<img class="avatar-square" src="' + data[0].user.avatar_image.url + '">';
-        document.getElementById( 'usr-names' ).innerHTML = '<h3>' + data[0].user.username + '</h3>' +
-                                                           '<h4 style="color:#' + h4color + '">' + data[0].user.name + '</h4>';
+        document.getElementById( 'usr-names' ).innerHTML =  '<h3>' + data[0].user.username + '</h3>' +
+                                                            '<h4 style="color:#' + h4color + '">' + data[0].user.name + '</h4>' +
+                                                            '<h5>' +
+                                                                '<ul>' +
+                                                                    '<li>' +
+                                                                        '<i class="fa fa-cog"></i>' +
+                                                                        '<ul>' +
+                                                                            '<li onClick="blockAccount(' + data[0].user.id + ');">Block</li>' +
+                                                                            '<li onClick="muteAccount(' + data[0].user.id + ');">Mute</li>' +
+                                                                            '<li onClick="reportAccount(' + data[0].user.id + ');">Report Spammer</li>' +
+                                                                        '</ul>' +
+                                                                    '</li>' +
+                                                                '</ul>' +
+                                                            '</h5>';
+
         document.getElementById( 'usr-info' ).innerHTML = ( data[0].user.hasOwnProperty('description') ) ? data[0].user.description.html : '';
         document.getElementById( 'usr-followers' ).innerHTML = addCommas( data[0].user.counts.followers );
         document.getElementById( 'usr-following' ).innerHTML = addCommas( data[0].user.counts.following );
@@ -348,10 +404,7 @@ function parseUserProfile( data ) {
                         '<div class="post-content">' +
                             parseText( data[i] ) +
                             '<p class="post-time">' +
-                                '<em id="' + data[i].id + '-time[TL]" name="' + data[i].id + '-time"' +
-                                     ' onClick="showConversation(' + data[i].id + ');">' +
-                                    humanized_time_span(data[i].created_at) + post_source +
-                                '</em>' +
+                                '<em>' + humanized_time_span(data[i].created_at) + post_source + '</em>' +
                             '</p>' +
                         '</div>' +
                     '</div>';
@@ -623,14 +676,12 @@ function buildHTMLSection( post ) {
 function isValidClient( post ) {
     var account_age = Math.floor(( new Date() - Date.parse(post.user.created_at) ) / 86400000);
     var post_client = post.source.name || 'unknown';
-    var mute_client = ['IFTTT', 'Buffer', 'PourOver', 'im-fluss'];
+    var mute_client = ['IFTTT', 'Buffer', 'PourOver', 'im-fluss', post.user.username];
     var use_nice = readStorage('nicerank');
     if ( use_nice === 'N' ) { return true; }
     var rVal = true;
 
-    if ( account_age <= 7 ) {
-        if ( mute_client.indexOf(post_client) >= 0 ) { rVal = false; }
-    }
+    if ( account_age <= 7 ) { if ( mute_client.indexOf(post_client) >= 0 ) { rVal = false; } }
     return rVal;
 }
 function buildNode( post_id, tl_ref, html ) {
@@ -668,6 +719,23 @@ function parseText( post ) {
 
     if ( post.text.indexOf('/me') === 0 ) {
         html = '<i class="fa fa-dot-circle-o"></i> ' + html.replace('/me', '<em onClick="doShowUser(' + post.user.id + ');">' + post.user.username + '</em>' );
+    }
+
+    /* Is This a Long Post? */
+    if ( post.hasOwnProperty('annotations') ) {
+        for ( var i = 0; i < post.annotations.length; i++ ) {
+            switch ( post.annotations[i].value.type || post.annotations[i].type ) {
+                case 'net.jazzychad.adnblog.post':
+                    var post_body = post.annotations[i].value.body.ireplaceAll('\n\n', '<br><br>');
+                    post_body = post_body.replace(/\[([^\[]+)\]\(([^\)]+)\)/g, '<a target="_blank" href="$2">$1</a>');
+                    html = ((post.annotations[i].value.title !== '') ? '<h6>' + post.annotations[i].value.title + '</h6>' : '') +
+                           '<span>' + post_body + '</span>';
+                    break;
+
+                default:
+                    /* Do Nothing */
+            }
+        }
     }
 
     if ( post.entities.mentions.length > 0 ) {
@@ -940,7 +1008,7 @@ function constructDialog( dialog_id ) {
                         '<div id="usr-banner" class="banner"></div>' +
                         '<div class="sight">' +
                             '<div id="usr-avatar" class="avatar"></div>' +
-                            '<div id="usr-names" class="names"><h3>&nbsp;</h3><h4>&nbsp;</h4></div>' +
+                            '<div id="usr-names" class="names"></div>' +
                         '</div>' +
                         '<div id="usr-info" class="info">&nbsp;</div>' +
                         '<div id="usr-actions" class="actions"><button>Follow</button></div>' +
@@ -1616,19 +1684,12 @@ function showHideResponse() {
         calcReplyCharacters();
 
     } else {
-        toggleClassIfExists('autocomp','show','hide'); 
+        document.getElementById('rpy-title').value = '';
+        toggleClassIfExists('autocomp','show','hide');
+        removeClassIfExists('rpy-box', 'longpost');
         toggleClass('response','show','hide');        
         saveStorage('in_reply_to', '0', true);
     }
-}
-function getNewPostCount() {
-    var i = 0;
-    for ( post_id in window.posts ) {
-        if ( window.posts[post_id] !== false ) {
-            if ( window.posts[post_id].is_new === false && window.posts[post_id].is_conversation === false ) { i++; }
-        }
-    }
-    return i;
 }
 function getReplyText() {
     var _id = readStorage('in_reply_to', true);
@@ -1739,6 +1800,17 @@ function parseEmbedded( post ) {
                                 ' style="background: url(\'' + post.annotations[i].value.url + '\');' +
                                        ' background-size: cover; background-position: center center;"' +
                                 ' onclick="showImage(\'' + post.annotations[i].value.url + '\');">&nbsp;</div>';
+                    break;
+
+                case 'net.app.core.geolocation':
+                case 'net.app.ohai.location':
+                    var map_url = 'http://staticmap.openstreetmap.de/staticmap.php?center=' +
+                                  post.annotations[i].value.latitude + ',' +
+                                  post.annotations[i].value.longitude + '&zoom=12&size=865x512';
+                    html += '<div id="' + post.id + '-img-' + i + '" class="post-image"' +
+                                ' style="background: url(\'' + map_url + '\');' +
+                                       ' background-size: cover; background-position: center center;"' +
+                                ' onclick="showMap(' + post.annotations[i].value.latitude + ', ' + post.annotations[i].value.longitude + ');">&nbsp;</div>';
                     break;
 
                 case 'net.vidcast-app.track-request':
@@ -2029,10 +2101,15 @@ function getReplyCharCount() {
 }
 function calcReplyCharacters() {
     var max_length = parseInt( readStorage('post_length', true) ),
+        max_default = 256,
         txt_length = getReplyCharCount();
-    if ( max_length === NaN || max_length === undefined ) { max_length = 256; }
+    if ( checkHasClass('rpy-box', 'longpost') ) {
+        max_length = parseInt( readStorage('long_length', true) );
+        max_default = 2048;
+    }
+    if ( max_length === NaN || max_length === undefined ) { max_length = max_default; }
     var rpy_length = (max_length - txt_length);
-    $("#rpy-length").text(rpy_length);
+    document.getElementById('rpy-length').innerHTML = addCommas(rpy_length);
 
     if ( rpy_length >= 0 && rpy_length <= max_length ) {
         removeClass('rpy-length','red');
@@ -2128,6 +2205,60 @@ function trimPosts() {
         }
     }
 }
+function getGeoPosition() {
+    if (navigator.geolocation) {
+        setSplashMessage('Requesting Current Location');
+        navigator.geolocation.getCurrentPosition(function(position) {
+            var data = { "latitude": position.coords.latitude,
+                        "longitude": position.coords.longitude
+                        };
+            if ( isNaN(position.coords.altitude) === false && position.coords.altitude !== null ) {
+                data["altitude"] = position.coords.altitude;
+            }
+            window.store['location'] = { "type": "net.app.core.geolocation",
+                                        "value": data
+                                        };
+            console.log( JSON.stringify(window.store['location']) );
+            setSplashMessage('');
+        }, function(error) {
+            saveStorage('msgTitle', 'Geolocation Problem', true);
+            switch ( error.code ) {
+                case 1:
+                    saveStorage('msgText', 'Uh oh. Nice Is Not Permitted to Access Your Location Data', true);
+                    break;
+
+                case 3:
+                    saveStorage('msgText', 'Very sorry. Nice Cannot Add Your Location. The Geolocation API Timed Out.', true);
+                    break;
+
+                default:
+                    saveStorage('msgText', 'Whoops! Nice Cannot Determine Your Location', true);
+            }
+            if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
+            setSplashMessage('');
+        },
+        { maximumAge: 600000, timeout: 10000 });
+    } else {
+        saveStorage('msgTitle', 'Geolocation Problem', true);
+        saveStorage('msgText', 'Very sorry. The Geolocation API Is Not Supported By Your Browser', true);
+        if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
+        setSplashMessage('');
+    }
+}
+function triggerFileUpload() { $('#file').trigger('click'); }
+function triggerGeoTagging() { getGeoPosition(); }
+function triggerLongPost() {
+    var max_length = parseInt( readStorage('long_length', true) ),
+        max_default = 2048;
+    if ( max_length === NaN || max_length === undefined ) { max_length = max_default; }
+    document.getElementById('rpy-length').innerHTML = addCommas(max_length);
+    addClassIfNotExists('rpy-box', 'longpost');
+}
+function showMap( Latitude, Longitude ) {
+    var osm_url = 'https://www.openstreetmap.org/#map=16/' + Latitude + '/' + Longitude;
+    var new_tab = window.open(osm_url, '_blank');
+    new_tab.focus();
+}
 function showWaitState( div_id, msg ) {
     var _html = '';
     if ( $('#' + div_id).length === 0 ) { return false; }
@@ -2176,6 +2307,8 @@ function isHidden(elID) {
     return false;
 }
 function addCommas(str) {
+    var orig = parseInt(str);
+    if ( orig < 0 ) { str = (orig * -1); }
     var parts = (str + "").split("."),
         main = parts[0],
         len = main.length,
@@ -2188,7 +2321,7 @@ function addCommas(str) {
         --i;
     }
     if (parts.length > 1) { rVal += "." + parts[1]; }
-    return rVal;
+    return ((orig < 0) ? '-' : '') + rVal;
 }
 function buildUrl(url, parameters) {
     var qs = '';
@@ -2199,6 +2332,78 @@ function buildUrl(url, parameters) {
     }
     if (qs.length > 0) { url = url + "?" + qs; }
     return url;
+}
+function parseFileUpload( response, file ) {
+    var access_token = readStorage('access_token');
+    if ( access_token === undefined || access_token === false || access_token === '' ) { return false; }
+
+    var rslt = jQuery.parseJSON( response );
+    var meta = rslt.meta;
+    var showMsg = false;
+    switch ( meta.code ) {
+        case 400:
+        case 507:
+            saveStorage('msgText', 'App.Net Returned a ' + meta.code + ' Error:<br>' + meta.error_message, true);
+            showMsg = true;
+            break;
+
+        case 200:
+            var data = rslt.data;
+            var xhr = new XMLHttpRequest();
+            var url = window.apiURL + '/files/' + data.id + '/content';
+
+            if ( xhr.upload ) {
+                xhr.upload.onprogress = function(e) {
+                    var done = e.loaded, total = e.total;
+                    var progress = (Math.floor(done/total*1000)/10);
+                    if ( progress > 0 && progress <= 99.9 ) {
+                        setSplashMessage('Uploading ... ' + progress + '% Complete');
+                    } else {
+                        setSplashMessage('');
+                    }
+                };
+            }
+            xhr.onreadystatechange = function(e) {
+                if ( 4 == this.readyState ) {
+                    switch ( e.target.status ) {
+                        case 204:
+                            if ( !window.files.hasOwnProperty( data.id ) ) {
+                                window.files[data.id] = { id: data.id,
+                                                          file_token: data.file_token,
+                                                          name: data.name,
+                                                          type: data.type,
+                                                          mime: file.type,
+                                                          url_permanent: data.url_permanent,
+                                                          url_short: data.url_short
+                                                         }
+                            }
+                            var txt = document.getElementById('rpy-text').value.trim();
+                            if ( txt !== '' ) { txt += ' '; }
+                            txt += '[' + data.name + '](_' + data.id + '_)';
+                            document.getElementById('rpy-text').value = txt;
+                            break;
+
+                        case 507:
+                            saveStorage('msgText', 'App.Net Returned a ' + meta.code + ' Error:<br>' + meta.error_message, true);
+                            showMsg = true;
+                            break;
+
+                        default:
+                            /* Do Nothing */
+                    }
+                }
+            };
+
+            xhr.open('put', url, true);
+            xhr.setRequestHeader("Authorization", "Bearer " + access_token);
+            xhr.setRequestHeader("Content-Type", file.type);
+            xhr.send(file);
+            break;
+
+        default:
+            /* Do Nothing */
+    }
+    if ( showMsg ) { if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); } }
 }
 function humanized_time_span(date, ref_date, date_formats, time_units) {
     date_formats = date_formats || {
