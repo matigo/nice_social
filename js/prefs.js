@@ -630,6 +630,7 @@ function setDelaySeconds() {
 function setColumnWidthAdjustment() {
     var px = parseInt( document.getElementById('scroll_amt').value )
     if ( px === undefined || isNaN(px) || px === false ) { px = 0; }
+    if ( px === 0 ) { px = '0'; }
     saveStorage('scrollbar_adjust', px);
     setWindowConstraints();
 }
