@@ -50,7 +50,7 @@
                     <div class="actions">
                         <span id="rpy-length" style="margin-top: 5px; min-width: 45px;">256</span>
                         <ul>
-                            <li><i class="fa fa-plus"></i>
+                            <li id="post-drop" class="hide" onclick="togglePostDrop();"><i class="fa fa-plus"></i>
                                 <ul>
                                     <li onclick="triggerFileUpload();"><i class="fa fa-cloud-upload"></i> Upload Image</li>
                                     <li onclick="triggerGeoTagging();"><i class="fa fa-map-marker"></i> Geo-Tag</li>
@@ -272,6 +272,7 @@
             function doMore( post_id ) {
                 alert( "[Debug] Let's Show another Modal for Post: " + post_id );
             }
+            function togglePostDrop() { toggleClassIfExists('post-drop', 'hide', 'show', true); }
             function muteAccount( account_id ) { alert( "[Debug] Let's Mute: " + account_id ); }
             function blockAccount( account_id ) { alert( "[Debug] Let's Block: " + account_id ); }
             function reportAccount( account_id ) { alert( "[Debug] Let's Report " + account_id + " as being a spammer."); }
