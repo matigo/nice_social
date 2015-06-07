@@ -286,7 +286,7 @@ function buildJSONPost( text, in_reply_to ) {
             oembed.push({ "type": "net.jazzychad.adnblog.post",
                           "value": { "title": post_title.replace(/^\s+|\s+$/gm,''),
                                      "body": text,
-                                     "timestamp": (Date.now() | 0)
+                                     "tstamp": (Date.now() | 0)
                                     }
                         });
             
