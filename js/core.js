@@ -315,7 +315,7 @@ function buildJSONPost( text, in_reply_to ) {
 
         var params = {
             access_token: access_token,
-            include_post_annoations: 1,
+            include_post_annotations: 1,
             include_annotations: 1,
             include_html: 1,
             text: text,
