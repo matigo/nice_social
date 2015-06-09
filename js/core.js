@@ -135,38 +135,57 @@ function prepApp() {
     document.getElementById("site-name").innerHTML = window.sitename;
     document.title = window.sitename.replace(/<(?:.|\n)*?>/gm, '');
     var seconds = new Date().getTime() / 1000;
+    var items = {  0: { 'key': 'show_live_timestamps', 'value': 'Y', 'useStore': false },
+                   1: { 'key': 'refresh_rate', 'value': 15, 'useStore': false },
+                   2: { 'key': 'max_post_age', 'value': 4, 'useStore': false },
+                   3: { 'key': 'global_show', 'value': 'e', 'useStore': false },
+                   4: { 'key': 'global_hide', 'value': 'N', 'useStore': false },
+                   5: { 'key': 'feeds_hide', 'value': 'Y', 'useStore': false },
+                   6: { 'key': 'column_max', 'value': 250, 'useStore': false },
+                   7: { 'key': 'show_hover_delay', 'value': 5000, 'useStore': false },
+                   8: { 'key': 'show_hover', 'value': 'N', 'useStore': false },
+                   9: { 'key': 'hide_audio', 'value': 'N', 'useStore': false },
+                  10: { 'key': 'hide_images', 'value': 'N', 'useStore': false },
+                  11: { 'key': 'hide_geodata', 'value': 'N', 'useStore': false },
 
-    if ( !readStorage('show_live_timestamps') ) { saveStorage( 'show_live_timestamps', 'Y' ); }
-    if ( !readStorage('refresh_rate') ) { saveStorage('refresh_rate', 15); }
-    if ( !readStorage('max_post_age') ) { saveStorage('max_post_age', 4); }
-    if ( !readStorage('global_show') ) { saveStorage('global_show', 'e'); }
-    if ( !readStorage('global_hide') ) { saveStorage('global_hide', 'N'); }
-    if ( !readStorage('feeds_hide') ) { saveStorage('feeds_hide', 'Y'); }
-    if ( !readStorage('column_max') ) { saveStorage('column_max', 250); }
-    if ( !readStorage('show_hover_delay') ) { saveStorage('show_hover_delay', 5000); }
-    if ( !readStorage('show_hover') ) { saveStorage('show_hover', 'N'); }
-    if ( !readStorage('hide_images') ) { saveStorage('hide_images', 'N'); }
-    if ( !readStorage('font_family') ) { saveStorage('font_family', 'Helvetica'); }
-    if ( !readStorage('font_size') ) { saveStorage('font_size', 14); }
-    if ( !readStorage('nicerank') ) { saveStorage('nicerank', 'Y'); }
-    if ( !readStorage('refresh_last', true) ) { saveStorage('refresh_last', seconds, true); }
-    if ( !readStorage('post_length', true) ) { saveStorage('post_length', 256, true); }
-    if ( !readStorage('min_rank', true) ) { saveStorage('min_rank', 2.1, true); }
-    if ( !readStorage('limit', true) ) { saveStorage('limit', 250, true); }
-    if ( !readStorage('since', true) ) { saveStorage('since', 0, true); }
+                  20: { 'key': 'refresh_last', 'value': seconds, 'useStore': true },
+                  21: { 'key': 'post_length', 'value': 256, 'useStore': true },
+                  22: { 'key': 'nicerank', 'value': 'Y', 'useStore': false },
+                  23: { 'key': 'min_rank', 'value': 2.1, 'useStore': true },
+                  24: { 'key': 'limit', 'value': 250, 'useStore': true },
+                  25: { 'key': 'since', 'value': '0', 'useStore': true },
 
-    /* Set the CSS Color Preferences */
-    if ( !readStorage('body_background') ) { saveStorage('body_background', 'fff'); }
-    if ( !readStorage('header_background') ) { saveStorage('header_background', '777'); }
-    if ( !readStorage('header_color') ) { saveStorage('header_color', 'fff'); }
-    if ( !readStorage('post-name_color') ) { saveStorage('post-name_color', '333'); }
-    if ( !readStorage('post-content_color') ) { saveStorage('post-content_color', '000'); }
-    if ( !readStorage('post-mention_color') ) { saveStorage('post-mention_color', '333'); }
-    if ( !readStorage('post-highlight_color') ) { saveStorage('post-highlight_color', 'eee'); }
-    if ( !readStorage('mention_color') ) { saveStorage('mention_color', '00f'); }
-    if ( !readStorage('one-week_color') ) { saveStorage('one-week_color', 'd9534f'); }
-    if ( !readStorage('one-day_color') ) { saveStorage('one-day_color', 'ff0'); }
-    if ( !readStorage('avatar_color') ) { saveStorage('avatar_color', 'ccc'); }
+                  30: { 'key': 'absolute_times', 'value': 'N', 'useStore': false },
+                  31: { 'key': 'keep_timezone', 'value': 'N', 'useStore': false },
+                  32: { 'key': 'display_nrscore', 'value': 'N', 'useStore': false },
+                  33: { 'key': 'display_details', 'value': 'N', 'useStore': false },
+                  34: { 'key': 'display_usage', 'value': 'N', 'useStore': false },
+
+                  40: { 'key': 'shortkey_cmdk', 'value': 'Y', 'useStore': false },
+                  41: { 'key': 'shortkey_down', 'value': 'Y', 'useStore': false },
+                  42: { 'key': 'shortkey_esc', 'value': 'Y', 'useStore': false },
+                  43: { 'key': 'shortkey_f3', 'value': 'Y', 'useStore': false },
+                  44: { 'key': 'shortkey_n', 'value': 'Y', 'useStore': false },
+
+                  50: { 'key': 'body_background', 'value': 'fff', 'useStore': false },
+                  51: { 'key': 'header_background', 'value': '777', 'useStore': false },
+                  52: { 'key': 'header_color', 'value': 'fff', 'useStore': false },
+                  53: { 'key': 'post-name_color', 'value': '333', 'useStore': false },
+                  54: { 'key': 'post-content_color', 'value': '000', 'useStore': false },
+                  55: { 'key': 'post-mention_color', 'value': '333', 'useStore': false },
+                  56: { 'key': 'post-highlight_color', 'value': 'eee', 'useStore': false },
+                  57: { 'key': 'mention_color', 'value': '00f', 'useStore': false },
+                  58: { 'key': 'one-week_color', 'value': 'd9534f', 'useStore': false },
+                  59: { 'key': 'one-day_color', 'value': 'ff0', 'useStore': false },
+                  60: { 'key': 'avatar_color', 'value': 'ccc', 'useStore': false },
+
+                  70: { 'key': 'font_family', 'value': 'Helvetica', 'useStore': false },
+                  71: { 'key': 'font_size', 'value': 14, 'useStore': false }
+
+                 };
+    for ( idx in items ) {
+        if ( readStorage( items[idx].key, items[idx].useStore ) === false ) { saveStorage( items[idx].key, items[idx].value, items[idx].useStore ); }
+    }
     setCSSPreferences();
 
     if ( !readStorage('tl_home') ) {
@@ -353,6 +372,24 @@ function getUserProfile( user_id ) {
         dataType: "json"
     });
 }
+function getUserProfileActions( data ) {
+    if ( data.user.id === readStorage('user_id') ) { return ''; }
+    var _html = '<ul>' +
+                    '<li>' +
+                        '<i class="fa fa-cog"></i>' +
+                        '<ul>' +
+                            '<li onClick="blockAccount(' + data.user.you_blocked + ', ' + data.user.id + ');">' + 
+                                ((data.user.you_blocked) ? 'Unblock' : 'Block') + 
+                            '</li>' +
+                            '<li onClick="muteAccount(' + data.user.you_muted + ', ' + data.user.id + ');">' + 
+                                ((data.user.you_muted) ? 'Listen Again' : 'Mute') +
+                            '</li>' +
+                            '<li onClick="reportAccount(' + data.user.id + ');">Report Spammer</li>' +
+                        '</ul>' +
+                    '</li>' +
+                '</ul>';
+    return _html;
+}
 function parseUserProfile( data ) {
     if ( data ) {
         var html = '',
@@ -366,18 +403,7 @@ function parseUserProfile( data ) {
         document.getElementById( 'usr-avatar' ).innerHTML = '<img class="avatar-square" src="' + data[0].user.avatar_image.url + '">';
         document.getElementById( 'usr-names' ).innerHTML =  '<h3>' + data[0].user.username + '</h3>' +
                                                             '<h4 style="color:#' + h4color + '">' + data[0].user.name + '</h4>' +
-                                                            '<h5>' +
-                                                                '<ul>' +
-                                                                    '<li>' +
-                                                                        '<i class="fa fa-cog"></i>' +
-                                                                        '<ul>' +
-                                                                            '<li onClick="blockAccount(' + data[0].user.id + ');">Block</li>' +
-                                                                            '<li onClick="muteAccount(' + data[0].user.id + ');">Mute</li>' +
-                                                                            '<li onClick="reportAccount(' + data[0].user.id + ');">Report Spammer</li>' +
-                                                                        '</ul>' +
-                                                                    '</li>' +
-                                                                '</ul>' +
-                                                            '</h5>';
+                                                            '<h5>' + getUserProfileActions( data[0] ) + '</h5>';
 
         document.getElementById( 'usr-info' ).innerHTML = ( data[0].user.hasOwnProperty('description') ) ? data[0].user.description.html : '';
         document.getElementById( 'usr-followers' ).innerHTML = addCommas( data[0].user.counts.followers );
@@ -389,7 +415,12 @@ function parseUserProfile( data ) {
             action_html += '<button onclick="doFollow(' + data[0].user.id + ', true)" class="btn-red">Unfollow</button>';
         } else {
             if ( data[0].user.id !== my_id ) {
-                action_html += '<button onclick="doFollow(' + data[0].user.id + ', false)" class="btn-green">Follow</button>';
+                if ( data[0].user.you_can_follow ) {
+                    action_html += '<button onclick="doFollow(' + data[0].user.id + ', false)" class="btn-green">Follow</button>';
+                } else {
+                    action_html = '&nbsp;';
+                }
+                
             } else {
                 action_html += '<span>I think this is you.</span>';
             }
@@ -613,7 +644,7 @@ function parseItems( data ) {
                     post_client = data[i].source.name || 'unknown';
                     is_mention = isMention( data[i] );
                     html = buildHTMLSection( data[i] );
-                    addPostItem( data[i].id, data[i].created_at, html, is_mention, followed, post_by,
+                    addPostItem( data[i].id, data[i].created_at, html, is_mention, followed, post_by, data[i].user.id,
                                  post_mentions, post_reposted, post_starred, false, post_client );
                 }
             }
@@ -693,12 +724,14 @@ function buildNode( post_id, tl_ref, html ) {
 
     return elem;
 }
-function addPostItem( post_id, created_at, html, is_mention, followed, post_by, post_mentions, post_reposted, post_starred, is_convo, client_name ) {
+function addPostItem( post_id, created_at, html, is_mention, followed, post_by, acct_id, post_mentions, post_reposted, post_starred, is_convo, client_name ) {
     if ( !window.posts.hasOwnProperty( post_id ) ) {
-        window.posts[post_id] = { post_id: post_id,
+        window.posts[post_id] = { type_cd: 'post',
+                                  post_id: post_id,
                                   is_new: false,
                                   created_at: created_at,
                                   created_by: post_by,
+                                  account_id: acct_id,
                                   html: html,
                                   is_mention: is_mention,
                                   followed: followed,
@@ -1293,8 +1326,8 @@ function getAccountNames( ids ) {
     }
 }
 
-
 function updateTimestamps() {
+    if ( readStorage('absolute_times') === 'Y' ) { return false; }
     if ( readStorage('show_live_timestamps') === 'Y' ) {
         for ( chan_id in window.chans ) {
             var itms = document.getElementsByName( chan_id + "-time" );
@@ -1612,7 +1645,7 @@ function parseConversation( data, post_id ) {
                         '</div>' +
                         respond.replaceAll('[TL]', '-c') +
                     '</div>';
-            addPostItem( data[i].id, data[i].created_at, html, is_mention, followed, post_by,
+            addPostItem( data[i].id, data[i].created_at, html, is_mention, followed, post_by, data[i].user.id,
                          post_mentions, post_reposted, post_starred, true, post_client );
         }
         document.getElementById( 'chat_posts' ).innerHTML = html;
@@ -1757,28 +1790,6 @@ function killPost() {
         if ( document.getElementById( 'rpy-text' ).value.trim().length > 0 ) { showSaveDraft(); } else { showHideResponse(); }
     }
 }
-function setLiveTimestamps() {
-    var value = ( readStorage('show_live_timestamps') === 'N' ) ? 'Y' : 'N';
-    saveStorage( 'show_live_timestamps', value );
-
-    var nav_text = document.getElementById("show_live").innerHTML,
-        chk_icon = ' <i class="fa fa-check"></i>';
-    nav_text = nav_text.replace(chk_icon, '');
-    if ( value === 'Y' ) { nav_text += chk_icon; }
-    document.getElementById("show_live").innerHTML = nav_text;
-
-    /* Kill or Show the TimeStamps */
-    for ( post_id in window.posts ) {
-        var itms = document.getElementsByName( post_id + "-time" );
-        var tStr = ( value === 'Y' ) ? humanized_time_span( window.posts[post_id].created_at ) : '<em>more...</em>',
-            html = '';
-
-        for ( var i = 0; i < itms.length; i++ ) {
-            html = document.getElementById( itms[i].id ).innerHTML;
-            if ( html != tStr ) { document.getElementById( itms[i].id ).innerHTML = tStr; } else { break; }
-        }
-    }
-}
 function setHideImages( do_hide ) {
     var hide_img = 'N';
     if ( do_hide === '' || do_hide === undefined ) {
@@ -1790,43 +1801,47 @@ function setHideImages( do_hide ) {
 }
 function parseEmbedded( post ) {
     var html = '';
-    if ( readStorage('hide_images') === 'Y' ) { return html; }
     if ( post.hasOwnProperty('annotations') ) {
         for ( var i = 0; i < post.annotations.length; i++ ) {
             switch ( post.annotations[i].value.type || post.annotations[i].type ) {
                 case 'net.app.core.oembed':
                 case 'photo':
-                    html += '<div id="' + post.id + '-img-' + i + '" class="post-image"' +
-                                ' style="background: url(\'' + post.annotations[i].value.url + '\');' +
-                                       ' background-size: cover; background-position: center center;"' +
-                                ' onclick="showImage(\'' + post.annotations[i].value.url + '\');">&nbsp;</div>';
+                    if ( readStorage('hide_images') === 'N' ) {
+                        html += '<div id="' + post.id + '-img-' + i + '" class="post-image"' +
+                                    ' style="background: url(\'' + post.annotations[i].value.url + '\');' +
+                                           ' background-size: cover; background-position: center center;"' +
+                                    ' onclick="showImage(\'' + post.annotations[i].value.url + '\');">&nbsp;</div>';
+                    }
                     break;
 
                 case 'net.app.core.geolocation':
                 case 'net.app.ohai.location':
-                    var map_url = 'http://staticmap.openstreetmap.de/staticmap.php?center=' +
-                                  post.annotations[i].value.latitude + ',' +
-                                  post.annotations[i].value.longitude + '&zoom=12&size=865x512';
-                    html += '<div id="' + post.id + '-img-' + i + '" class="post-image"' +
-                                ' style="background: url(\'' + map_url + '\');' +
-                                       ' background-size: cover; background-position: center center;"' +
-                                ' onclick="showMap(' + post.annotations[i].value.latitude + ', ' + post.annotations[i].value.longitude + ');">&nbsp;</div>';
+                    if ( readStorage('hide_geodata') === 'N' ) {
+                        var lat_long = post.annotations[i].value.latitude + ',' + post.annotations[i].value.longitude;
+                        var map_url = 'http://staticmap.openstreetmap.de/staticmap.php?center=' + lat_long + '&zoom=12&size=865x512';
+                        html += '<div id="' + post.id + '-img-' + i + '" class="post-geo"' +
+                                    ' style="background: url(\'' + map_url + '\');' +
+                                           ' background-size: cover; background-position: center center;"' +
+                                    ' onclick="showMap(' + lat_long + ');">&nbsp;</div>';
+                    }
                     break;
 
                 case 'net.vidcast-app.track-request':
-                    var _innerHTML = ( post.annotations[i].value.title || false ) ? post.annotations[i].value.title : '';
-                    var _vidid = post.annotations[i].value.link.replace('http://youtu.be/', '').replace('https://www.youtube.com/watch?v=', '').replace('https://m.youtube.com/watch?v=', '');
-                    _vidid = _vidid.substring(0, _vidid.indexOf('&') != -1 ? _vidid.indexOf('&') : _vidid.length);
-
-                    if ( post.annotations[i].value.track || false ) {
-                        if ( _innerHTML != '' ) { _innerHTML += ' - '; }
-                        _innerHTML += post.annotations[i].value.track;
+                    if ( readStorage('hide_images') === 'N' ) {
+                        var _innerHTML = ( post.annotations[i].value.title || false ) ? post.annotations[i].value.title : '';
+                        var _vidid = post.annotations[i].value.link.replace('http://youtu.be/', '').replace('https://www.youtube.com/watch?v=', '').replace('https://m.youtube.com/watch?v=', '');
+                        _vidid = _vidid.substring(0, _vidid.indexOf('&') != -1 ? _vidid.indexOf('&') : _vidid.length);
+    
+                        if ( post.annotations[i].value.track || false ) {
+                            if ( _innerHTML != '' ) { _innerHTML += ' - '; }
+                            _innerHTML += post.annotations[i].value.track;
+                        }
+                        html += '<div id="' + post.id + '-vid-' + i + '" class="post-video">' +
+                                    '<a href="' + post.annotations[i].value.link + '" title="' + _innerHTML + '" target="_blank">' +
+                                        '<img src="https://img.youtube.com/vi/' + _vidid + '/0.jpg" />' +
+                                    '</a>' +
+                                '</div>';
                     }
-                    html += '<div id="' + post.id + '-vid-' + i + '" class="post-video">' +
-                                '<a href="' + post.annotations[i].value.link + '" title="' + _innerHTML + '" target="_blank">' +
-                                    '<img src="https://img.youtube.com/vi/' + _vidid + '/0.jpg" />' +
-                                '</a>' +
-                            '</div>';
                     break;
 
                 default:
@@ -2087,7 +2102,7 @@ function parseHashDetails( data, name ) {
                         respond.replaceAll('[TL]', '-x') +
                         parseEmbedded( data[i] ) +
                     '</div>';
-            addPostItem( data[i].id, data[i].created_at, html, is_mention, followed, post_by,
+            addPostItem( data[i].id, data[i].created_at, html, is_mention, followed, post_by, data[i].user.id,
                          post_mentions, post_reposted, post_starred, true, post_client );
         }
         document.getElementById( 'hash_posts' ).innerHTML = html;
@@ -2545,3 +2560,116 @@ function isMutedClient( name ) {
     for ( var idx = 0; idx <= clients.length; idx++ ) { if ( clients[idx] === name ) { return true; } }
     return false;    
 }
+function muteAccount( ismuted, account_id ) {
+    var access_token = readStorage('access_token');
+    var action_type = ( ismuted ) ? 'DELETE' : 'POST';
+
+    if ( access_token !== false ) {
+        var params = { access_token: access_token };
+        $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                xhr.setRequestHeader("Authorization", "Bearer " + access_token);
+                return true;
+            }
+        });
+        $.ajax({
+            url: window.apiURL + '/users/' + account_id + '/mute',
+            crossDomain: true,
+            data: params,
+            type: action_type,
+            success: function( data ) {
+                if ( parseMeta(data.meta) ) {
+                    var ds = data.data; 
+                    showHidePostsFromAccount(ds.id, ds.you_muted);
+                    saveStorage('msgTitle', 'Done and Done', true);
+                    saveStorage('msgText', ((ds.you_muted) ? "You won't see any more posts from " + ds.username + "."
+                                                           : "You'll start seeing posts from " + ds.username + " again."), true);
+                    if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
+                    showHideDialog();
+                }
+            },
+            error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
+            dataType: "json"
+        });
+    } else {
+        getAuthorisation();
+    }
+}
+function blockAccount( isblocked, account_id ) {
+    var access_token = readStorage('access_token');
+    var action_type = ( isblocked ) ? 'DELETE' : 'POST';
+
+    if ( access_token !== false ) {
+        var params = { access_token: access_token };
+        $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                xhr.setRequestHeader("Authorization", "Bearer " + access_token);
+                return true;
+            }
+        });
+        $.ajax({
+            url: window.apiURL + '/users/' + account_id + '/block',
+            crossDomain: true,
+            data: params,
+            type: action_type,
+            success: function( data ) {
+                if ( parseMeta(data.meta) ) {
+                    var ds = data.data; 
+                    showHidePostsFromAccount(ds.id, ds.you_blocked);
+                    saveStorage('msgTitle', 'Done and Done', true);
+                    saveStorage('msgText', ((ds.you_blocked) ? "You won't see any more posts from " + ds.username + "."
+                                                             : "You've successfully unblocked " + ds.username + "."), true);
+                    if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
+                    showHideDialog();
+                }
+            },
+            error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
+            dataType: "json"
+        });
+    } else {
+        getAuthorisation();
+    }
+}
+function reportAccount( account_id ) {
+    var params = { 'account_id': account_id,
+                   'report_by': readStorage('user_id')
+                  };
+    $.ajax({
+        url: window.niceURL + '/user/report',
+        crossDomain: true,
+        data: params,
+        type: 'GET',
+        success: function( data ) { parseReport( data, account_id ); },
+        error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
+        dataType: "json"
+    });
+}
+function parseReport( data, account_id ) {
+    if ( data.data ) {
+        var ds = data.data;
+        if ( ds.id > 0 ) {
+            showHidePostsFromAccount( account_id, false );
+            saveStorage( account_id + '_rank', 0.1, true );
+            saveStorage( account_id + '_human', 'N', true );
+            saveStorage('msgTitle', 'Reported Account', true);
+            saveStorage('msgText', 'Thank You For Making ADN A Little Bit Better!', true);
+        } else {
+            saveStorage('msgTitle', 'Whoops', true);
+            saveStorage('msgText', 'There Was a Problem When Reporting This Account', true);
+        }
+        if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
+    }
+    showHideDialog();
+}
+function showHidePostsFromAccount( account_id, hide ) {
+    for ( idx in window.posts ) {
+        if ( window.posts[idx].account_id === account_id.toString() ) {
+            var elems = document.getElementsByName(idx);
+            for (e in elems) {
+                var elementExists = document.getElementById(elems[e].id);
+                if ( elementExists ) { document.getElementById(elems[e].id).style.display = ((hide === true) ? 'none' : 'block'); }
+            }
+        }
+    }
+}
+function togglePostDrop() { toggleClassIfExists('post-drop', 'hide', 'show', true); }

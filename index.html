@@ -12,7 +12,6 @@
 
         <link type="text/css" rel="stylesheet" href="css/style.css" />
         <link type="text/css" rel="stylesheet" href="css/font-awesome.css" />
-        <link type="text/css" rel="stylesheet" href="css/jquery.mmenu.all.css" />
 
         <link href="img/apple-touch-icon.png" rel="apple-touch-icon" />
         <link href="img/apple-touch-icon-76x76.png" rel="apple-touch-icon" sizes="76x76" />
@@ -86,6 +85,8 @@
             <div id="okbox" class="dialog hide"></div>
             <div id="prefs" class="dialog hide"></div>
         </div>
+        <script type="text/javascript" src="js/moment-with-locales.js"></script>
+        <script type="text/javascript" src="js/moment-timezone-with-data.js"></script>
         <script type="text/javascript" src="js/dom.js"></script>
         <script type="text/javascript" src="js/storage.js"></script>
         <script type="text/javascript" src="js/prefs.js"></script>
@@ -140,14 +141,17 @@
                     } 
                 });
                 $(document).keyup(function(e) {
-                    if( $('#response').hasClass('hide') ) { if ( event.keyCode === KEY_N ) { showHideResponse(); } }
-                    if( $('#response').hasClass('hide') ) { if ( event.keyCode === KEY_P ) { showHidePM(); } }
+                    if ( readStorage('shortkey_n') == 'Y' ) {
+                        if( $('#response').hasClass('hide') ) { if ( event.keyCode === KEY_N ) { showHideResponse(); } }
+                    }
                     if ( event.keyCode === KEY_F2 ) { $('#autocomp').removeClass('show').addClass('hide'); }
                 });
                 $(document).keydown(function(e) {
                     var cancelKeyPress = false;
-                    if ( (e.metaKey || e.ctrlKey) && e.keyCode == KEY_K ) { clearTimelines(); cancelKeyPress = true; }
-                    if (e.keyCode === KEY_ESCAPE) {
+                    if ( readStorage('shortkey_cmdk') == 'Y' ) {
+                        if ( (e.metaKey || e.ctrlKey) && e.keyCode == KEY_K ) { clearTimelines(); cancelKeyPress = true; }
+                    }
+                    if (e.keyCode === KEY_ESCAPE && readStorage('shortkey_esc') == 'Y' ) {
                         var items = ['conversation', 'gallery', 'hashbox', 'dialog', 'okbox', 'prefs'];
                         for ( idx in items ) {
                             toggleClassIfExists(items[idx], 'show', 'hide');
@@ -155,7 +159,9 @@
                         cancelKeyPress = true;
                         killPost();
                     }
-                    if ( e.keyCode === KEY_F3 ) { doShowPrefs('main'); cancelKeyPress = true; }
+                    if ( readStorage('shortkey_f3') == 'Y' ) {
+                        if ( e.keyCode === KEY_F3 ) { doShowPrefs('main'); cancelKeyPress = true; }
+                    }
                     if (cancelKeyPress) { return false; }
                 });
                 document.addEventListener('focusout', function(e) {window.scrollTo(0, 0)});
@@ -272,10 +278,6 @@
             function doMore( post_id ) {
                 alert( "[Debug] Let's Show another Modal for Post: " + post_id );
             }
-            function togglePostDrop() { toggleClassIfExists('post-drop', 'hide', 'show', true); }
-            function muteAccount( account_id ) { alert( "[Debug] Let's Mute: " + account_id ); }
-            function blockAccount( account_id ) { alert( "[Debug] Let's Block: " + account_id ); }
-            function reportAccount( account_id ) { alert( "[Debug] Let's Report " + account_id + " as being a spammer."); }
         </script>
     </body>
 </html>

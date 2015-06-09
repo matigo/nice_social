@@ -15,7 +15,6 @@ function fillPrefsWindow( opt ) {
         case 'main':
             var items = { 'streams': { 'label': "Streams", 'icon': "fa-bullhorn", 'action': "fillPrefsWindow('streams');" },
                           'prefs': { 'label': "Preferences", 'icon': "fa-sliders", 'action': "fillPrefsWindow('prefs');" },
-                          'mutes': { 'label': "Muted Items", 'icon': "fa-microphone-slash", 'action': "fillPrefsWindow('mutes');" },
                           'logout': { 'label': "Log Out", 'icon': "fa-sign-out", 'action': "doLogout();" }
                         };
             for ( item in items ) {
@@ -64,7 +63,58 @@ function fillPrefsWindow( opt ) {
                     '<button style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
                            ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
             break;
-        
+
+        case 'display':
+            var spacer = '';
+            var items = { 0: { 'label': "Timestamps",
+                               'notes': "Customise How You See Post Times",
+                               'icon' : "fa-clock-o",
+                               'items': { 'absolute_times': { 'label': "Timestamps", 'type': "ar", 'js': "setTimestamps();" },
+                                          'keep_timezone': { 'label': "Keep Timezone", 'type': "yn", 'js':"" },
+                                          'show_live_timestamps': { 'label': "Live Timestamps", 'type': "yn", 'js': "setTimestamps();" }
+                                         }
+                              },
+                          1: { 'label': "Post Preferences",
+                               'notes': "Customise How Posts are Drawn",
+                               'icon' : "fa-columns",
+                               'items': { 'hide_audio':   { 'label': "Hide Audio Files", 'type': "yn", 'js': "togglePostElement(\'hide_audio\');" },
+                                          'hide_images':  { 'label': "Hide Images", 'type': "yn", 'js': "togglePostElement(\'hide_images\');" },
+                                          'hide_geodata': { 'label': "Hide GeoMaps", 'type': "yn", 'js': "togglePostElement(\'hide_geodata\');" }
+                                         }
+                              },
+                          2: { 'label': "Account Profile",
+                               'notes': "Display and Hide Profile Information",
+                               'icon' : "fa-street-view",
+                               'items': { 'display_nrscore': { 'label': "Show NR Score", 'type': "yn", 'js':"" },
+                                          'display_usage': { 'label': "Show Usage Graph", 'type': "yn", 'js':"" },
+                                          'display_details': { 'label': "Show Account Details", 'type': "yn", 'js':"" },
+                                          'display_oneavatar': { 'label': "Prevent Avatar Changes", 'type': "yn", 'js':"" }
+                                         }
+                              }
+                         };
+            for ( idx in items ) {
+                html += spacer +
+                        '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' +
+                            '<i class="fa ' + items[idx].icon + '"></i> ' + items[idx].label +
+                        '</strong>';
+                if ( items[idx].notes !== '' ) {
+                    html += '<em class="lbltxt" style="display: block; width: 95%; text-align: justify; padding: 0 2.5%;">' + items[idx].notes + '</em>';
+                }
+                for ( i in items[idx].items ) {
+                    html += '<label class="lbltxt">' + items[idx].items[i].label + '</label>' +
+                            getButtonValue( 'btn-opt-' + i,
+                                            i,
+                                            items[idx].items[i].type,
+                                            'toggleOption(\'' + i + '\', \'' + items[idx].items[i].type + '\');' +
+                                            ( ( items[idx].items[i].js == "" ) ? '' : ' ' + items[idx].items[i].js)
+                                           );
+                }
+                spacer = '<br><br>';
+            }
+            html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
+                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
+            break;
+
         case 'font':
             var items = { '10': { 'label': "Tiny", 'icon': "fa-font" },
                           '12': { 'label': "Small", 'icon': "fa-font" },
@@ -211,7 +261,7 @@ function fillPrefsWindow( opt ) {
                         '</em>';
             }
             html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
-                           ' onClick="fillPrefsWindow(\'main\');"><i class="fa fa-reply"></i> Back</button>';
+                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
             break;
 
         case 'global':
@@ -243,6 +293,42 @@ function fillPrefsWindow( opt ) {
                 spacer = '<br><br>';
             }
 
+            html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
+                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
+            break;
+        
+        case 'keyboard':
+            var spacer = '';
+            var items = { 0: { 'label': "Keyboard Shortcuts",
+                               'notes': "Choose the Keyboard Shortcuts You Use",
+                               'icon' : "fa-keyboard-o",
+                               'items': { 'shortkey_n': { 'label': "New Post (N)", 'type': "yn", 'js':"" },
+                                          'shortkey_cmdk': { 'label': "Clear Posts (Ctrl+K / ⌘+K)", 'type': "yn", 'js':"" },
+                                          'shortkey_f3': { 'label': "Preferences (F3)", 'type': "yn", 'js':"" },
+                                          'shortkey_down': { 'label': "Auto-Complete (▼)", 'type': "yn", 'js':"" },
+                                          'shortkey_esc': { 'label': "Escape (Esc)", 'type': "yn", 'js':"" },
+                                         }
+                              }
+                         };
+            for ( idx in items ) {
+                html += spacer +
+                        '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' +
+                            '<i class="fa ' + items[idx].icon + '"></i> ' + items[idx].label +
+                        '</strong>';
+                if ( items[idx].notes !== '' ) {
+                    html += '<em class="lbltxt" style="display: block; width: 95%; text-align: justify; padding: 0 2.5%;">' + items[idx].notes + '</em>';
+                }
+                for ( i in items[idx].items ) {
+                    html += '<label class="lbltxt">' + items[idx].items[i].label + '</label>' +
+                            getButtonValue( 'btn-opt-' + i,
+                                            i,
+                                            items[idx].items[i].type,
+                                            'toggleOption(\'' + i + '\', \'' + items[idx].items[i].type + '\');' +
+                                            ( ( items[idx].items[i].js == "" ) ? '' : ' ' + items[idx].items[i].js)
+                                           );
+                }
+                spacer = '<br><br>';
+            }
             html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
                            ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
             break;
@@ -280,12 +366,15 @@ function fillPrefsWindow( opt ) {
         case 'prefs':
             var items = { 'color': { 'label': "Colours", 'icon': "fa-paint-brush" },
                           'ppcolumn': { 'label': "Column Length", 'icon': "fa-columns" },
+                          'display': { 'label': "Display Prefs", 'icon': "fa-cloud" },
                           'font': { 'label': "Fonts", 'icon': "fa-font" },
                           'hover': { 'label': "Hovers", 'icon': "fa-location-arrow" },
                           'global': { 'label': "Filtering", 'icon': "fa-globe" },
+                          'keyboard': { 'label': "Keyboard Shortcuts", 'icon': "fa-keyboard-o" },
+                          'mutes': { 'label': "Muted Items", 'icon': "fa-microphone-slash" },
                       /*    'language': { 'label': "Languages", 'icon': "fa-comments-o" }, */
                           'refresh': { 'label': "Refresh Rate", 'icon': "fa-refresh" },
-                          'scroll': { 'label': "Column Widths", 'icon': "fa-arrows-h" }
+                          'widths': { 'label': "Column Widths", 'icon': "fa-arrows-h" }
                         };
             html += '<strong class="lbltxt">What Would You Like to Change?</strong>';
             for ( item in items ) {
@@ -328,28 +417,6 @@ function fillPrefsWindow( opt ) {
             html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
                            ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
             break;
-        
-        case 'scroll':
-            var sb_adjust = readStorage('scrollbar_adjust');
-            var sHeight = window.innerHeight || document.body.clientHeight;
-            var sWidth = window.innerWidth || document.body.clientWidth;
-
-            if ( isNaN(sb_adjust) || sb_adjust === false ) { sb_adjust = 0; } else { sb_adjust = parseInt(sb_adjust); }
-            html  = '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' +
-                        'Column Widths Off a Bit? Adjust Them Here.' +
-                    '</strong>' +
-                    '<em class="lbltxt" style="display: block; width: 95%; text-align: justify; padding: 0 2.5%;">' +
-                        'Note: Negative Numbers Expand the Columns, Positive Numbers Narrow the Columns' +
-                    '</em>' +
-                    '<label class="lbltxt">Width Adjustment</label>' +
-                    '<input type="number" id="scroll_amt" max="50" min="-50" onChange="setColumnWidthAdjustment();" value="' + sb_adjust + '">' +
-                    '<em class="lbltxt" style="display: block; width: 95%; text-align: justify; margin-top: 25px; padding: 0 2.5%;">' +
-                        'Reported Screen Width: ' + sWidth + 'px / Height: ' + sHeight + 'px' +
-                    '</em>';
-            html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
-                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
-            break;
-
 
         case 'streams':
             var items = { 'home': { 'label': "Home", 'icon': "fa-home" },
@@ -376,6 +443,27 @@ function fillPrefsWindow( opt ) {
                            ' onClick="fillPrefsWindow(\'main\');"><i class="fa fa-reply"></i> Back</button>';
             break;
 
+        case 'widths':
+            var sb_adjust = readStorage('scrollbar_adjust');
+            var sHeight = window.innerHeight || document.body.clientHeight;
+            var sWidth = window.innerWidth || document.body.clientWidth;
+
+            if ( isNaN(sb_adjust) || sb_adjust === false ) { sb_adjust = 0; } else { sb_adjust = parseInt(sb_adjust); }
+            html  = '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' +
+                        'Column Widths Off a Bit? Adjust Them Here.' +
+                    '</strong>' +
+                    '<em class="lbltxt" style="display: block; width: 95%; text-align: justify; padding: 0 2.5%;">' +
+                        'Note: Negative Numbers Expand the Columns, Positive Numbers Narrow the Columns' +
+                    '</em>' +
+                    '<label class="lbltxt">Width Adjustment</label>' +
+                    '<input type="number" id="scroll_amt" max="50" min="-50" onChange="setColumnWidthAdjustment();" value="' + sb_adjust + '">' +
+                    '<em class="lbltxt" style="display: block; width: 95%; text-align: justify; margin-top: 25px; padding: 0 2.5%;">' +
+                        'Reported Screen Width: ' + sWidth + 'px / Height: ' + sHeight + 'px' +
+                    '</em>';
+            html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
+                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
+            break;
+
         default:
             /* Do Nothing */
     }
@@ -385,8 +473,10 @@ function getButtonValue( id, item, type, on_click ) {
     var bgColor = '#' + readStorage('header_background'),
         frColor = '#' + readStorage('header_color');
     var strings = { 'ed': { on: "Enabled", off: "Disabled", icon: "fa-circle", icoff: "fa-circle-o" },
+                    'ar': { on: "Absolute", off: "Relative", icon: "fa-circle", icoff: "fa-circle-o" },
                     'sh': { on: "Hidden", off: "Show", icon: "fa-circle", icoff: "fa-circle-o" },
-                    'vh': { on: "Hidden", off: "Visible", icon: "fa-circle", icoff: "fa-circle-o" }
+                    'vh': { on: "Hidden", off: "Visible", icon: "fa-circle", icoff: "fa-circle-o" },
+                    'yn': { on: "Yes", off: "No", icon: "fa-circle", icoff: "fa-circle-o" }
                    };
     var value = readStorage(item);
     var css = 'background-color: ' + bgColor + '; color: ' + frColor + ';';
@@ -638,8 +728,11 @@ function toggleOption( item, txt ) {
     var bgColor = '#' + readStorage('header_color'),
         frColor = '#' + readStorage('header_background');
     var txtOpts = { 'ed': {'enabled': "Enabled", 'disabled': "Disabled"},
+                    'ar': {'enabled': "Absolute", 'disabled': "Relative"},
+                    'hc': {'enabled': "Hidden", 'disabled': "Collapsed"},
                     'sh': {'enabled': "Hidden", 'disabled': "Show"},
-                    'vh': {'enabled': "Hidden", 'disabled': "Visible"}
+                    'vh': {'enabled': "Hidden", 'disabled': "Visible"},
+                    'yn': {'enabled': "Yes", 'disabled': "No"},
                    };
     var value = readStorage(item);
     if ( value === 'Y' ) { value = false; } else { value = true; }
@@ -651,6 +744,43 @@ function toggleOption( item, txt ) {
         document.getElementById('btn-opt-' + item).style.color = (( value ) ? frColor : bgColor);
         document.getElementById('btn-opt-' + item).innerHTML = (( value ) ? '<i class="fa fa-circle"></i> ' + txtOpts[txt]['enabled']
                                                                           : '<i class="fa fa-circle-o"></i> ' + txtOpts[txt]['disabled']);
+    }
+}
+function togglePostElement( item ) {
+    var value = readStorage( item );
+    var cls = '';
+    
+    switch ( item ) {
+        case 'hide_audio':
+            cls = '.post-audio';
+            break;
+        
+        case 'hide_images':
+            cls = '.post-image';
+            break;
+        
+        case 'hide_geodata':
+            cls = '.post-geo';
+            break;
+    }
+    jss.set('.post-list .post-item ' + cls, { 'display': (( value === 'N' ) ? 'block' : 'none') });
+}
+
+function setTimestamps() {
+    var at_value = readStorage('absolute_times'),
+        live_value = readStorage('show_live_timestamps');
+    
+    moment.locale('en');
+    for ( post_id in window.posts ) {
+        var itms = document.getElementsByName( post_id + "-time" );
+        var tStr = ( at_value === 'Y' ) ? moment( window.posts[post_id].created_at ).format("MMMM Do YYYY h:mma")
+                                        : ((live_value === 'Y') ? humanized_time_span( window.posts[post_id].created_at ) : '<em>more...</em>'),
+            html = '';
+
+        for ( var i = 0; i < itms.length; i++ ) {
+            html = document.getElementById( itms[i].id ).innerHTML;
+            if ( html != tStr ) { document.getElementById( itms[i].id ).innerHTML = tStr; } else { break; }
+        }
     }
 }
 function removeHashFilter( name ) {
