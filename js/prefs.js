@@ -610,9 +610,11 @@ function setCSSPreferences() {
     jss.set('.post-mention', { 'color': '#' + readStorage('post-mention_color') });
     jss.set('.chat .post-item.post-grey', { 'background-color': '#' + readStorage('post-highlight_color') });
     jss.set('.chatbox', { 'background-color': '#' + readStorage('body_background') });
-    jss.set('.chatbox', { 'border-color': '#' + readStorage('header_background') });
+    jss.set('.chatbox', { 'border-color': '#' + readStorage('post-content_color') });
     jss.set('.chatbox .title', { 'background-color': '#' + readStorage('header_background') });
     jss.set('.chatbox .title', { 'color': '#' + readStorage('header_color') });
+    jss.set('.chatbox div#mute_hash.title_btn', { 'background-color': '#' + readStorage('header_background') });
+    jss.set('.chatbox div#mute_hash.title_btn', { 'color': '#' + readStorage('header_color') });
     jss.set('.chatbox .lbltxt', { 'color': '#' + readStorage('post-content_color') });
     jss.set('.profile', { 'background-color': '#' + readStorage('body_background') });
     jss.set('.profile', { 'border-color': '#' + readStorage('header_background') });
@@ -765,16 +767,17 @@ function togglePostElement( item ) {
     }
     jss.set('.post-list .post-item ' + cls, { 'display': (( value === 'N' ) ? 'block' : 'none') });
 }
-
-function setTimestamps() {
+function getTimestamp( created_at, show_something ) {
     var at_value = readStorage('absolute_times'),
         live_value = readStorage('show_live_timestamps');
-    
     moment.locale('en');
+    return ( at_value === 'Y' ) ? moment( created_at ).format("MMMM Do YYYY h:mma")
+                                : ((live_value === 'Y' || show_something === true ) ? humanized_time_span( created_at ) : '<em>more...</em>');
+}
+function setTimestamps() {
     for ( post_id in window.posts ) {
         var itms = document.getElementsByName( post_id + "-time" );
-        var tStr = ( at_value === 'Y' ) ? moment( window.posts[post_id].created_at ).format("MMMM Do YYYY h:mma")
-                                        : ((live_value === 'Y') ? humanized_time_span( window.posts[post_id].created_at ) : '<em>more...</em>'),
+        var tStr = getTimestamp( window.posts[post_id].created_at ),
             html = '';
 
         for ( var i = 0; i < itms.length; i++ ) {

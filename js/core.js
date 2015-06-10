@@ -375,7 +375,7 @@ function getUserProfile( user_id ) {
 function getUserProfileActions( data ) {
     if ( data.user.id === readStorage('user_id') ) { return ''; }
     var _html = '<ul>' +
-                    '<li>' +
+                    '<li id="profile-drop" class="hide" onclick="toggleProfileDrop();">' +
                         '<i class="fa fa-cog"></i>' +
                         '<ul>' +
                             '<li onClick="blockAccount(' + data.user.you_blocked + ', ' + data.user.id + ');">' + 
@@ -430,12 +430,11 @@ function parseUserProfile( data ) {
         // Write the Post History
         for ( var i = 0; i < data.length; i++ ) {
             post_source = ' via ' + data[i].source.name || 'unknown';
-
             html += '<div class="post-item">' +
                         '<div class="post-content">' +
                             parseText( data[i] ) +
                             '<p class="post-time">' +
-                                '<em>' + humanized_time_span(data[i].created_at) + post_source + '</em>' +
+                                '<em>' + getTimestamp( data[i].created_at, true ) + post_source + '</em>' +
                             '</p>' +
                         '</div>' +
                     '</div>';
@@ -680,7 +679,7 @@ function buildHTMLSection( post ) {
                 '</div>' +
                 buildRespondBar( data );
     } else {
-        post_time = ( show_time === 'Y' ) ? humanized_time_span(data.created_at) : '<em>more...</em>';
+        post_time = getTimestamp( data.created_at );
         account_age = Math.floor(( new Date() - Date.parse(data.user.created_at) ) / 86400000);
         if ( account_age <= 7 ) { avatarClass = 'avatar-round recent-acct'; }
         if ( account_age <= 1 ) { avatarClass = 'avatar-round new-acct'; }
@@ -1268,7 +1267,7 @@ function buildRespondBar( post, is_convo ) {
                     '<span onclick="doReply(' + post.id + ');"><i class="fa fa-reply-all"></i></span>';
     if ( post.user.id !== my_id ) {
         html += '<span id="' + post.id + '-repost[TL]" name="' + post.id + '-repost" onclick="doRepost(' + post.id + ');" class="' + css_r + '">' +
-                    '<i class="fa fa-recycle"></i>' +
+                    '<i class="fa fa-retweet"></i>' +
                 '</span>';
     } else {
         html += '<span onclick="doDelete(' + post.id + ');"><i class="fa fa-trash"></i></span>';
@@ -1527,7 +1526,8 @@ function setFollow( data ) {
     if ( data ) {
         var my_id = readStorage('user_id');
         var html = '';
-        
+
+        if ( data.follows_you ) { html += '<em>Follows You</em>'; }
         if ( data.you_follow ) {
             html += '<button onclick="doFollow(' + data.id + ', true)" class="btn-red">Unfollow</button>';
         } else {
@@ -1595,7 +1595,6 @@ function parseConversation( data, post_id ) {
             post_time = '',
             post_by = '';
         var my_id = readStorage('user_id');
-        showWaitState('chat_posts', 'Reading Posts');
 
         document.getElementById( 'chat_count' ).innerHTML = '(' + data.length + ' Posts)';
         for ( var i = 0; i < data.length; i++ ) {
@@ -1625,7 +1624,7 @@ function parseConversation( data, post_id ) {
                 }
             }
 
-            post_time = humanized_time_span(data[i].created_at);
+            post_time = getTimestamp( data[i].created_at, true );
             post_source = ' via ' + data[i].source.name || 'unknown';
             post_client = data[i].source.name || 'unknown';
 
@@ -1691,9 +1690,7 @@ function showHideActions( post_id, tl ) {
         var div = '';
         for ( var i = 0; i <= tls.length; i++ ) {
             div = '#' + post_id + '-rsp-' + tls[i];
-            if ($(div).length) {
-                toggleClassIfExists(post_id + '-rsp-' + tls[i],'show','hide');
-            }
+            if ($(div).length) { toggleClassIfExists(post_id + '-rsp-' + tls[i],'show','hide'); }
         }
     } else {
         toggleClassIfExists(post_id + '-rsp' + tl,'hide','show',true);
@@ -2673,3 +2670,4 @@ function showHidePostsFromAccount( account_id, hide ) {
     }
 }
 function togglePostDrop() { toggleClassIfExists('post-drop', 'hide', 'show', true); }
+function toggleProfileDrop() { toggleClassIfExists('profile-drop', 'hide', 'show', true); }

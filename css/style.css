@@ -643,6 +643,16 @@ nav:not(.mm-menu) { display: none; }
     -o-transition: opacity 0.2s;
     -transition: opacity 0.2s;
 }
+.profile .names h5 ul li#profile-drop.hide ul {
+    display: none;
+    opacity: 0;
+    visibility: hidden;
+}
+.profile .names h5 ul li#profile-drop.show ul {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+}
 @media all and (min-device-width:768px) {
     .profile .names { height: 72px; }
     .profile .names h5 ul li {
@@ -658,15 +668,17 @@ nav:not(.mm-menu) { display: none; }
         transition: all 0.2s;
     }
     .profile .names h5 ul li ul {
-        top: 0;
+        top: 35px;
         left: -155px;
     }
 }
 .profile .names h5 ul li ul li {
     background: #555;
+    border-radius: 10px;
     color: #fff;
     display: block;
     font-size: 50%;
+    margin-bottom: 3px;
     padding: 15px 15px 15px 0;
 }
 .profile .names h5 ul li ul li:hover { background: #666; }
@@ -689,6 +701,7 @@ nav:not(.mm-menu) { display: none; }
 .profile .actions em {
     color: #00f;
     float: left;
+    margin-top: 5px;
 }
 .profile .actions span {
     color: #00f;
