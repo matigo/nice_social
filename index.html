@@ -10,9 +10,6 @@
         <meta http-equiv="cleartype" content="on">
         <meta charset="utf-8">
 
-        <link type="text/css" rel="stylesheet" href="css/style.css" />
-        <link type="text/css" rel="stylesheet" href="css/font-awesome.css" />
-
         <link href="img/apple-touch-icon.png" rel="apple-touch-icon" />
         <link href="img/apple-touch-icon-76x76.png" rel="apple-touch-icon" sizes="76x76" />
         <link href="img/apple-touch-icon-120x120.png" rel="apple-touch-icon" sizes="120x120" />
@@ -23,6 +20,29 @@
 
         <script type="text/javascript" src="js/jquery.min.js"></script>
         <script type="text/javascript" src="js/jss.min.js"></script>
+        <script type="text/javascript">
+            var version = 1;
+            var items = { 0: { el: 'link', href: 'css/style.css', rel: 'stylesheet', type: 'text/css' },
+                          1: { el: 'link', href: 'css/font-awesome.css', rel: 'stylesheet', type: 'text/css' },
+                          
+                         10: { el: 'script', href: 'js/moment-with-locales.js', src: false, rel: false, type: 'text/javascript' },
+                         11: { el: 'script', href: 'js/moment-timezone-with-data.js', src: false, rel: false, type: 'text/javascript' },
+                         12: { el: 'script', href: false, src: 'js/dom.js', rel: false, type: 'text/javascript' },
+                         13: { el: 'script', href: false, src: 'js/storage.js', rel: false, type: 'text/javascript' },
+                         14: { el: 'script', href: false, src: 'js/prefs.js', rel: false, type: 'text/javascript' },
+                         15: { el: 'script', href: false, src: 'js/core.js', rel: false, type: 'text/javascript' }
+            }
+
+            for ( idx in items ) {
+                var link = document.createElement( items[idx].el );
+                    if ( items[idx].href ) { link.href = items[idx].href + '?v=' + version; }
+                    if ( items[idx].src ) { link.src = items[idx].src + '?v=' + version; }
+                    if ( items[idx].rel ) { link.rel = items[idx].rel; }
+                    link.type = items[idx].type;
+
+                document.getElementsByTagName("head")[0].appendChild( link );
+            }
+        </script>
     </head>
     <body>
         <div id="page">
