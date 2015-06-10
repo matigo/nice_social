@@ -15,6 +15,7 @@ function fillPrefsWindow( opt ) {
         case 'main':
             var items = { 'streams': { 'label': "Streams", 'icon': "fa-bullhorn", 'action': "fillPrefsWindow('streams');" },
                           'prefs': { 'label': "Preferences", 'icon': "fa-sliders", 'action': "fillPrefsWindow('prefs');" },
+                          'accts': { 'label': "Accounts", 'icon': "fa-users", 'action': "fillAcctsWindows();"},
                           'logout': { 'label': "Log Out", 'icon': "fa-sign-out", 'action': "doLogout();" }
                         };
             for ( item in items ) {
@@ -70,7 +71,7 @@ function fillPrefsWindow( opt ) {
                                'notes': "Customise How You See Post Times",
                                'icon' : "fa-clock-o",
                                'items': { 'absolute_times': { 'label': "Timestamps", 'type': "ar", 'js': "setTimestamps();" },
-                                          'keep_timezone': { 'label': "Keep Timezone", 'type': "yn", 'js':"" },
+                                          /* 'keep_timezone': { 'label': "Keep Timezone", 'type': "yn", 'js':"" }, */
                                           'show_live_timestamps': { 'label': "Live Timestamps", 'type': "yn", 'js': "setTimestamps();" }
                                          }
                               },
@@ -81,7 +82,7 @@ function fillPrefsWindow( opt ) {
                                           'hide_images':  { 'label': "Hide Images", 'type': "yn", 'js': "togglePostElement(\'hide_images\');" },
                                           'hide_geodata': { 'label': "Hide GeoMaps", 'type': "yn", 'js': "togglePostElement(\'hide_geodata\');" }
                                          }
-                              },
+/*                              },
                           2: { 'label': "Account Profile",
                                'notes': "Display and Hide Profile Information",
                                'icon' : "fa-street-view",
@@ -89,7 +90,7 @@ function fillPrefsWindow( opt ) {
                                           'display_usage': { 'label': "Show Usage Graph", 'type': "yn", 'js':"" },
                                           'display_details': { 'label': "Show Account Details", 'type': "yn", 'js':"" },
                                           'display_oneavatar': { 'label': "Prevent Avatar Changes", 'type': "yn", 'js':"" }
-                                         }
+                                         }*/
                               }
                          };
             for ( idx in items ) {
@@ -793,4 +794,9 @@ function removeHashFilter( name ) {
             if ( btns[i].value === name ) { btns[i].innerHTML = 'Scrubbed'; }
         }
     }
+}
+function fillAcctsWindows() {
+    saveStorage('msgTitle', 'Ack!', true);
+    saveStorage('msgText', 'I wish this were ready to go. I really do. Check back later :)', true);
+    if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
 }

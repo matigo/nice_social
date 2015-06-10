@@ -22,21 +22,24 @@
         <script type="text/javascript" src="js/jss.min.js"></script>
         <script type="text/javascript">
             var version = 1;
-            var items = { 0: { el: 'link', href: 'css/style.css', rel: 'stylesheet', type: 'text/css' },
-                          1: { el: 'link', href: 'css/font-awesome.css', rel: 'stylesheet', type: 'text/css' },
-                          
-                         10: { el: 'script', href: 'js/moment-with-locales.js', src: false, rel: false, type: 'text/javascript' },
-                         11: { el: 'script', href: 'js/moment-timezone-with-data.js', src: false, rel: false, type: 'text/javascript' },
-                         12: { el: 'script', href: false, src: 'js/dom.js', rel: false, type: 'text/javascript' },
-                         13: { el: 'script', href: false, src: 'js/storage.js', rel: false, type: 'text/javascript' },
-                         14: { el: 'script', href: false, src: 'js/prefs.js', rel: false, type: 'text/javascript' },
-                         15: { el: 'script', href: false, src: 'js/core.js', rel: false, type: 'text/javascript' }
+            var items = { 0: { el: 'link', rel: 'stylesheet', type: 'text/css', url: 'css/style.css' },
+                          1: { el: 'link', rel: 'stylesheet', type: 'text/css', url: 'css/font-awesome.css' },
+
+                         10: { el: 'script', rel: false, type: 'text/javascript', url: 'js/moment-with-locales.js' },
+                         11: { el: 'script', rel: false, type: 'text/javascript', url: 'js/moment-timezone-with-data.js' },
+                         12: { el: 'script', rel: false, type: 'text/javascript', url: 'js/dom.js' },
+                         13: { el: 'script', rel: false, type: 'text/javascript', url: 'js/storage.js' },
+                         14: { el: 'script', rel: false, type: 'text/javascript', url: 'js/prefs.js' },
+                         15: { el: 'script', rel: false, type: 'text/javascript', url: 'js/core.js' }
             }
 
             for ( idx in items ) {
                 var link = document.createElement( items[idx].el );
-                    if ( items[idx].href ) { link.href = items[idx].href + '?v=' + version; }
-                    if ( items[idx].src ) { link.src = items[idx].src + '?v=' + version; }
+                    if ( items[idx].el === 'link' ) {
+                        link.href = items[idx].url + '?v=' + version;
+                    } else {
+                        link.src = items[idx].url + '?v=' + version;
+                    }
                     if ( items[idx].rel ) { link.rel = items[idx].rel; }
                     link.type = items[idx].type;
 
@@ -105,196 +108,7 @@
             <div id="okbox" class="dialog hide"></div>
             <div id="prefs" class="dialog hide"></div>
         </div>
-        <script type="text/javascript" src="js/moment-with-locales.js"></script>
-        <script type="text/javascript" src="js/moment-timezone-with-data.js"></script>
-        <script type="text/javascript" src="js/dom.js"></script>
-        <script type="text/javascript" src="js/storage.js"></script>
-        <script type="text/javascript" src="js/prefs.js"></script>
-        <script type="text/javascript" src="js/core.js"></script>
         <script>
-            jQuery(function($) {
-                window.store = new Object();
-                window.chans = {};
-                window.posts = {};
-                window.users = {};
-                window.files = {};
-                window.activate = false;
-                window.timelines = { home     : false,
-                                     mentions : false,
-                                     global   : true,
-                                     pms      : false
-                }
-                loadConfigFile();
-                window.KEY_ENTER = 13;
-                window.KEY_ESCAPE = 27;
-                window.KEY_K = 75;
-                window.KEY_N = 78;
-                window.KEY_P = 80;
-                window.KEY_F2 = 113;
-                window.KEY_F3 = 114;
-                window.KEY_DOWNARROW = 40;
-
-                $('#doAction').click(function() { doPostOrAuth(); });
-                $('#rpy-kill').click(function() { killPost(); });
-                $('#rpy-send').click(function() { sendPost(); });
-                $("#rpy-text").keyup(function() {
-                    var caret = getCaretPos(this);
-                    var result = /\S+$/.exec(this.value.slice(0, caret));
-                    var lastWord = result ? result[0] : null;
-                    if ( lastWord !== undefined && lastWord !== '' && lastWord !== null ) {
-                        if ( lastWord.length >= 4 && lastWord.charAt(0) === '@' ) {
-                            listNames( lastWord );
-                        } else {
-                            if( $('#autocomp').hasClass('show') ) { $('#autocomp').removeClass('show').addClass('hide') }
-                        }
-                    }
-
-                    doHandyTextSwitch();
-                });
-                $("#rpy-text").keydown(function (event) { 
-                    if ( (event.metaKey || event.ctrlKey) && event.keyCode === KEY_ENTER ) { 
-                        sendPost();
-                    }
-                    if ( $('#autocomp').hasClass('show') && event.keyCode === KEY_DOWNARROW) {
-                        $('#autocomp > .autobox > span:first-child').trigger("click");
-                        return false;
-                    } 
-                });
-                $(document).keyup(function(e) {
-                    if ( readStorage('shortkey_n') == 'Y' ) {
-                        if( $('#response').hasClass('hide') ) { if ( event.keyCode === KEY_N ) { showHideResponse(); } }
-                    }
-                    if ( event.keyCode === KEY_F2 ) { $('#autocomp').removeClass('show').addClass('hide'); }
-                });
-                $(document).keydown(function(e) {
-                    var cancelKeyPress = false;
-                    if ( readStorage('shortkey_cmdk') == 'Y' ) {
-                        if ( (e.metaKey || e.ctrlKey) && e.keyCode == KEY_K ) { clearTimelines(); cancelKeyPress = true; }
-                    }
-                    if (e.keyCode === KEY_ESCAPE && readStorage('shortkey_esc') == 'Y' ) {
-                        var items = ['conversation', 'gallery', 'hashbox', 'dialog', 'okbox', 'prefs'];
-                        for ( idx in items ) {
-                            toggleClassIfExists(items[idx], 'show', 'hide');
-                        }
-                        cancelKeyPress = true;
-                        killPost();
-                    }
-                    if ( readStorage('shortkey_f3') == 'Y' ) {
-                        if ( e.keyCode === KEY_F3 ) { doShowPrefs('main'); cancelKeyPress = true; }
-                    }
-                    if (cancelKeyPress) { return false; }
-                });
-                document.addEventListener('focusout', function(e) {window.scrollTo(0, 0)});
-                $( window ).resize(function() { setWindowConstraints(); });
-            });
-            window.addEventListener('load', function(){
-                var touchsurface = document.getElementById('rpy-text'),
-                    touchMenu = document.getElementById('header_bar'),
-                    startX,
-                    startY,
-                    dist,
-                    threshold = 150,
-                    allowedTime = 1000,
-                    elapsedTime,
-                    startTime;
-                function handleswipe(isRightSwipe, isLeftSwipe) {
-                    if ( isRightSwipe === true ) { setCursorPosition( 1 ); }
-                    if ( isLeftSwipe === true ) { setCursorPosition( -1 ); }
-                }
-                function handleMenuSwipe(isRightSwipe, isLeftSwipe) {
-                    if ( isRightSwipe === true ) { rotateTimelines(); }
-                    if ( isLeftSwipe === true ) { rotateTimelines(); }
-                }
-                function rotateTimelines() {
-                    var els = document.getElementsByClassName("post-list");
-                    var showNext = false;
-                    var cnt = 0;
-
-                    for (i in window.timelines) {
-                        if ( showNext ) {
-                            if ( window.timelines.hasOwnProperty(i) ) {
-                                window.timelines[i] = true;
-                                if ( window.timelines[i] ) { saveStorage('tl_' + i, 'Y'); } else { saveStorage('tl_' + i, 'N'); }
-                                break;
-                            }
-                        }
-                        if ( els[0].id === i ) {
-                            if ( window.timelines.hasOwnProperty(i) ) {
-                                window.timelines[i] = !window.timelines[i];
-                                if ( window.timelines[i] ) { saveStorage('tl_' + i, 'Y'); } else { saveStorage('tl_' + i, 'N'); }
-                                showNext = true;
-                            }
-                        } else {
-                            window.timelines[i] = false;
-                        }
-                    }
-                    for (i in window.timelines) { if ( window.timelines[i] ) { cnt++; } }
-                    if ( cnt == 0 ) { window.timelines['home'] = true; }
-                    showTimelines();
-                }
-                function setCursorPosition( PlusMinus ) {
-                    var txtBox = document.getElementById('rpy-text');
-                    setCaretToPos(txtBox, txtBox.selectionEnd + PlusMinus);
-                }
-                touchMenu.addEventListener('touchstart', function(e) {
-                    var touchobj = e.changedTouches[0];
-                    dist = 0;
-                    startX = touchobj.pageX;
-                    startY = touchobj.pageY;
-                    startTime = new Date().getTime();
-                }, false);
-                touchMenu.addEventListener('touchend', function(e){
-                    var touchobj = e.changedTouches[0];
-                    dist_r = touchobj.pageX - startX;
-                    dist_l = startX - touchobj.pageX;
-                    elapsedTime = new Date().getTime() - startTime;
-                    var isRightSwipe = (elapsedTime <= allowedTime && dist_r >= threshold && Math.abs(touchobj.pageY - startY) <= 100),
-                        isLeftSwipe = (elapsedTime <= allowedTime && dist_l >= threshold && Math.abs(touchobj.pageY - startY) <= 100);
-                    handleMenuSwipe(isRightSwipe, isLeftSwipe);
-                    if ( isRightSwipe || isLeftSwipe ) { e.preventDefault(); }
-                }, false);
-
-                touchsurface.addEventListener('touchstart', function(e) {
-                    touchsurface.innerHTML = '';
-                    var touchobj = e.changedTouches[0];
-                    dist = 0;
-                    startX = touchobj.pageX;
-                    startY = touchobj.pageY;
-                    startTime = new Date().getTime();
-                }, false);
-                touchsurface.addEventListener('touchmove', function(e){ e.preventDefault(); }, false);
-                touchsurface.addEventListener('touchend', function(e){
-                    var touchobj = e.changedTouches[0];
-                    dist_r = touchobj.pageX - startX;
-                    dist_l = startX - touchobj.pageX;
-                    elapsedTime = new Date().getTime() - startTime;
-                    var isRightSwipe = (elapsedTime <= allowedTime && dist_r >= threshold && Math.abs(touchobj.pageY - startY) <= 100),
-                        isLeftSwipe = (elapsedTime <= allowedTime && dist_l >= threshold && Math.abs(touchobj.pageY - startY) <= 100);
-                    handleswipe(isRightSwipe, isLeftSwipe);
-                    if ( isRightSwipe || isLeftSwipe ) { e.preventDefault(); }
-                }, false); 
-            }, false);
-            document.getElementById('file').addEventListener('change', function(e) {
-                var access_token = readStorage('access_token');
-                if ( access_token === undefined || access_token === false || access_token === '' ) { return false; }
-
-                var file = this.files[0];
-                var xhr = new XMLHttpRequest();
-                var url = window.apiURL + '/files';
-
-                var fileObj = { 'kind': "photo",
-                                'type': "social.nice.image",
-                                'mime_type': file.type,
-                                'name': file.name,
-                                'public': true
-                               };
-
-                xhr.onreadystatechange = function(e) { if ( 4 == this.readyState ) { parseFileUpload( e.target.response, file ); } };
-                xhr.open('post', url, true);
-                xhr.setRequestHeader("Authorization", "Bearer " + access_token);
-                xhr.setRequestHeader("Content-Type", "application/json");
-                xhr.send(JSON.stringify(fileObj));
-            }, false);
             function doMore( post_id ) {
                 alert( "[Debug] Let's Show another Modal for Post: " + post_id );
             }

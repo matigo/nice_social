@@ -11,6 +11,189 @@ jQuery.fn.scrollTo = function(elem, speed) {
     }, speed === undefined ? 1000 : speed); 
     return this; 
 };
+jQuery(function($) {
+    window.store = new Object();
+    window.chans = {};
+    window.posts = {};
+    window.users = {};
+    window.files = {};
+    window.activate = false;
+    window.timelines = { home     : false,
+                         mentions : false,
+                         global   : true,
+                         pms      : false
+    }
+    loadConfigFile();
+    window.KEY_ENTER = 13;
+    window.KEY_ESCAPE = 27;
+    window.KEY_K = 75;
+    window.KEY_N = 78;
+    window.KEY_P = 80;
+    window.KEY_F2 = 113;
+    window.KEY_F3 = 114;
+    window.KEY_DOWNARROW = 40;
+
+    $('#doAction').click(function() { doPostOrAuth(); });
+    $('#rpy-kill').click(function() { killPost(); });
+    $('#rpy-send').click(function() { sendPost(); });
+    $("#rpy-text").keyup(function() {
+        var caret = getCaretPos(this);
+        var result = /\S+$/.exec(this.value.slice(0, caret));
+        var lastWord = result ? result[0] : null;
+        if ( lastWord !== undefined && lastWord !== '' && lastWord !== null ) {
+            if ( lastWord.length >= 4 && lastWord.charAt(0) === '@' ) {
+                listNames( lastWord );
+            } else {
+                if( $('#autocomp').hasClass('show') ) { $('#autocomp').removeClass('show').addClass('hide') }
+            }
+        }
+
+        doHandyTextSwitch();
+    });
+    $("#rpy-text").keydown(function (event) { 
+        if ( (event.metaKey || event.ctrlKey) && event.keyCode === KEY_ENTER ) { 
+            sendPost();
+        }
+        if ( $('#autocomp').hasClass('show') && event.keyCode === KEY_DOWNARROW) {
+            $('#autocomp > .autobox > span:first-child').trigger("click");
+            return false;
+        } 
+    });
+    $(document).keyup(function(e) {
+        if ( readStorage('shortkey_n') == 'Y' ) {
+            if( $('#response').hasClass('hide') ) { if ( event.keyCode === KEY_N ) { showHideResponse(); } }
+        }
+        if ( event.keyCode === KEY_F2 ) { $('#autocomp').removeClass('show').addClass('hide'); }
+    });
+    $(document).keydown(function(e) {
+        var cancelKeyPress = false;
+        if ( readStorage('shortkey_cmdk') == 'Y' ) {
+            if ( (e.metaKey || e.ctrlKey) && e.keyCode == KEY_K ) { clearTimelines(); cancelKeyPress = true; }
+        }
+        if (e.keyCode === KEY_ESCAPE && readStorage('shortkey_esc') == 'Y' ) {
+            var items = ['conversation', 'gallery', 'hashbox', 'dialog', 'okbox', 'prefs'];
+            for ( idx in items ) {
+                toggleClassIfExists(items[idx], 'show', 'hide');
+            }
+            cancelKeyPress = true;
+            killPost();
+        }
+        if ( readStorage('shortkey_f3') == 'Y' ) {
+            if ( e.keyCode === KEY_F3 ) { doShowPrefs('main'); cancelKeyPress = true; }
+        }
+        if (cancelKeyPress) { return false; }
+    });
+    document.addEventListener('focusout', function(e) {window.scrollTo(0, 0)});
+    $( window ).resize(function() { setWindowConstraints(); });
+});
+window.addEventListener('load', function(){
+    var touchsurface = document.getElementById('rpy-text'),
+        touchMenu = document.getElementById('header_bar'),
+        startX,
+        startY,
+        dist,
+        threshold = 150,
+        allowedTime = 1000,
+        elapsedTime,
+        startTime;
+    function handleswipe(isRightSwipe, isLeftSwipe) {
+        if ( isRightSwipe === true ) { setCursorPosition( 1 ); }
+        if ( isLeftSwipe === true ) { setCursorPosition( -1 ); }
+    }
+    function handleMenuSwipe(isRightSwipe, isLeftSwipe) {
+        if ( isRightSwipe === true ) { rotateTimelines(); }
+        if ( isLeftSwipe === true ) { rotateTimelines(); }
+    }
+    function rotateTimelines() {
+        var els = document.getElementsByClassName("post-list");
+        var showNext = false;
+        var cnt = 0;
+
+        for (i in window.timelines) {
+            if ( showNext ) {
+                if ( window.timelines.hasOwnProperty(i) ) {
+                    window.timelines[i] = true;
+                    if ( window.timelines[i] ) { saveStorage('tl_' + i, 'Y'); } else { saveStorage('tl_' + i, 'N'); }
+                    break;
+                }
+            }
+            if ( els[0].id === i ) {
+                if ( window.timelines.hasOwnProperty(i) ) {
+                    window.timelines[i] = !window.timelines[i];
+                    if ( window.timelines[i] ) { saveStorage('tl_' + i, 'Y'); } else { saveStorage('tl_' + i, 'N'); }
+                    showNext = true;
+                }
+            } else {
+                window.timelines[i] = false;
+            }
+        }
+        for (i in window.timelines) { if ( window.timelines[i] ) { cnt++; } }
+        if ( cnt == 0 ) { window.timelines['home'] = true; }
+        showTimelines();
+    }
+    function setCursorPosition( PlusMinus ) {
+        var txtBox = document.getElementById('rpy-text');
+        setCaretToPos(txtBox, txtBox.selectionEnd + PlusMinus);
+    }
+    touchMenu.addEventListener('touchstart', function(e) {
+        var touchobj = e.changedTouches[0];
+        dist = 0;
+        startX = touchobj.pageX;
+        startY = touchobj.pageY;
+        startTime = new Date().getTime();
+    }, false);
+    touchMenu.addEventListener('touchend', function(e){
+        var touchobj = e.changedTouches[0];
+        dist_r = touchobj.pageX - startX;
+        dist_l = startX - touchobj.pageX;
+        elapsedTime = new Date().getTime() - startTime;
+        var isRightSwipe = (elapsedTime <= allowedTime && dist_r >= threshold && Math.abs(touchobj.pageY - startY) <= 100),
+            isLeftSwipe = (elapsedTime <= allowedTime && dist_l >= threshold && Math.abs(touchobj.pageY - startY) <= 100);
+        handleMenuSwipe(isRightSwipe, isLeftSwipe);
+        if ( isRightSwipe || isLeftSwipe ) { e.preventDefault(); }
+    }, false);
+
+    touchsurface.addEventListener('touchstart', function(e) {
+        touchsurface.innerHTML = '';
+        var touchobj = e.changedTouches[0];
+        dist = 0;
+        startX = touchobj.pageX;
+        startY = touchobj.pageY;
+        startTime = new Date().getTime();
+    }, false);
+    touchsurface.addEventListener('touchmove', function(e){ e.preventDefault(); }, false);
+    touchsurface.addEventListener('touchend', function(e){
+        var touchobj = e.changedTouches[0];
+        dist_r = touchobj.pageX - startX;
+        dist_l = startX - touchobj.pageX;
+        elapsedTime = new Date().getTime() - startTime;
+        var isRightSwipe = (elapsedTime <= allowedTime && dist_r >= threshold && Math.abs(touchobj.pageY - startY) <= 100),
+            isLeftSwipe = (elapsedTime <= allowedTime && dist_l >= threshold && Math.abs(touchobj.pageY - startY) <= 100);
+        handleswipe(isRightSwipe, isLeftSwipe);
+        if ( isRightSwipe || isLeftSwipe ) { e.preventDefault(); }
+    }, false); 
+}, false);
+document.getElementById('file').addEventListener('change', function(e) {
+    var access_token = readStorage('access_token');
+    if ( access_token === undefined || access_token === false || access_token === '' ) { return false; }
+
+    var file = this.files[0];
+    var xhr = new XMLHttpRequest();
+    var url = window.apiURL + '/files';
+
+    var fileObj = { 'kind': "photo",
+                    'type': "social.nice.image",
+                    'mime_type': file.type,
+                    'name': file.name,
+                    'public': true
+                   };
+
+    xhr.onreadystatechange = function(e) { if ( 4 == this.readyState ) { parseFileUpload( e.target.response, file ); } };
+    xhr.open('post', url, true);
+    xhr.setRequestHeader("Authorization", "Bearer " + access_token);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.send(JSON.stringify(fileObj));
+}, false);
 function loadConfigFile() {
     if ( readConfigFile( 'config.json' ) ) { return true; }
 }
@@ -98,6 +281,7 @@ function parseMyToken( data ) {
         saveStorage('long_length', 8000, true );
         saveStorage('chan_length', 2048, true);
         saveStorage('post_length', 256, true);
+        saveStorage('_refresher', '0', true);
         saveStorage('isGood', 'Y', true);
 
         saveStorage('username', data.username);
@@ -648,6 +832,7 @@ function parseItems( data ) {
                 }
             }
         }
+        saveStorage('_refresher', -1, true)
         showHideActivity(false);
         trimPosts();
     }
@@ -823,6 +1008,14 @@ function showMutedPost( post_id, tl ) {
     $('#' + post_id + tl ).replaceWith( _html );
 }
 function redrawList() {
+    var counter = parseInt( readStorage('_refresher', true) );
+    if ( counter >= 0 && counter < 10 ) {
+        saveStorage( '_refresher', (counter + 1), true);
+        return false;
+    } else { 
+        saveStorage( '_refresher', '0', true);
+    }
+
     var global_showall = ( readStorage('global_show') === 'e' ) ? true : false;
     if ( readStorage('global_hide') === 'Y' ) { global_showall = false; }
     if ( window.activate === false ) {
@@ -1105,6 +1298,7 @@ function constructDialog( dialog_id ) {
                             '<button id="rpy-send" class="btn-grey">Send</button>' +
                         '</div>' +
                     '</div>';
+            break;
 
         default:
             /* Do Nothing */

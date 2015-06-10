@@ -148,6 +148,8 @@ nav:not(.mm-menu) { display: none; }
     overflow-y: auto;
     position: fixed;
     z-index: 980;
+    -webkit-overflow-scrolling: touch;
+    -webkit-transform: translate3d(0, 0, 0);
 
     max-height: 90%;
     max-width: 400px;
@@ -537,6 +539,8 @@ nav:not(.mm-menu) { display: none; }
     overflow-y: auto;
     position: fixed;
     z-index: 990;
+    -webkit-overflow-scrolling: touch;
+    -webkit-transform: translate3d(0, 0, 0);
 
     max-height: 80%;
     max-width: 400px;
