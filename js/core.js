@@ -350,6 +350,7 @@ function prepApp() {
                    9: { 'key': 'hide_audio', 'value': 'N', 'useStore': false },
                   10: { 'key': 'hide_images', 'value': 'N', 'useStore': false },
                   11: { 'key': 'hide_geodata', 'value': 'N', 'useStore': false },
+                  12: { 'key': 'hide_avatars', 'value': 'N', 'useStore': false },
 
                   20: { 'key': 'refresh_last', 'value': seconds, 'useStore': true },
                   21: { 'key': 'post_length', 'value': 256, 'useStore': true },
@@ -2065,6 +2066,7 @@ function parseEmbedded( post ) {
 }
 function clearTimelines() {
     window.posts = {};
+    window.chans = {};
     showTimelines();
 }
 function getPMSummary( before_id ) {
@@ -2912,6 +2914,14 @@ function setCSSPreferences() {
     jss.set('.post-list .post-item .post-avatar img.avatar-round.mention', { 'border-color': '#' + readStorage('mention_color') });
     jss.set('.post-list .post-item .post-avatar img.avatar-round.recent-acct', { 'border-color': '#' + readStorage('one-week_color') });
     jss.set('.post-list .post-item .post-avatar img.avatar-round.new-acct', { 'border-color': '#' + readStorage('one-day_color') });
+
+    if ( readStorage('hide_avatars') === 'Y' ) {
+        jss.set('.post-list .post-item .post-avatar', { 'display': 'none' });
+        jss.set('.post-list .post-item .post-content', { 'width': '90%' });
+    } else {
+        jss.set('.post-list .post-item .post-avatar', { 'display': 'inline-block' });
+        jss.set('.post-list .post-item .post-content', { 'width': '70%' });
+    }
 }
 function setRefreshInterval( interval ) {
     var options = [5, 15, 30, 60, 300, 10000];
