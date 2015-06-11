@@ -594,6 +594,19 @@ function getUserProfileActions( data ) {
                 '</ul>';
     return _html;
 }
+function getUserProfileNumbers( data ) {
+    var _html = '<div class="detail" style="border-right: 1px solid #ccc;" onclick="doShowUser(' + data.id + ');">' +
+                    '<strong>Posts</strong><p>' + addCommas( data.counts.posts ) + '</p>' +
+                '</div>' +
+                '<div class="detail" style="border-right: 1px solid #ccc;" onclick="showUserList(\'following\', ' + data.id + ');">' +
+                    '<strong>Following</strong><p>' + addCommas( data.counts.following ) + '</p>' +
+                '</div>' +
+                '<div class="detail" onclick="showUserList(\'followers\', ' + data.id + ');">' +
+                    '<strong>Followers</strong><p>' + addCommas( data.counts.followers ) + '</p>' +
+                '</div>';
+    
+    return _html;
+}
 function parseUserProfile( data ) {
     if ( data ) {
         var html = '',
@@ -610,9 +623,7 @@ function parseUserProfile( data ) {
                                                             '<h5>' + getUserProfileActions( data[0] ) + '</h5>';
 
         document.getElementById( 'usr-info' ).innerHTML = ( data[0].user.hasOwnProperty('description') ) ? data[0].user.description.html : '';
-        document.getElementById( 'usr-followers' ).innerHTML = addCommas( data[0].user.counts.followers );
-        document.getElementById( 'usr-following' ).innerHTML = addCommas( data[0].user.counts.following );
-        document.getElementById( 'usr-posts' ).innerHTML = addCommas( data[0].user.counts.posts );
+        document.getElementById( 'usr-numbers' ).innerHTML = getUserProfileNumbers( data[0].user );
 
         if ( data[0].user.follows_you ) { action_html += '<em>Follows You</em>'; }
         if ( data[0].user.you_follow ) {
@@ -1258,12 +1269,8 @@ function constructDialog( dialog_id ) {
                             '<div id="usr-names" class="names"></div>' +
                         '</div>' +
                         '<div id="usr-info" class="info">&nbsp;</div>' +
-                        '<div id="usr-actions" class="actions"><button>Follow</button></div>' +
-                        '<div class="numbers">' +
-                            '<div class="detail" style="border-right: 1px solid #ccc;"><strong>Posts</strong><p id="usr-posts">&nbsp;</p></div>' +
-                            '<div class="detail" style="border-right: 1px solid #ccc;"><strong>Following</strong><p id="usr-following">&nbsp;</p></div>' +
-                            '<div class="detail"><strong>Followers</strong><p id="usr-followers">&nbsp;</p></div>' +
-                        '</div>' +
+                        '<div id="usr-actions" class="actions">&nbsp;</div>' +
+                        '<div id="usr-numbers" class="numbers">&nbsp;</div>' +
                         '<div id="user_posts"></div>' +
                     '</div>';
             break;
@@ -1743,20 +1750,26 @@ function setFollow( data ) {
         var my_id = readStorage('user_id');
         var html = '';
 
-        if ( data.follows_you ) { html += '<em>Follows You</em>'; }
-        if ( data.you_follow ) {
-            html += '<button onclick="doFollow(' + data.id + ', true)" class="btn-red">Unfollow</button>';
+        var elementExists = document.getElementById('btn-follow-' + data.id);
+        if ( elementExists ) {
+            document.getElementById('btn-follow-' + data.id).innerHTML = ((data.you_follow === true) ? 'Unfollow' : 'Follow');
+            document.getElementById('btn-follow-' + data.id).onclick = function() { doFollow(data.id, data.you_follow); }
+            toggleClassIfExists('btn-follow-' + data.id, 'btn-green', 'btn-red', true);
         } else {
-            if ( data.id !== my_id ) {
-                html += '<button onclick="doFollow(' + data.id + ', false)" class="btn-green">Follow</button>';
+            if ( data.follows_you ) { html += '<em>Follows You</em>'; }
+            if ( data.you_follow ) {
+                html += '<button onclick="doFollow(' + data.id + ', true)" class="btn-red">Unfollow</button>';
             } else {
-                html += '<span>I think this is you.</span>';
+                if ( data.id !== my_id ) {
+                    html += '<button onclick="doFollow(' + data.id + ', false)" class="btn-green">Follow</button>';
+                } else {
+                    html += '<span>I think this is you.</span>';
+                }
             }
+            document.getElementById( 'usr-actions' ).innerHTML = html;
         }
-        document.getElementById( 'usr-actions' ).innerHTML = html;
     }
 }
-
 function doShowConv( post_id ) {
     if ( post_id === '' || post_id === undefined ) {  
         toggleClass('conversation','show','hide');
@@ -3004,4 +3017,66 @@ function setColumnWidthAdjustment() {
     if ( px === 0 ) { px = '0'; }
     saveStorage('scrollbar_adjust', px);
     setWindowConstraints();
+}
+function showUserList( type, account_id ) {
+    var access_token = readStorage('access_token');
+
+    if ( access_token !== false ) {
+        document.getElementById('user_posts').innerHTML = '<div id="usr-0" class="user-item">&nbsp;</div>';
+        setSplashMessage('Getting Account List');
+        var params = {
+            include_annotations: 0,
+            include_deleted: 0,
+            include_machine: 0,
+            access_token: access_token,
+            include_html: 0,
+            count: 200
+        }; 
+        $.ajax({
+            url: window.apiURL + '/users/' + account_id + '/' + type,
+            crossDomain: true,
+            data: params,
+            type: 'GET',
+            success: function( data ) { parseUserList( data ); },
+            error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
+            dataType: "json"
+        });
+    }
+}
+function parseUserList( resp ) {
+    var data = resp.data;
+    if ( data ) {
+        var _html = '',
+            _id = 'usr-0';
+        for ( var i = 0; i < data.length; i++ ) {
+            _html = '<img src="' + data[i].avatar_image.url + '" alt="' + data[i].username + '" onclick="doShowUser(' + data[i].id + ');" />' +
+                    '<strong onclick="doShowUser(' + data[i].id + ');">' +
+                        data[i].username +
+                        ( (data[i].name !== '') ? ' <em>(' + data[i].name  + ')</em>' : '' ) +
+                    '</strong>' +
+                    '<div class="buttons">' +
+                        ( (data[i].follows_you === true) ? '<em>Follows You</em>' : '') +
+                        '<button id="btn-follow-' + data[i].id + '" class="btn ' + ( (data[i].you_follow === true) ? 'btn-red' : 'btn-green') + '"' +
+                               ' onclick="doFollow(' + data[i].id + ',' + data[i].you_follow + ');">' +
+                            ( (data[i].you_follow === true) ? 'Unfollow' : 'Follow') +
+                        '</button>' +
+                    '</div>' +
+                    '<div id="more-' + data[i].id + '" class="user-detail">' +
+                        '<p>' + data[i].timezone + '</p>' +
+                        '<p>' + ((data[i].description === undefined) ? '&nbsp;' : data[i].description.text) + '</p>' +
+                    '</div>';
+            document.getElementById('user_posts').insertBefore( buildGenericNode( 'usr-' + data[i].id, data[i].id, 'user-item', _html ),
+                                                                                  document.getElementById(_id) );
+        }
+    }
+    setSplashMessage('');
+}
+function buildGenericNode( elID, elName, elClass, html ) {
+    var elem = document.createElement("div");
+    elem.setAttribute('id', elID);
+    elem.setAttribute('name', elName);
+    elem.setAttribute('class', elClass);
+    elem.innerHTML = html;
+
+    return elem;
 }

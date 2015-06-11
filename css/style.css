@@ -711,6 +711,7 @@ nav:not(.mm-menu) { display: none; }
     color: #00f;
     font-style: italic;
 }
+.profile .user-item .buttons button,
 .profile .actions button {
     border: 1px solid #ccc;
     border-radius: 10px;
@@ -719,9 +720,17 @@ nav:not(.mm-menu) { display: none; }
     font-weight: bold;
     padding: 5px 15px;
     cursor: pointer;
-    min-width: 100px;
+    min-width: 60px;
 }
+@media all and (min-device-width:768px) {
+    .profile .user-item .buttons button,
+    .profile .actions button {
+        min-width: 100px;
+    }
+}
+.profile .user-item .buttons button.btn-red,
 .profile .actions button.btn-red { background: #d9534f; }
+.profile .user-item .buttons button.btn-green,
 .profile .actions button.btn-green { background: #5ba525; }
 .profile .numbers {
     border-top: 1px solid #ccc;
@@ -751,6 +760,46 @@ nav:not(.mm-menu) { display: none; }
     margin: 0;
     text-align: right;
 }
+
+.profile .user-item {
+    border-bottom: 1px solid #ccc;
+    display: block;
+    overflow-x: hidden;
+    padding: 5px;
+}
+
+.profile .user-item img {
+    background: #fff;
+    background-color: #fff;
+    border: 1px solid #000;
+    border-radius: 5px;
+    display: inline-block;
+    float: left;
+
+    max-height: 50px;
+    max-width: 50px;
+    height: auto;
+    width: auto;
+}
+
+.profile .user-item strong {
+    display: inline-block;
+    margin-left: 5px;
+    vertical-align: top;
+}
+
+.profile .user-item .buttons {
+    display: block;
+    margin: 5px 0;
+    text-align: right;
+}
+
+.profile .user-item .buttons em {
+    float: left;
+    margin: 3px 0 0 5px;
+}
+
+
 /** ******************************************* *
  *      Post Classes                            *
  ** ******************************************* */
