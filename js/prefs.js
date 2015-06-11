@@ -66,6 +66,7 @@ function fillPrefsWindow( opt ) {
             break;
 
         case 'display':
+            loadMomentIfRequired( true );
             var spacer = '';
             var items = { 0: { 'label': "Timestamps",
                                'notes': "Customise How You See Post Times",
@@ -602,33 +603,6 @@ function loadCSSPreset( preset ) {
         validateHexColorAndPreview(i);
     }
 }
-function setCSSPreferences() {
-    jss.set('body', { 'background-color': '#' + readStorage('body_background') });
-    jss.set('.header', { 'background-color': '#' + readStorage('header_background') });
-    jss.set('.header', { 'color': '#' + readStorage('header_color') });
-    jss.set('.post-name', { 'color': '#' + readStorage('post-name_color') });
-    jss.set('.post-content', { 'color': '#' + readStorage('post-content_color') });
-    jss.set('.post-mention', { 'color': '#' + readStorage('post-mention_color') });
-    jss.set('.chat .post-item.post-grey', { 'background-color': '#' + readStorage('post-highlight_color') });
-    jss.set('.chatbox', { 'background-color': '#' + readStorage('body_background') });
-    jss.set('.chatbox', { 'border-color': '#' + readStorage('post-content_color') });
-    jss.set('.chatbox .title', { 'background-color': '#' + readStorage('header_background') });
-    jss.set('.chatbox .title', { 'color': '#' + readStorage('header_color') });
-    jss.set('.chatbox div#mute_hash.title_btn', { 'background-color': '#' + readStorage('header_background') });
-    jss.set('.chatbox div#mute_hash.title_btn', { 'color': '#' + readStorage('header_color') });
-    jss.set('.chatbox .lbltxt', { 'color': '#' + readStorage('post-content_color') });
-    jss.set('.profile', { 'background-color': '#' + readStorage('body_background') });
-    jss.set('.profile', { 'border-color': '#' + readStorage('header_background') });
-    jss.set('.profile .info', { 'color': '#' + readStorage('post-content_color') });
-    jss.set('.profile .numbers', { 'color': '#' + readStorage('post-content_color') });
-    jss.set('.profile .actions span', { 'color': '#' + readStorage('mention_color') });
-    jss.set('.profile .names h4', { 'color': '#' + readStorage('header_color') });
-    jss.set('.post-list .post-item .post-actions span', { 'color': '#' + readStorage('post-content_color') });
-    jss.set('.post-list .post-item .post-avatar img.avatar-round', { 'border-color': '#' + readStorage('avatar_color') });
-    jss.set('.post-list .post-item .post-avatar img.avatar-round.mention', { 'border-color': '#' + readStorage('mention_color') });
-    jss.set('.post-list .post-item .post-avatar img.avatar-round.recent-acct', { 'border-color': '#' + readStorage('one-week_color') });
-    jss.set('.post-list .post-item .post-avatar img.avatar-round.new-acct', { 'border-color': '#' + readStorage('one-day_color') });
-}
 function saveCSSPreferences() {
     var items = ['body_background', 'header_background', 'header_color',
                  'post-name_color', 'post-content_color', 'post-mention_color', 'post-highlight_color',
@@ -644,88 +618,6 @@ function validateHexColorAndPreview( elID ) {
     var hex = document.getElementById(elID).value.replaceAll('#', '');
     var isOk  = /(^[0-9A-F]{6}$)|(^[0-9A-F]{3}$)/i.test(hex);
     if ( isOk ) { document.getElementById('prev' + elID).style.backgroundColor = '#' + hex; }
-}
-function setRefreshInterval( interval ) {
-    var options = [5, 15, 30, 60, 300, 10000];
-    var bgColor = '#' + readStorage('header_color'),
-        frColor = '#' + readStorage('header_background');
-    var rrate = parseInt(interval);
-    if ( rrate === undefined || isNaN(interval) ) { rrate = 15; }
-    var old_val = readStorage('refresh_rate');
-    saveStorage('refresh_rate', rrate);
-
-    var elementExists = document.getElementById('btn-rr-' + old_val);
-    if ( elementExists !== null && elementExists !== undefined ) {
-        document.getElementById('btn-rr-' + old_val).style.backgroundColor = frColor;
-        document.getElementById('btn-rr-' + old_val).style.color = bgColor;
-        document.getElementById('btn-rr-' + rrate).style.backgroundColor = bgColor;
-        document.getElementById('btn-rr-' + rrate).style.color = frColor;
-    }
-}
-function setPostsPerColumn( posts ) {
-    var options = [50, 100, 250, 500, 1000, 99999];
-    var bgColor = '#' + readStorage('header_color'),
-        frColor = '#' + readStorage('header_background');
-    var pcnt = parseInt(posts);
-    if ( pcnt === undefined || isNaN(pcnt) ) { pcnt = 250; }
-    var old_val = readStorage('column_max');
-    saveStorage('column_max', pcnt);
-
-    var elementExists = document.getElementById('btn-ppc-' + old_val);
-    if ( elementExists !== null && elementExists !== undefined ) {
-        document.getElementById('btn-ppc-' + old_val).style.backgroundColor = frColor;
-        document.getElementById('btn-ppc-' + old_val).style.color = bgColor;
-        document.getElementById('btn-ppc-' + pcnt).style.backgroundColor = bgColor;
-        document.getElementById('btn-ppc-' + pcnt).style.color = frColor;
-    }
-    trimPosts();
-}
-function setFontFamily( family ) {
-    document.body.style.fontFamily = family;
-    saveStorage('font_family', family);
-}
-function setFontSize( size_px ) {
-    var options = [10, 12, 14, 16, 18, 20];
-    var bgColor = '#' + readStorage('header_color'),
-        frColor = '#' + readStorage('header_background');
-    size_px = parseInt(size_px);
-    if ( size_px === undefined || isNaN(size_px) ) { size_px = 14; }
-    document.body.style.fontSize = size_px + "px";
-    document.body.style.lineHeight = (size_px + 6) + "px";
-    var old_val = readStorage('font_size');
-    saveStorage('font_size', size_px);
-
-    var elementExists = document.getElementById('btn-pt-' + old_val);
-    if ( elementExists !== null && elementExists !== undefined ) {
-        document.getElementById('btn-pt-' + old_val).style.backgroundColor = frColor;
-        document.getElementById('btn-pt-' + old_val).style.color = bgColor;
-        document.getElementById('btn-pt-' + size_px).style.backgroundColor = bgColor;
-        document.getElementById('btn-pt-' + size_px).style.color = frColor;
-    }
-}
-function setGlobalShow( type ) {
-    var options = ['e', 'n'];
-    var show_type = ( type === 'n' ) ? 'n' : 'e';
-    saveStorage('global_show', show_type);
-}
-function setDelaySeconds() {
-    var sec = parseInt( document.getElementById('show_hover_delay').value );
-    if ( sec === undefined || isNaN(sec) ) {
-        alert( "Whoops. Please Enter a Value Between 1 and 15." );
-        return false;
-    }
-    if ( sec < 1 || sec > 15 ) {
-        alert( "Whoops. Please Enter a Value Between 1 and 15." );
-        return false;
-    }
-    saveStorage('show_hover_delay', (sec * 1000));
-}
-function setColumnWidthAdjustment() {
-    var px = parseInt( document.getElementById('scroll_amt').value )
-    if ( px === undefined || isNaN(px) || px === false ) { px = 0; }
-    if ( px === 0 ) { px = '0'; }
-    saveStorage('scrollbar_adjust', px);
-    setWindowConstraints();
 }
 function toggleOption( item, txt ) {
     var bgColor = '#' + readStorage('header_color'),
@@ -771,9 +663,16 @@ function togglePostElement( item ) {
 function getTimestamp( created_at, show_something ) {
     var at_value = readStorage('absolute_times'),
         live_value = readStorage('show_live_timestamps');
-    moment.locale('en');
-    return ( at_value === 'Y' ) ? moment( created_at ).format("MMMM Do YYYY h:mma")
-                                : ((live_value === 'Y' || show_something === true ) ? humanized_time_span( created_at ) : '<em>more...</em>');
+    var rVal = '';
+    if ( at_value === 'Y' ) {
+        var i = 0;
+        while ( moment === undefined || moment === null ) { setTimeout(function() { i++; }, 250); }
+        moment.locale('en');
+        rVal = moment( created_at ).format("MMMM Do YYYY h:mma");
+    } else {
+        rVal = ((live_value === 'Y' || show_something === true ) ? humanized_time_span( created_at ) : '<em>more...</em>');
+    }
+    return rVal;
 }
 function setTimestamps() {
     for ( post_id in window.posts ) {

@@ -21,12 +21,11 @@
         <script type="text/javascript" src="js/jquery.min.js"></script>
         <script type="text/javascript" src="js/jss.min.js"></script>
         <script type="text/javascript">
-            var version = 1;
+            var version = 1,
+                srclist = {};
             var items = { 0: { el: 'link', rel: 'stylesheet', type: 'text/css', url: 'css/style.css' },
                           1: { el: 'link', rel: 'stylesheet', type: 'text/css', url: 'css/font-awesome.css' },
 
-                         10: { el: 'script', rel: false, type: 'text/javascript', url: 'js/moment-with-locales.js' },
-                         11: { el: 'script', rel: false, type: 'text/javascript', url: 'js/moment-timezone-with-data.js' },
                          12: { el: 'script', rel: false, type: 'text/javascript', url: 'js/dom.js' },
                          13: { el: 'script', rel: false, type: 'text/javascript', url: 'js/storage.js' },
                          14: { el: 'script', rel: false, type: 'text/javascript', url: 'js/prefs.js' },
@@ -34,16 +33,19 @@
             }
 
             for ( idx in items ) {
-                var link = document.createElement( items[idx].el );
-                    if ( items[idx].el === 'link' ) {
-                        link.href = items[idx].url + '?v=' + version;
-                    } else {
-                        link.src = items[idx].url + '?v=' + version;
-                    }
-                    if ( items[idx].rel ) { link.rel = items[idx].rel; }
-                    link.type = items[idx].type;
-
-                document.getElementsByTagName("head")[0].appendChild( link );
+                if ( window.srclist.hasOwnProperty( items[idx].url ) === false ) {
+                    var link = document.createElement( items[idx].el );
+                        if ( items[idx].el === 'link' ) {
+                            link.href = items[idx].url + '?v=' + version;
+                        } else {
+                            link.src = items[idx].url + '?v=' + version;
+                        }
+                        if ( items[idx].rel ) { link.rel = items[idx].rel; }
+                        link.type = items[idx].type;
+    
+                    document.getElementsByTagName("head")[0].appendChild( link );
+                    window.srclist[items[idx].url] = true;
+                }
             }
         </script>
     </head>

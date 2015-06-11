@@ -1015,6 +1015,9 @@ nav:not(.mm-menu) { display: none; }
     cursor: pointer;
     min-width: 100px;
 }
+@media all and (max-device-width:600px) {
+    .chatbox div#pref-list.chat button { min-width: 60px; }
+}
 .chatbox div#pref-list.chat button.btn-red { background: #d9534f; }
 .chatbox div#pref-list.chat button.btn-grey { background: #ccc; }
 .chatbox div#pref-list.chat button.btn-green { background: #5ba525; }
