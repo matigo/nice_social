@@ -1229,7 +1229,7 @@ function setColumnsWidth( cWidth, cCount ) {
     for (i in window.timelines) {
         if ( window.timelines.hasOwnProperty(i) ) { if ( window.timelines[i] ) { vCols++; } }
     }
-    css_style += (cCount === 1) ? ' max-width: 480px;' : ' max-width: ' + (100 / cCount) + '%;';
+    css_style += (cCount === 1) ? ' max-width: 480px;' : ' max-width: ' + parseFloat(100 / cCount).toFixed(3) + '%;';
     for (i in window.timelines) {
         if ( window.timelines.hasOwnProperty(i) ) {
             if ( window.timelines[i] ) { 

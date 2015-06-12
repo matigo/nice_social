@@ -843,7 +843,7 @@ nav:not(.mm-menu) { display: none; }
 }
 .post-list .post-item .post-avatar .avatar-round,
 .chat .post-item .post-avatar .avatar-round {
-    background: transparent;
+    background: #fff;
     border: 1px solid #ccc;
     border-radius: 50px;
     height: auto;
