@@ -2922,19 +2922,16 @@ function setCSSPreferences() {
     jss.set('.profile .numbers', { 'color': '#' + readStorage('post-content_color') });
     jss.set('.profile .actions span', { 'color': '#' + readStorage('mention_color') });
     jss.set('.profile .names h4', { 'color': '#' + readStorage('header_color') });
+
     jss.set('.post-list .post-item .post-actions span', { 'color': '#' + readStorage('post-content_color') });
     jss.set('.post-list .post-item .post-avatar img.avatar-round', { 'border-color': '#' + readStorage('avatar_color') });
     jss.set('.post-list .post-item .post-avatar img.avatar-round.mention', { 'border-color': '#' + readStorage('mention_color') });
     jss.set('.post-list .post-item .post-avatar img.avatar-round.recent-acct', { 'border-color': '#' + readStorage('one-week_color') });
     jss.set('.post-list .post-item .post-avatar img.avatar-round.new-acct', { 'border-color': '#' + readStorage('one-day_color') });
 
-    if ( readStorage('hide_avatars') === 'Y' ) {
-        jss.set('.post-list .post-item .post-avatar', { 'display': 'none' });
-        jss.set('.post-list .post-item .post-content', { 'width': '90%' });
-    } else {
-        jss.set('.post-list .post-item .post-avatar', { 'display': 'inline-block' });
-        jss.set('.post-list .post-item .post-content', { 'width': '70%' });
-    }
+    jss.set('.post-list .post-item .post-avatar, .chat-list .post-item .post-avatar', {
+        'display': (( readStorage('hide_avatars') === 'Y' ) ? 'none' : 'inline-block')
+    });
 }
 function setRefreshInterval( interval ) {
     var options = [5, 15, 30, 60, 300, 10000];

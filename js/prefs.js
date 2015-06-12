@@ -651,6 +651,10 @@ function togglePostElement( item ) {
             cls = '.post-audio';
             break;
         
+        case 'hide_avatars':
+            cls = '.post-avatar';
+            break;
+
         case 'hide_images':
             cls = '.post-image';
             break;
