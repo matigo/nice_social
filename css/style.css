@@ -659,18 +659,7 @@ nav:not(.mm-menu) { display: none; }
 }
 @media all and (min-device-width:768px) {
     .profile .names { height: 72px; }
-    .profile .names h5 ul li {
-        border-radius: 0px;
-        cursor: pointer;
-        display: inline-block;
-        margin: 0 -4px 0 0;
-        position: relative;
-        -webkit-transition: all 0.2s;
-        -moz-transition: all 0.2s;
-        -ms-transition: all 0.2s;
-        -o-transition: all 0.2s;
-        transition: all 0.2s;
-    }
+    .profile .names h5 ul li { border-radius: 0px; }
     .profile .names h5 ul li ul {
         top: 35px;
         left: -155px;

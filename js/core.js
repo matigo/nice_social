@@ -351,6 +351,7 @@ function prepApp() {
                   10: { 'key': 'hide_images', 'value': 'N', 'useStore': false },
                   11: { 'key': 'hide_geodata', 'value': 'N', 'useStore': false },
                   12: { 'key': 'hide_avatars', 'value': 'N', 'useStore': false },
+                  13: { 'key': 'hide_longpost', 'value': 'N', 'useStore': false },
 
                   20: { 'key': 'refresh_last', 'value': seconds, 'useStore': true },
                   21: { 'key': 'post_length', 'value': 256, 'useStore': true },
@@ -974,10 +975,14 @@ function parseText( post ) {
         for ( var i = 0; i < post.annotations.length; i++ ) {
             switch ( post.annotations[i].value.type || post.annotations[i].type ) {
                 case 'net.jazzychad.adnblog.post':
-                    var post_body = post.annotations[i].value.body.ireplaceAll('\n\n', '<br><br>');
-                    post_body = post_body.replace(/\[([^\[]+)\]\(([^\)]+)\)/g, '<a target="_blank" href="$2">$1</a>');
-                    html = ((post.annotations[i].value.title !== '') ? '<h6>' + post.annotations[i].value.title + '</h6>' : '') +
-                           '<span>' + post_body + '</span>';
+                    var hide_longpost = readStorage('hide_longpost')
+                    if ( hide_longpost === 'N' || hide_longpost === false ) {
+                        var post_body = post.annotations[i].value.body.ireplaceAll('\n\n', '<br><br>');
+                            post_body = post_body.ireplaceAll('\r\r', '<br>');
+                        post_body = post_body.replace(/\[([^\[]+)\]\(([^\)]+)\)/g, '<a target="_blank" href="$2">$1</a>');
+                        html = ((post.annotations[i].value.title !== '') ? '<h6>' + post.annotations[i].value.title + '</h6>' : '') +
+                               '<span>' + post_body + '</span>';
+                    }
                     break;
 
                 default:

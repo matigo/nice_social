@@ -82,7 +82,8 @@ function fillPrefsWindow( opt ) {
                                'items': { 'hide_audio':   { 'label': "Hide Audio Files", 'type': "yn", 'js': "togglePostElement(\'hide_audio\');" },
                                           'hide_avatars':   { 'label': "Hide Avatars", 'type': "yn", 'js': "togglePostElement(\'hide_avatars\');" },
                                           'hide_images':  { 'label': "Hide Images", 'type': "yn", 'js': "togglePostElement(\'hide_images\');" },
-                                          'hide_geodata': { 'label': "Hide GeoMaps", 'type': "yn", 'js': "togglePostElement(\'hide_geodata\');" }
+                                          'hide_geodata': { 'label': "Hide GeoMaps", 'type': "yn", 'js': "togglePostElement(\'hide_geodata\');" },
+                                          'hide_longpost': { 'label': "Tiny Long Posts", 'type': "yn", 'js': "" }
                                          }
 /*                              },
                           2: { 'label': "Account Profile",
