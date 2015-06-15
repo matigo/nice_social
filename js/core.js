@@ -979,6 +979,7 @@ function parseText( post ) {
                     if ( hide_longpost === 'N' || hide_longpost === false ) {
                         var post_body = post.annotations[i].value.body.ireplaceAll('\n\n', '<br><br>');
                             post_body = post_body.ireplaceAll('\r\r', '<br>');
+                            post_body = post_body.ireplaceAll('\n', '<br>');
                         post_body = post_body.replace(/\[([^\[]+)\]\(([^\)]+)\)/g, '<a target="_blank" href="$2">$1</a>');
                         html = ((post.annotations[i].value.title !== '') ? '<h6>' + post.annotations[i].value.title + '</h6>' : '') +
                                '<span>' + post_body + '</span>';
