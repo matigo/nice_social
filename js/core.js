@@ -2038,11 +2038,34 @@ function parseEmbedded( post ) {
             switch ( post.annotations[i].value.type || post.annotations[i].type ) {
                 case 'net.app.core.oembed':
                 case 'photo':
+                case 'rich':
                     if ( readStorage('hide_images') === 'N' ) {
-                        html += '<div id="' + post.id + '-img-' + i + '" class="post-image"' +
-                                    ' style="background: url(\'' + post.annotations[i].value.url + '\');' +
-                                           ' background-size: cover; background-position: center center;"' +
-                                    ' onclick="showImage(\'' + post.annotations[i].value.url + '\');">&nbsp;</div>';
+                        if ( post.annotations[i].value.mime_type !== undefined && post.annotations[i].value.mime_type !== false ) {
+                            switch ( post.annotations[i].value.mime_type ) {
+                                case 'audio/mpeg':
+                                case 'audio/mp4':
+                                case 'audio/mp3':
+                                    html += '<div id="' + post.id + '-audio-' + i + '" class="post-audio">' +
+                                                '<audio controls>' +
+                                                    '<source src="' + post.annotations[i].value.url + '"' +
+                                                           ' type="' + post.annotations[i].value.mime_type + '">' +
+                                                    'Your browser does not support the audio element.' +
+                                                '</audio>' +
+                                            '</div>';
+                                    break;
+                                
+                                default:
+                                    html += '<div id="' + post.id + '-img-' + i + '" class="post-image"' +
+                                                ' style="background: url(\'' + post.annotations[i].value.url + '\');' +
+                                                       ' background-size: cover; background-position: center center;"' +
+                                                ' onclick="showImage(\'' + post.annotations[i].value.url + '\');">&nbsp;</div>';
+                            }
+                        } else {
+                            html += '<div id="' + post.id + '-img-' + i + '" class="post-image"' +
+                                        ' style="background: url(\'' + post.annotations[i].value.url + '\');' +
+                                               ' background-size: cover; background-position: center center;"' +
+                                        ' onclick="showImage(\'' + post.annotations[i].value.url + '\');">&nbsp;</div>';
+                        }
                     }
                     break;
 

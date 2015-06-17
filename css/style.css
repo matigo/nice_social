@@ -914,6 +914,21 @@ nav:not(.mm-menu) { display: none; }
     text-align: left;
     width: 100%;
 }
+.chat .post-item .post-audio,
+.post-list .post-item .post-audio {
+    cursor: pointer;
+    margin: 15px 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0 5%;
+    text-align: left;
+    width: 90%;
+}
+.chat .post-item .post-audio audio,
+.post-list .post-item .post-audio audio {
+    margin: 0;
+    width: 100%;
+}
 .post-list .post-item .post-actions,
 .chat .post-item .post-actions {
     font-size: 200%;
