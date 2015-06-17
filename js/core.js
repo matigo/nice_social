@@ -179,15 +179,9 @@ document.getElementById('file').addEventListener('change', function(e) {
     var file = this.files[0];
     var xhr = new XMLHttpRequest();
     var url = window.apiURL + '/files';
+    var fileObj = getFileObjectByType( file );
 
-    var fileObj = { 'kind': "photo",
-                    'type': "social.nice.image",
-                    'mime_type': file.type,
-                    'name': file.name,
-                    'public': true
-                   };
-
-    xhr.onreadystatechange = function(e) { if ( 4 == this.readyState ) { parseFileUpload( e.target.response, file ); } };
+    xhr.onreadystatechange = function(e) { if ( 4 == this.readyState ) { parseFileUpload( e.target.response, file, fileObj.anno ); } };
     xhr.open('post', url, true);
     xhr.setRequestHeader("Authorization", "Bearer " + access_token);
     xhr.setRequestHeader("Content-Type", "application/json");
@@ -195,6 +189,34 @@ document.getElementById('file').addEventListener('change', function(e) {
 }, false);
 function loadConfigFile() {
     if ( readConfigFile( 'config.json' ) ) { return true; }
+}
+function getFileObjectByType( file ) {
+    var fileObj = false;
+    
+    switch ( file.type ) {
+        case 'audio/x-m4a':
+        case 'audio/mpeg':
+        case 'audio/mp4':
+        case 'audio/mp3':
+            fileObj = { 'anno': "social.nice.audio",
+                        'kind': "audio",
+                        'type': "rich",
+                        'mime_type': file.type,
+                        'name': file.name,
+                        'public': true
+                       };
+            break;
+        
+        default:
+            fileObj = { 'anno': "net.app.core.oembed",
+                        'kind': "photo",
+                        'type': "photo",
+                        'mime_type': file.type,
+                        'name': file.name,
+                        'public': true
+                       };
+    }
+    return fileObj;
 }
 function readConfigFile( filename ) {
     var xhr = new XMLHttpRequest();
@@ -493,12 +515,26 @@ function buildJSONPost( text, in_reply_to ) {
             if ( text.indexOf('_' + idx + '_') > -1 ) {
                 text = text.replaceAll('_' + idx + '_', window.files[idx].url_permanent);
                 if ( oembed === false ) { oembed = []; }
-                oembed.push({ "type": "net.app.core.oembed",
-                              "value": { "+net.app.core.file": { "file_id": window.files[idx].id,
-                                                                 "file_token": window.files[idx].file_token,
-                                                                 "format": "oembed" }
-                                        }
-                            });
+                switch ( window.files[idx].anno ) {
+                    case 'social.nice.audio':
+                        oembed.push({ "type": window.files[idx].anno,
+                                      "value": { "filename": window.files[idx].name,
+                                                 "filetype": window.files[idx].type,
+                                                 "mimetype": window.files[idx].mime,
+                                                 "permanent_url": window.files[idx].url_permanent,
+                                                 "short_url": window.files[idx].url_short
+                                                }
+                                    });
+                        break;
+                    
+                    default:
+                        oembed.push({ "type": window.files[idx].anno,
+                                      "value": { "+net.app.core.file": { "file_id": window.files[idx].id,
+                                                                         "file_token": window.files[idx].file_token,
+                                                                         "format": "oembed" }
+                                                }
+                                    });
+                }
             }
         }
 
@@ -2069,6 +2105,23 @@ function parseEmbedded( post ) {
                     }
                     break;
 
+                case 'social.nice.audio':
+                    if ( readStorage('hide_audio') === 'N' ) {
+                        html += '<div id="' + post.id + '-audio-' + i + '" class="post-audio">' +
+                                    '<audio controls>' +
+                                        '<source src="' + post.annotations[i].value.short_url + '"' +
+                                               ' type="' + post.annotations[i].value.mimetype + '">' +
+                                        'Your browser does not support the audio element.' +
+                                    '</audio>' +
+                                    '<p>' +
+                                        '<a href="' + post.annotations[i].value.short_url + '" title="' + post.annotations[i].value.filename + '">' +
+                                            '<i class="fa fa-cloud-download"></i> Download This File' +
+                                        '</a>' +
+                                    '</p>' +
+                                '</div>';
+                    }
+                    break;
+
                 case 'net.app.core.geolocation':
                 case 'net.app.ohai.location':
                     if ( readStorage('hide_geodata') === 'N' ) {
@@ -2604,7 +2657,7 @@ function buildUrl(url, parameters) {
     if (qs.length > 0) { url = url + "?" + qs; }
     return url;
 }
-function parseFileUpload( response, file ) {
+function parseFileUpload( response, file, anno_type ) {
     var access_token = readStorage('access_token');
     if ( access_token === undefined || access_token === false || access_token === '' ) { return false; }
 
@@ -2644,6 +2697,7 @@ function parseFileUpload( response, file ) {
                                                           name: data.name,
                                                           type: data.type,
                                                           mime: file.type,
+                                                          anno: anno_type,
                                                           url_permanent: data.url_permanent,
                                                           url_short: data.url_short
                                                          }
