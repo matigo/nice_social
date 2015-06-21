@@ -613,6 +613,37 @@ function getUserProfile( user_id ) {
         dataType: "json"
     });
 }
+function getUserUsage( user_id ) {
+    if ( parseInt(user_id) <= 0 ) { return false; }
+    var params = { account_id: user_id };
+
+    $.ajax({
+        url: window.niceURL + '/user/list_activity',
+        crossDomain: true,
+        data: params,
+        success: function( data ) { parseUserUsage( data.data ); },
+        error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
+        dataType: "json"
+    });
+}
+function parseUserUsage( data ) {
+    if ( data ) {
+        var ds = data.counts;
+        var html = '',
+            col_max = data.max_count,
+            col_pct = 0;
+
+        for ( var i = 0; i < ds.length; i++ ) {
+            col_pct = ((ds[i].post_count + ds[i].broadcasts) / col_max) * 100;
+            html += '<span class="item" style="height: ' + col_pct + '%;">&nbsp;</span>';
+        }
+        
+        if ( readStorage('display_nrscore') === 'Y' ) { document.getElementById( 'history-score' ).innerHTML = 'NiceRank Score: ' + data.nicerank; }
+        if ( readStorage('display_usage') === 'Y' ) {
+            if ( html != '' ) { document.getElementById( 'history-bars' ).innerHTML = html; }
+        }
+    }
+}
 function getUserProfileActions( data ) {
     if ( data.user.id === readStorage('user_id') ) { return ''; }
     var _html = '<ul>' +
@@ -632,17 +663,19 @@ function getUserProfileActions( data ) {
     return _html;
 }
 function getUserProfileNumbers( data ) {
-    var _html = '<div class="detail" style="border-right: 1px solid #ccc;" onclick="doShowUser(' + data.id + ');">' +
-                    '<strong>Posts</strong><p>' + addCommas( data.counts.posts ) + '</p>' +
-                '</div>' +
-                '<div class="detail" style="border-right: 1px solid #ccc;" onclick="showUserList(\'following\', ' + data.id + ');">' +
-                    '<strong>Following</strong><p>' + addCommas( data.counts.following ) + '</p>' +
-                '</div>' +
-                '<div class="detail" onclick="showUserList(\'followers\', ' + data.id + ');">' +
-                    '<strong>Followers</strong><p>' + addCommas( data.counts.followers ) + '</p>' +
-                '</div>';
-    
-    return _html;
+    var html = '';
+    if ( readStorage('display_nrscore') === 'Y' ) { html += '<div id="history-score" class="score">&nbsp;</div>'; }
+    if ( readStorage('display_usage') === 'Y' ) { html += '<div id="history-bars" class="history">&nbsp;</div>'; }
+    html += '<div class="detail" style="border-right: 1px solid #ccc;" onclick="doShowUser(' + data.id + ');">' +
+                '<strong>Posts</strong><p>' + addCommas( data.counts.posts ) + '</p>' +
+            '</div>' +
+            '<div class="detail" style="border-right: 1px solid #ccc;" onclick="showUserList(\'following\', ' + data.id + ');">' +
+                '<strong>Following</strong><p>' + addCommas( data.counts.following ) + '</p>' +
+            '</div>' +
+            '<div class="detail" onclick="showUserList(\'followers\', ' + data.id + ');">' +
+                '<strong>Followers</strong><p>' + addCommas( data.counts.followers ) + '</p>' +
+            '</div>';
+    return html;
 }
 function parseUserProfile( data ) {
     if ( data ) {
@@ -678,6 +711,7 @@ function parseUserProfile( data ) {
             }
         }
         document.getElementById( 'usr-actions' ).innerHTML = action_html;
+        if ( readStorage('display_usage') === 'Y' || readStorage('display_nrscore') === 'Y' ) { getUserUsage( data[0].user.id ); }
 
         // Write the Post History
         for ( var i = 0; i < data.length; i++ ) {

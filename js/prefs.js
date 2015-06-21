@@ -85,15 +85,15 @@ function fillPrefsWindow( opt ) {
                                           'hide_geodata': { 'label': "Hide GeoMaps", 'type': "yn", 'js': "togglePostElement(\'hide_geodata\');" },
                                           'hide_longpost': { 'label': "Tiny Long Posts", 'type': "yn", 'js': "" }
                                          }
-/*                              },
+                              },
                           2: { 'label': "Account Profile",
                                'notes': "Display and Hide Profile Information",
                                'icon' : "fa-street-view",
                                'items': { 'display_nrscore': { 'label': "Show NR Score", 'type': "yn", 'js':"" },
-                                          'display_usage': { 'label': "Show Usage Graph", 'type': "yn", 'js':"" },
-                                          'display_details': { 'label': "Show Account Details", 'type': "yn", 'js':"" },
-                                          'display_oneavatar': { 'label': "Prevent Avatar Changes", 'type': "yn", 'js':"" }
-                                         }*/
+                                          'display_usage': { 'label': "Show Usage Graph", 'type': "yn", 'js':"" }
+                                          /* 'display_details': { 'label': "Show Account Details", 'type': "yn", 'js':"" },
+                                          'display_oneavatar': { 'label': "Prevent Avatar Changes", 'type': "yn", 'js':"" } */
+                                         }
                               }
                          };
             for ( idx in items ) {

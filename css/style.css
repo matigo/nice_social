@@ -733,6 +733,28 @@ nav:not(.mm-menu) { display: none; }
     width: 32%;
 }
 .profile .numbers .detail p { margin: 0; }
+.profile .numbers .history {
+    border-bottom: 1px solid #ccc;
+    display: block;
+    height: 50px;
+    overflow: hidden;
+    padding-top: 1px;
+    text-align: right;
+}
+.profile .numbers .history .item {
+    background-color: #00f;
+    display: inline-block;
+    margin: 0 1px;
+    vertical-align: bottom;
+    width: 1.35%;
+}
+.profile .numbers .score {
+    border-bottom: 1px solid #ccc;
+    display: block;
+    overflow: hidden;
+    padding: 1px 5px 0;
+    text-align: left;
+}
 
 .profile .post-item {
     border-bottom: 1px solid #ccc;
