@@ -374,6 +374,7 @@ function prepApp() {
                   11: { 'key': 'hide_geodata', 'value': 'N', 'useStore': false },
                   12: { 'key': 'hide_avatars', 'value': 'N', 'useStore': false },
                   13: { 'key': 'hide_longpost', 'value': 'N', 'useStore': false },
+                  14: { 'key': 'show_24h_timestamps', 'value': 'N', 'useStore': false },
 
                   20: { 'key': 'refresh_last', 'value': seconds, 'useStore': true },
                   21: { 'key': 'post_length', 'value': 256, 'useStore': true },
@@ -635,7 +636,10 @@ function parseUserUsage( data ) {
 
         for ( var i = 0; i < ds.length; i++ ) {
             col_pct = ((ds[i].post_count + ds[i].broadcasts) / col_max) * 100;
-            html += '<span class="item" style="height: ' + col_pct + '%;">&nbsp;</span>';
+            html += '<span class="item" style="height: ' + col_pct + '%;">' +
+                        '<red style="height: ' + ((ds[i].broadcasts / (ds[i].post_count + ds[i].broadcasts)) * 100) + '%;">&nbsp;</red>' +
+                        '<blue>&nbsp;</blue>' +
+                    '</span>';
         }
         
         if ( readStorage('display_nrscore') === 'Y' ) { document.getElementById( 'history-score' ).innerHTML = 'NiceRank Score: ' + data.nicerank; }

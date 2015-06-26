@@ -748,6 +748,13 @@ nav:not(.mm-menu) { display: none; }
     vertical-align: bottom;
     width: 1.35%;
 }
+.profile .numbers .history .item red {
+    background-color: #f00;
+    display: block;
+}
+.profile .numbers .history .item blue {
+    display: block;
+}
 .profile .numbers .score {
     border-bottom: 1px solid #ccc;
     display: block;

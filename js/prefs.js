@@ -73,6 +73,7 @@ function fillPrefsWindow( opt ) {
                                'icon' : "fa-clock-o",
                                'items': { 'absolute_times': { 'label': "Timestamps", 'type': "ar", 'js': "setTimestamps();" },
                                           /* 'keep_timezone': { 'label': "Keep Timezone", 'type': "yn", 'js':"" }, */
+                                          'show_24h_timestamps': { 'label': "24h Timestamps", 'type': "yn", 'js': "setTimestamps();" },
                                           'show_live_timestamps': { 'label': "Live Timestamps", 'type': "yn", 'js': "setTimestamps();" }
                                          }
                               },
@@ -668,13 +669,18 @@ function togglePostElement( item ) {
 }
 function getTimestamp( created_at, show_something ) {
     var at_value = readStorage('absolute_times'),
-        live_value = readStorage('show_live_timestamps');
+        live_value = readStorage('show_live_timestamps'),
+        show_24h = readStorage('show_24h_timestamps');
     var rVal = '';
     if ( at_value === 'Y' ) {
         var i = 0;
         while ( moment === undefined || moment === null ) { setTimeout(function() { i++; }, 250); }
         moment.locale('en');
-        rVal = moment( created_at ).format("MMMM Do YYYY h:mma");
+        if ( show_24h === 'Y' ) {
+            rVal = moment( created_at ).format("MMMM Do YYYY HH:mm");
+        } else {
+            rVal = moment( created_at ).format("MMMM Do YYYY h:mma");
+        }
     } else {
         rVal = ((live_value === 'Y' || show_something === true ) ? humanized_time_span( created_at ) : '<em>more...</em>');
     }
