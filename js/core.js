@@ -468,7 +468,9 @@ function sendPost() {
     }
 }
 function writePost( text, in_reply_to ) {
+    if ( checkIfRepeat(text) === false ) { return false; }
     var access_token = readStorage('access_token');
+    saveStorage('last_posttext', text, true);
     saveStorage('in_reply_to', '0', true);
 
     if ( access_token !== false ) {
@@ -504,6 +506,16 @@ function writePost( text, in_reply_to ) {
             }
         });
     }
+}
+function checkIfRepeat( text ) {
+    var last_posttext = readStorage('last_posttext', true);
+    if ( text === last_posttext ) {
+        saveStorage('msgTitle', 'Duplicate Post', true);
+        saveStorage('msgText', 'This post looks like your last one.<br>' +
+                               ' Give me a moment. ADN might be slow.', true);
+        if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
+    } 
+    return ( text !== last_posttext );
 }
 function buildJSONPost( text, in_reply_to ) {
     var access_token = readStorage('access_token');
@@ -2113,12 +2125,12 @@ function parseEmbedded( post ) {
                 case 'net.app.core.oembed':
                 case 'photo':
                 case 'rich':
-                    if ( readStorage('hide_images') === 'N' ) {
-                        if ( post.annotations[i].value.mime_type !== undefined && post.annotations[i].value.mime_type !== false ) {
-                            switch ( post.annotations[i].value.mime_type ) {
-                                case 'audio/mpeg':
-                                case 'audio/mp4':
-                                case 'audio/mp3':
+                    if ( post.annotations[i].value.mime_type !== undefined && post.annotations[i].value.mime_type !== false ) {
+                        switch ( post.annotations[i].value.mime_type ) {
+                            case 'audio/mpeg':
+                            case 'audio/mp4':
+                            case 'audio/mp3':
+                                if ( readStorage('hide_audio') === 'N' ) {
                                     html += '<div id="' + post.id + '-audio-' + i + '" class="post-audio">' +
                                                 '<audio controls>' +
                                                     '<source src="' + post.annotations[i].value.url + '"' +
@@ -2126,20 +2138,26 @@ function parseEmbedded( post ) {
                                                     'Your browser does not support the audio element.' +
                                                 '</audio>' +
                                             '</div>';
-                                    break;
-                                
-                                default:
-                                    html += '<div id="' + post.id + '-img-' + i + '" class="post-image"' +
-                                                ' style="background: url(\'' + post.annotations[i].value.url + '\');' +
-                                                       ' background-size: cover; background-position: center center;"' +
-                                                ' onclick="showImage(\'' + post.annotations[i].value.url + '\');">&nbsp;</div>';
-                            }
-                        } else {
+                                }
+                                break;
+
+                            default:
+                                if ( readStorage('hide_images') === 'N' ) {
+                                    if ( post.annotations[i].value.url !== undefined && post.annotations[i].value.url !== '' ) {
+                                        html += '<div id="' + post.id + '-img-' + i + '" class="post-image"' +
+                                                    ' style="background: url(\'' + post.annotations[i].value.url + '\');' +
+                                                           ' background-size: cover; background-position: center center;"' +
+                                                    ' onclick="showImage(\'' + post.annotations[i].value.url + '\');">&nbsp;</div>';
+                                    }
+                                }
+                        }
+                    } else {
+                        if ( readStorage('hide_images') === 'N' ) {
                             html += '<div id="' + post.id + '-img-' + i + '" class="post-image"' +
                                         ' style="background: url(\'' + post.annotations[i].value.url + '\');' +
                                                ' background-size: cover; background-position: center center;"' +
                                         ' onclick="showImage(\'' + post.annotations[i].value.url + '\');">&nbsp;</div>';
-                        }
+                            }
                     }
                     break;
 
