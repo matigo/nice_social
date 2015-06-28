@@ -148,8 +148,6 @@ nav:not(.mm-menu) { display: none; }
     overflow-y: auto;
     position: fixed;
     z-index: 980;
-    -webkit-overflow-scrolling: touch;
-    -webkit-transform: translate3d(0, 0, 0);
 
     max-height: 90%;
     max-width: 400px;
@@ -168,9 +166,9 @@ nav:not(.mm-menu) { display: none; }
     padding: 5px 10px;
     position: fixed;
     max-width: 380px;
-    width: 285px;
+    width: 100%;
+    z-index: 1000;
 }
-@media all and (min-device-width:768px) { .chatbox .title { width: 100%; } }
 .chatbox .title span {
     float: right;
     font-size: 175%;
@@ -201,6 +199,10 @@ nav:not(.mm-menu) { display: none; }
     font-weight: bold;
     margin-top: 30px;
     min-width: 100px;
+}
+.chatbox .chat {
+    -webkit-overflow-scrolling: touch;
+    -webkit-transform: translate3d(0, 0, 0);
 }
 
 .msgbox {
