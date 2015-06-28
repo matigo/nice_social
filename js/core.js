@@ -297,7 +297,7 @@ function doPostOrAuth() {
 }
 function doReply( post_id ) {
     var _id = parseInt(post_id);
-    if ( _id > 0 ) { saveStorage('in_reply_to', _id, true); }
+    if ( _id > 0 ) { saveStorage('in_reply_to', _id); }
     doPostOrAuth();
 }
 function testADNAccessToken() {
@@ -452,7 +452,7 @@ function sendPost() {
         max_default = 2048;
     }
     if ( max_length === NaN || max_length === undefined ) { max_length = max_default; }
-    var reply_to = parseInt(readStorage('in_reply_to', true));
+    var reply_to = parseInt(readStorage('in_reply_to'));
 
     if ( rpy_length > 0 && rpy_length <= max_length ) {
         writePost( document.getElementById('rpy-text').value.trim(), reply_to );
@@ -471,7 +471,7 @@ function writePost( text, in_reply_to ) {
     if ( checkIfRepeat(text) === false ) { return false; }
     var access_token = readStorage('access_token');
     saveStorage('last_posttext', text, true);
-    saveStorage('in_reply_to', '0', true);
+    saveStorage('in_reply_to', '0');
 
     if ( access_token !== false ) {
         $.ajaxSetup({
@@ -2041,11 +2041,11 @@ function showHideResponse() {
         toggleClassIfExists('autocomp','show','hide');
         removeClassIfExists('rpy-box', 'longpost');
         toggleClass('response','show','hide');        
-        saveStorage('in_reply_to', '0', true);
+        saveStorage('in_reply_to', '0');
     }
 }
 function getReplyText() {
-    var _id = readStorage('in_reply_to', true);
+    var _id = readStorage('in_reply_to');
     var txt = '';
 
     if ( _id > 0 ) {
@@ -2095,11 +2095,12 @@ function doLogout() {
 function loadDraft() {
     var draft_text = readStorage('draft'),
         reply_to = parseInt(readStorage('draft_reply_to'));
+        saveStorage( 'draft_reply_to', readStorage('in_reply_to') );
 
     if ( draft_text ) {
         document.getElementById('rpy-draft').innerHTML = '&nbsp;';
         document.getElementById('rpy-text').value = draft_text;
-        saveStorage('in_reply_to', reply_to, true);
+        saveStorage('in_reply_to', reply_to);
 
         deleteStorage('draft_reply_to');
         deleteStorage('draft');
@@ -2515,7 +2516,7 @@ function showSaveDraft() {
 function saveDraft() {
     var post_text = document.getElementById('rpy-text').value.trim();
     if ( post_text !== '' ) {
-        saveStorage( 'draft_reply_to', readStorage('in_reply_to', true) )
+        saveStorage( 'draft_reply_to', readStorage('in_reply_to') );
         saveStorage( 'draft', post_text );
     }
     showSaveDraft();
