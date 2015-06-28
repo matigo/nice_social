@@ -643,13 +643,15 @@ function parseUserUsage( data ) {
     if ( data ) {
         var ds = data.counts;
         var html = '',
-            col_max = data.max_count,
+            col_max = (data.max_count <= 0) ? 1 : data.max_count,
+            pst_max = 0,
             col_pct = 0;
 
         for ( var i = 0; i < ds.length; i++ ) {
             col_pct = ((ds[i].post_count + ds[i].broadcasts) / col_max) * 100;
+            pst_max = ((ds[i].post_count + ds[i].broadcasts) <= 0 ) ? 1 : (ds[i].post_count + ds[i].broadcasts);
             html += '<span class="item" style="height: ' + col_pct + '%;">' +
-                        '<red style="height: ' + ((ds[i].broadcasts / (ds[i].post_count + ds[i].broadcasts)) * 100) + '%;">&nbsp;</red>' +
+                        '<red style="height: ' + ((ds[i].broadcasts / pst_max) * 100) + '%;">&nbsp;</red>' +
                         '<blue>&nbsp;</blue>' +
                     '</span>';
         }
