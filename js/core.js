@@ -1068,7 +1068,8 @@ function parseText( post ) {
                         var post_body = post.annotations[i].value.body.ireplaceAll('\n\n', '<br><br>');
                             post_body = post_body.ireplaceAll('\r\r', '<br>');
                             post_body = post_body.ireplaceAll('\n', '<br>');
-                        post_body = post_body.replace(/\[([^\[]+)\]\(([^\)]+)\)/g, '<a target="_blank" href="$2">$1</a>');
+                            post_body = post_body.replace(/\[([^\[]+)\]\(([^\)]+)\)/g, '<a target="_blank" href="$2">$1</a>');
+                            post_body = post_body.replace(/(^|\s)@(\w+)/g, '<em onclick="doShowUserByName(\'$2\');">@$2</em>');
                         html = ((post.annotations[i].value.title !== '') ? '<h6>' + post.annotations[i].value.title + '</h6>' : '') +
                                '<span>' + post_body + '</span>';
                     }
@@ -2365,6 +2366,19 @@ function parseRecentText( post ) {
     }
 
     return html;
+}
+function doShowUserByName( user_name ) {
+    if ( user_name === '' || user_name === undefined ) {
+        toggleClass('dialog','show','hide');
+    } else {
+        // Get a UserID From the User List
+        for ( var id in window.users ) {
+            if ( window.users[ id ].username === user_name ) {
+                doShowUser( id );
+                break;
+            }
+        }
+    }    
 }
 function doShowUser( user_id ) {
     if ( user_id === '' || user_id === undefined ) {
