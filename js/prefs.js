@@ -428,7 +428,7 @@ function fillPrefsWindow( opt ) {
                           'mentions': { 'label': "Mentions", 'icon': "fa-comment" },
                           'global': { 'label': "Filtered Global", 'icon': "fa-globe" },
                           'pms': { 'label': "PMs", 'icon': "fa-lock" },
-                          'interactions': { 'label': "Interactions", 'icon': "fa-heartbeat" },
+                          'interact': { 'label': "Interactions", 'icon': "fa-heartbeat" },
                           'add': { 'label': "Add", 'icon': "fa-plus" }
                         };
             for ( item in items ) {
@@ -502,10 +502,6 @@ function getButtonValue( id, item, type, on_click ) {
 function toggleTimeline( tl ) {
     if ( tl === 'add' ) {
         alert("[Debug] Sorry ... just a little more testing to do.");
-        return false;
-    }
-    if ( tl === 'interactions' ) {
-        alert("[Debug] This is *very* close, but not quite ready.");
         return false;
     }
     window.timelines[tl] = !window.timelines[tl];

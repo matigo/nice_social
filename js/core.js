@@ -15,13 +15,15 @@ jQuery(function($) {
     window.store = new Object();
     window.chans = {};
     window.posts = {};
+    window.pulse = {};
     window.users = {};
     window.files = {};
     window.activate = false;
     window.timelines = { home     : false,
                          mentions : false,
                          global   : true,
-                         pms      : false
+                         pms      : false,
+                         interact : false
     }
     loadConfigFile();
     window.KEY_ENTER = 13;
@@ -765,7 +767,10 @@ function getTimeline() {
             crossDomain: true,
             data: params,
             type: 'GET',
-            success: function( data ) { parseItems( data.data ); saveStorage('home_done', 'Y',true); },
+            success: function( data ) {
+                parseItems( data.data );
+                if ( readStorage( 'home_done', true ) === 'N' ) { saveStorage('home_done', 'Y', true); }
+            },
             error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
             dataType: "json"
         });
@@ -773,7 +778,7 @@ function getTimeline() {
 }
 function getMentions() {
     var access_token = readStorage('access_token');
-    
+
     if ( access_token !== false ) {
         setSplashMessage('Getting Your Mentions');
         var params = {
@@ -864,7 +869,7 @@ function getGlobalItems() {
         url: window.apiURL + '/posts/stream/global',
         crossDomain: true,
         data: params,
-        success: function( data ) { parseItems( data.data ); },
+        success: function( data ) { parseItems( data.data ); getInteractions(); },
         error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
         dataType: "json"
     });
@@ -1153,6 +1158,17 @@ function redrawList() {
         window.activate = true;
     }
     
+    if ( window.timelines.interact === true ) {
+        if ( document.getElementById('interact').innerHTML === '' ) { $( "#interact" ).prepend(buffer); }
+        for ( post_id in window.pulse ) {
+            if ( window.pulse[post_id] !== false ) {
+                if ( checkElementExists(post_id + '-in') === false ) {
+                    $( "#interact" ).prepend( buildInteractionHTML(post_id) );
+                }
+            }
+        }
+    }
+
     if ( window.timelines.pms === true ) {
         var my_id = readStorage('user_id');
         var user_list = '',
@@ -1299,7 +1315,7 @@ function setWindowConstraints() {
     
     while ( cWidth < 280 ) {
         vCols--;
-        if ( vCols > 4 ) { vCols = 4; }
+        if ( vCols > 6 ) { vCols = 6; }
         if ( vCols <= 0 ) { vCols = 1; }
         if ( sWidth <= 1024 && vCols > 3 ) { vCols = 3; pAdj = 6; }
         if ( sWidth == 768 && vCols >= 2 ) { vCols = 2; pAdj = 10; }
@@ -1372,6 +1388,18 @@ function constructDialog( dialog_id ) {
     switch ( dialog_id ) {
         case 'autocomp':
             _html = '';
+            break;
+        
+        case 'channel':
+            dialog_id = 'conversation';
+            _html = '<div class="chatbox">' +
+                        '<div class="title" onclick="doShowConv();">' +
+                            'Conversation View <em id="chat_count">&nbsp;</em>' +
+                            '<span><i class="fa fa-times-circle-o"></i></span>' +
+                        '</div>' +
+                        '<div class="title_btn"><button onclick="doConvReply();">Reply</button></div>' +
+                        '<div id="chat_posts" class="chat"></div>' +
+                    '</div>';
             break;
 
         case 'conversation':
@@ -1466,10 +1494,10 @@ function dismissOKbox() {
 }
 function doShowChan( chan_id ) {
     if ( chan_id === '' || chan_id === undefined ) {
-        toggleClass('conversation','show','hide');        
+        toggleClass('channel','show','hide');        
     } else {
-        toggleClassIfExists('conversation','hide','show');
-        if ( constructDialog('conversation') ) {
+        toggleClassIfExists('channel','hide','show');
+        if ( constructDialog('channel') ) {
             showWaitState('chat_posts', 'Collecting Private Conversation');
             getChannelMessages(chan_id);
         }
@@ -1723,6 +1751,7 @@ function collectRankSummary() {
                 getGlobalItems();
                 showHideActivity(false);
                 setSplashMessage('');
+                getInteractions();
             }
         },
         error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
@@ -3100,6 +3129,8 @@ function setCSSPreferences() {
     jss.set('.chatbox', { 'border-color': '#' + readStorage('post-content_color') });
     jss.set('.chatbox .title', { 'background-color': '#' + readStorage('header_background') });
     jss.set('.chatbox .title', { 'color': '#' + readStorage('header_color') });
+    jss.set('.chatbox .title_btn', { 'background-color': '#' + readStorage('header_background') });
+    jss.set('.chatbox .title_btn', { 'color': '#' + readStorage('header_color') });
     jss.set('.chatbox div#mute_hash.title_btn', { 'background-color': '#' + readStorage('header_background') });
     jss.set('.chatbox div#mute_hash.title_btn', { 'color': '#' + readStorage('header_color') });
     jss.set('.chatbox .lbltxt', { 'color': '#' + readStorage('post-content_color') });
@@ -3254,6 +3285,107 @@ function parseUserList( resp ) {
         }
     }
     setSplashMessage('');
+}
+function getInteractions() {
+    var access_token = readStorage('access_token');
+
+    if ( access_token !== false ) {
+        var params = {
+            access_token: access_token,
+            interaction_actions: 'follow,repost,star',
+            include_annotations: 1,
+            include_deleted: 0,
+            include_machine: 0,
+            include_html: 1,
+            count: 200
+        }; 
+        $.ajax({
+            url: window.apiURL + '/users/me/interactions',
+            crossDomain: true,
+            data: params,
+            type: 'GET',
+            success: function( data ) { parseInteractions( data ); },
+            error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
+            dataType: "json"
+        });
+    }
+}
+function parseInteractions( resp ) {
+    var data = resp.data;
+    if ( data ) {
+        var acct_ids = [];
+
+        for ( var i = 0; i < data.length; i++ ) {
+            acct_ids = [];
+            if ( data[i].hasOwnProperty('users') ) {
+                if ( data[i].users.length > 0 ) {
+                    for ( var idx = 0; idx < data[i].users.length; idx++ ) {
+                        acct_ids.push({  user_id: data[i].users[idx].id,
+                                          avatar: data[i].users[idx].avatar_image.url,
+                                        username: data[i].users[idx].username
+                                       });
+                    }
+                }
+            }
+
+            addInteractionItem( data[i].action, data[i].event_date, acct_ids, data[i].objects[0].id, data[i].objects[0].html );
+        }
+    }
+}
+function buildInteractionHTML( post_id ) {
+    var data = window.pulse[ post_id ];
+    var m_id = (data.action_by.length - 1);
+    var what = '',
+        icon = '';
+    if ( m_id < 0 ) { return ''; }
+    switch ( data.action_type ) {
+        case 'star':
+            what = '<span onclick="doShowConv(' + post_id + ');">starred your post (' + post_id + ')</span>';
+            icon = 'fa-star';
+            break;
+
+        case 'repost':
+            what = '<span onclick="doShowConv(' + post_id + ');">reposted your post (' + post_id + ')</span>';
+            icon = 'fa-retweet';
+            break;
+
+        case 'follow':
+            what = 'followed you';
+            icon = 'fa-eye';
+            break;
+
+        default:
+            what = data.action_type;
+    }
+    var _html = '<div id="' + post_id + '-in" name="' + post_id + '" class="pulse-item">';
+    for ( var i = m_id; i >= 0; i-- ) {
+        _html +='<div class="pulse-avatar">' +
+                    '<img class="avatar-round"' +
+                        ' onClick="doShowUser(' + data.action_by[i].user_id + ');"' +
+                        ' src="' + data.action_by[i].avatar + '">' +
+                '</div>';
+    }
+    _html +='<div class="pulse-content">' +
+                '<i class="fa ' + icon + '"></i> ' +
+                '<strong onClick="doShowUser(' + data.action_by[m_id].user_id + ');">@' + data.action_by[m_id].username + '</strong> ' +
+                ((data.action_by.length > 1) ? ' and ' + m_id + ((m_id === 1) ? ' other ' : ' others ') : '' ) +
+                what +
+            '</div>' +
+        '</div>';
+    return _html;
+}
+function addInteractionItem( action_type, action_at, action_by, post_id, html ) {
+    if ( !window.pulse.hasOwnProperty( post_id ) ) {
+        window.pulse[ post_id ] = { action_type: action_type,
+                                    action_at: action_at,
+                                    action_by: action_by,
+                                    updated_at: new Date(action_at),
+                                    post_id: post_id,
+                                    html: html
+                                   };
+    } else {
+        window.pulse[ post_id ].action_by = action_by;
+    }
 }
 function buildGenericNode( elID, elName, elClass, html ) {
     var elem = document.createElement("div");

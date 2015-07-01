@@ -842,8 +842,10 @@ nav:not(.mm-menu) { display: none; }
 @media all and (min-device-width:768px) {  .post-list .mobile-hide { display: inline-block; } }
 .post-list.tl-home { background-image: url("../img/home.png"); }
 .post-list.tl-global { background-image: url("../img/global.png"); }
+.post-list.tl-interact { background-image: url("../img/interact.png"); }
 .post-list.tl-mentions { background-image: url("../img/mentions.png"); }
 .post-list.tl-pms { background-image: url("../img/lock.png"); }
+.post-list .pulse-item,
 .post-list .post-item,
 .chat .post-item {
     background: transparent;
@@ -851,16 +853,19 @@ nav:not(.mm-menu) { display: none; }
     padding: 5px 0;
     width: 100%;
 }
+.post-list .pulse-item { text-align: left; }
+.post-list .pulse-item .pulse-avatar,
 .post-list .post-item .post-avatar,
 .chat .post-item .post-avatar {
     background: transparent;
     display: inline-block;
+    margin-left: 10px;
     padding-top: 5px;
-    text-align: center;
+    text-align: left;
     vertical-align: top;
     max-width: 75px;
-    width: 18%;
 }
+.post-list .pulse-item .pulse-avatar .avatar-round,
 .post-list .post-item .post-avatar .avatar-round,
 .chat .post-item .post-avatar .avatar-round {
     background: #fff;
@@ -875,6 +880,7 @@ nav:not(.mm-menu) { display: none; }
 .post-list .post-item .post-avatar img.avatar-round.recent-acct { border: 2px solid #d9534f; }
 .post-list .post-item .post-avatar img.avatar-round.new-acct { border: 2px solid #ff0; }
 .post-list .post-item .post-avatar img.avatar-round.mention { border: 2px solid #00f; }
+.post-list .pulse-item .pulse-content,
 .post-list .post-item .post-content,
 .chat .post-item .post-content {
     background: transparent;
@@ -882,8 +888,22 @@ nav:not(.mm-menu) { display: none; }
     text-align: left;
     vertical-align: top;
     width: 70%;
+    word-break: break-word;
+    word-wrap: break-word;
 }
-@media all and (min-device-width:768px) { .post-list .post-item .post-content { width: 75%; } }
+.post-list .pulse-item .pulse-content {
+    display: block;
+    padding: 0 5%;
+    width: 90%;
+    word-break: break-word;
+    word-wrap: break-word;
+}
+@media all and (min-device-width:768px) {
+    .post-list .post-item .post-content {
+        padding-right: 5%;
+        width: 70%;
+    }
+}
 .chat .post-item.post-grey { background: #eee; }
 .post-list .post-item .post-content a,
 .chat .post-item .post-content a {
