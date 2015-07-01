@@ -1242,6 +1242,36 @@ function redrawList() {
     }
     setWindowConstraints();
     updateTimestamps();
+    updatePMList();
+}
+function updatePMList() {
+    if ( window.timelines.pms === true ) {
+        var my_id = readStorage('user_id');
+        var user_list = '',
+            user_name = '',
+            msg_text = '';
+        for ( chan_id in window.chans ) {
+            if ( window.chans[chan_id] !== false ) {
+                msg_text = ( window.chans[chan_id].messages === 1 ) ? 'Message' : 'Messages';
+                user_list = '';
+                for ( var i = 0; i < window.chans[chan_id].user_ids.length; i++ ) {
+                    if ( user_list !== '' ) { user_list += ( i === (window.chans[chan_id].user_ids.length - 1) ) ? ' &amp; ' : ', '; }
+                    if ( window.chans[chan_id].user_ids[i] === my_id ) {
+                        user_list += 'You';
+                    } else {
+                        if ( window.users.hasOwnProperty(window.chans[chan_id].user_ids[i]) ) {
+                            var u_name = window.users[window.chans[chan_id].user_ids[i]].username;
+                            user_name = u_name.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+                        } else {
+                            user_name = '???';
+                        }
+                        user_list += user_name;
+                    }
+                }
+                document.getElementById( chan_id + '-ni' ).innerHTML = user_list + ' (' + window.chans[chan_id].messages + ' ' + msg_text + ')';
+            }
+        }
+    }
 }
 function getPreviousElement( post_id, timeline, tl_ref ) {
     var elems = document.getElementById(timeline);
@@ -2306,7 +2336,7 @@ function parsePMData( data ) {
                             '</div>' +
                             '<div id="' + data[i].id + '-dtl" class="post-content">' +
                                 '<h5 class="post-name" style="cursor: pointer;" onClick="doShowChan(' + data[i].id + ');">' +
-                                    '<span id="' + data[i].id + '-ni">[NAME_INFO] (' + data[i].counts.messages + ' Messages)</span>' +
+                                    '<span id="' + data[i].id + '-ni">[NAME_INFO]</span>' +
                                 '</h5>' +
                                 parseRecentText( data[i] ) +
                                 '<p class="post-time">' +
@@ -2315,22 +2345,23 @@ function parsePMData( data ) {
                                 '</p>' +
                             '</div>' +
                         '</div>';
-                addChanItem( data[i].id, post_type, data[i].recent_message.created_at, html, participants );
+                addChanItem( data[i].id, post_type, data[i].recent_message.created_at, html, participants, data[i].counts.messages );
             }
         }
         if ( _ids.length > 0 ) { getAccountNames( _ids ); }
     }
 }
-function addChanItem( chan_id, chan_type, created_at, html, participants ) {
+function addChanItem( chan_id, chan_type, created_at, html, participants, msg_count ) {
     if ( !window.chans.hasOwnProperty( chan_id ) ) {
-        window.chans[chan_id] = { chan_id: chan_id,
-                                  chan_type: chan_type,
-                                  created_at: created_at,
-                                  updated_at: new Date(created_at),
-                                  html: html,
-                                  user_ids: participants,
-                                  is_new: true
-                                 }
+        window.chans[ chan_id ] = { chan_id: chan_id,
+                                    chan_type: chan_type,
+                                    created_at: created_at,
+                                    updated_at: new Date(created_at),
+                                    html: html,
+                                    messages: msg_count,
+                                    user_ids: participants,
+                                    is_new: true
+                                   };
     }
 }
 function sortPMList() {
