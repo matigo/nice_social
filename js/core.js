@@ -1160,10 +1160,10 @@ function redrawList() {
     
     if ( window.timelines.interact === true ) {
         if ( document.getElementById('interact').innerHTML === '' ) { $( "#interact" ).prepend(buffer); }
-        for ( post_id in window.pulse ) {
-            if ( window.pulse[post_id] !== false ) {
-                if ( checkElementExists(post_id + '-in') === false ) {
-                    $( "#interact" ).prepend( buildInteractionHTML(post_id) );
+        for ( item_id in window.pulse ) {
+            if ( window.pulse[item_id] !== false ) {
+                if ( checkElementExists( item_id + '-in') === false ) {
+                    $( "#interact" ).prepend( buildInteractionHTML(item_id) );
                 }
             }
         }
@@ -3332,20 +3332,20 @@ function parseInteractions( resp ) {
         }
     }
 }
-function buildInteractionHTML( post_id ) {
-    var data = window.pulse[ post_id ];
+function buildInteractionHTML( item_id ) {
+    var data = window.pulse[ item_id ];
     var m_id = (data.action_by.length - 1);
     var what = '',
         icon = '';
     if ( m_id < 0 ) { return ''; }
     switch ( data.action_type ) {
         case 'star':
-            what = '<span onclick="doShowConv(' + post_id + ');">starred your post (' + post_id + ')</span>';
+            what = '<span onclick="doShowConv(' + data.post_id + ');">starred your post (' + data.post_id + ')</span>';
             icon = 'fa-star';
             break;
 
         case 'repost':
-            what = '<span onclick="doShowConv(' + post_id + ');">reposted your post (' + post_id + ')</span>';
+            what = '<span onclick="doShowConv(' + data.post_id + ');">reposted your post (' + data.post_id + ')</span>';
             icon = 'fa-retweet';
             break;
 
@@ -3357,7 +3357,7 @@ function buildInteractionHTML( post_id ) {
         default:
             what = data.action_type;
     }
-    var _html = '<div id="' + post_id + '-in" name="' + post_id + '" class="pulse-item">';
+    var _html = '<div id="' + item_id + '-in" name="' + data.post_id + '" class="pulse-item">';
     for ( var i = m_id; i >= 0; i-- ) {
         _html +='<div class="pulse-avatar">' +
                     '<img class="avatar-round"' +
@@ -3375,8 +3375,9 @@ function buildInteractionHTML( post_id ) {
     return _html;
 }
 function addInteractionItem( action_type, action_at, action_by, post_id, html ) {
+    var item_id = action_type + '_' + post_id;
     if ( !window.pulse.hasOwnProperty( post_id ) ) {
-        window.pulse[ post_id ] = { action_type: action_type,
+        window.pulse[ item_id ] = { action_type: action_type,
                                     action_at: action_at,
                                     action_by: action_by,
                                     updated_at: new Date(action_at),
@@ -3384,7 +3385,7 @@ function addInteractionItem( action_type, action_at, action_by, post_id, html ) 
                                     html: html
                                    };
     } else {
-        window.pulse[ post_id ].action_by = action_by;
+        window.pulse[ item_id ].action_by = action_by;
     }
 }
 function buildGenericNode( elID, elName, elClass, html ) {
