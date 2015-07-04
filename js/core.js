@@ -1160,10 +1160,10 @@ function redrawList() {
     
     if ( window.timelines.interact === true ) {
         if ( document.getElementById('interact').innerHTML === '' ) { $( "#interact" ).prepend(buffer); }
-        for ( item_id in window.pulse ) {
-            if ( window.pulse[item_id] !== false ) {
-                if ( checkElementExists( item_id + '-in') === false ) {
-                    $( "#interact" ).prepend( buildInteractionHTML(item_id) );
+        for ( post_id in window.pulse ) {
+            if ( window.pulse[post_id] !== false ) {
+                if ( checkElementExists( post_id + '-in') === false ) {
+                    $( "#interact" ).prepend( buildInteractionHTML(post_id) );
                 }
             }
         }
@@ -3332,60 +3332,47 @@ function parseInteractions( resp ) {
         }
     }
 }
-function buildInteractionHTML( item_id ) {
-    var data = window.pulse[ item_id ];
-    var m_id = (data.action_by.length - 1);
-    var what = '',
+function buildInteractionHTML( post_id ) {
+    var data = window.pulse[ post_id ];
+    var _html = '',
+        what = '',
         icon = '';
-    if ( m_id < 0 ) { return ''; }
-    switch ( data.action_type ) {
-        case 'star':
-            what = '<span onclick="doShowConv(' + data.post_id + ');">starred your post (' + data.post_id + ')</span>';
-            icon = 'fa-star';
-            break;
 
-        case 'repost':
-            what = '<span onclick="doShowConv(' + data.post_id + ');">reposted your post (' + data.post_id + ')</span>';
-            icon = 'fa-retweet';
-            break;
-
-        case 'follow':
-            what = 'followed you';
-            icon = 'fa-eye';
-            break;
-
-        default:
-            what = data.action_type;
+    if ( data.repost_by.length > 0 ) {
+        what += data.repost_by.length + ((data.repost_by.length === 1) ? ' person' : ' people') + ' reposted';
+        icon += '<i class="fa fa-retweet"></i> ';
     }
-    var _html = '<div id="' + item_id + '-in" name="' + data.post_id + '" class="pulse-item">';
-    for ( var i = m_id; i >= 0; i-- ) {
-        _html +='<div class="pulse-avatar">' +
-                    '<img class="avatar-round"' +
-                        ' onClick="doShowUser(' + data.action_by[i].user_id + ');"' +
-                        ' src="' + data.action_by[i].avatar + '">' +
+    if ( data.star_by.length > 0 ) {
+        if ( what !== '' ) { what += ' &amp; '; }
+        what += data.star_by.length + ((data.star_by.length === 1) ? ' person' : ' people') + ' starred';
+        icon += '<i class="fa fa-star"></i> ';
+    }
+
+    if ( what !== '' ) {
+        _html = '<div id="' + post_id + '-in" name="' + data.post_id + '" class="pulse-item">' +
+                    '<div class="pulse-content">' +
+                        icon + what +
+                        ' <span onClick="doShowConv(' + data.post_id + ');">your post.</span> ' +
+                    '</div>' +
                 '</div>';
     }
-    _html +='<div class="pulse-content">' +
-                '<i class="fa ' + icon + '"></i> ' +
-                '<strong onClick="doShowUser(' + data.action_by[m_id].user_id + ');">@' + data.action_by[m_id].username + '</strong> ' +
-                ((data.action_by.length > 1) ? ' and ' + m_id + ((m_id === 1) ? ' other ' : ' others ') : '' ) +
-                what +
-            '</div>' +
-        '</div>';
     return _html;
 }
 function addInteractionItem( action_type, action_at, action_by, post_id, html ) {
-    var item_id = action_type + '_' + post_id;
     if ( !window.pulse.hasOwnProperty( post_id ) ) {
-        window.pulse[ item_id ] = { action_type: action_type,
-                                    action_at: action_at,
-                                    action_by: action_by,
-                                    updated_at: new Date(action_at),
-                                    post_id: post_id,
+        window.pulse[ post_id ] = { action_last: action_at,
+                                    follow_by: (action_type === 'follow') ? action_by : [],
+                                    repost_by: (action_type === 'repost') ? action_by : [],
+                                    star_by: (action_type === 'star') ? action_by : [],
+                                    post_id: (action_type !== 'follow') ? post_id : 0,
                                     html: html
                                    };
     } else {
-        window.pulse[ item_id ].action_by = action_by;
+        if ( window.pulse[ post_id ].html === '' ) { window.pulse[ post_id ].html = (action_type !== 'follow') ? html : ''; }
+        if ( action_at > window.pulse[ post_id ].action_last ) { window.pulse[ post_id ].action_last = action_at; }
+        if ( action_type === 'follow' ) { window.pulse[ post_id ].follow_by = action_by; }
+        if ( action_type === 'repost' ) { window.pulse[ post_id ].repost_by = action_by; }
+        if ( action_type === 'star' ) { window.pulse[ post_id ].star_by = action_by; }
     }
 }
 function buildGenericNode( elID, elName, elClass, html ) {
