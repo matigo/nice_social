@@ -1103,6 +1103,7 @@ function parseText( post ) {
     html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/\*(.*?)\*/g, '<i>$1</i>');
     html = html.replace(/`(.*?)`/g, '<code style="background-color:#' + highlight + ';padding:0 5px;">$1</code>');
+    html = hmtl.replace(/_(.*?)_/g, '<u>$1</u>');
 
     return html;
 }
