@@ -579,6 +579,21 @@ function getCSSPresets() {
                                         }
                             },
 
+            'solarizedlight': {        'label': "Solarized Light",
+                            'style': {  'body_background': 'fdf6e3',
+                                        'header_background': 'eee8d5',
+                                        'header_color': '839496',
+                                        'post-name_color': '93a1a1',
+                                        'post-content_color': '657b83',
+                                        'post-mention_color': '93a1a1',
+                                        'post-highlight_color': 'eee8d5',
+                                        'avatar_color': 'eee8d5',
+                                        'mention_color': '268bd2',
+                                        'one-week_color': 'dc322f',
+                                        'one-day_color': 'b58900'
+                                        }
+                            },
+
             'hotdog': {     'label': "Hotdog Stand",
                             'style': {  'body_background': 'f00',
                                         'header_background': '000',
