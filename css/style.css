@@ -1085,6 +1085,15 @@ nav:not(.mm-menu) { display: none; }
     text-align: right;
     margin-right: 5%;
 }
+.chatbox div#pref-list.chat version {
+    bottom: 5px;
+    left: 0;
+    right: 0;
+    padding: 0 5%;
+    position: absolute;
+    text-align: right;
+    width: 90%;
+}
 .chatbox div#pref-list.chat label {
     display: inline-block;
     margin-right: 10px;

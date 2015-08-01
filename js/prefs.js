@@ -25,6 +25,15 @@ function fillPrefsWindow( opt ) {
                             '<span>' + items[item].label + '</span>' +
                         '</button>';
             }
+            var version_str = ('0' + version).slice(((version.toString().length) < 3 ? 3 : version.toString().length) * -1),
+                version_no = '';
+            var cnt = 0;
+            for ( var i = (version_str.length - 1); i >= 0; i-- ) {
+                if ( cnt === 1 || cnt === 2 ) { version_no = '.' + version_no; }
+                version_no = version_str[i] + version_no;
+                cnt++;
+            }
+            html += '<version>Version: ' + version_no + '</version>';
             break;
 
         case 'color':
