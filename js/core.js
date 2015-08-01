@@ -978,37 +978,42 @@ function buildHTMLSection( post ) {
         repost_by = ' <i style="float: right;">(<i class="fa fa-retweet"></i> ' + post.user.username + ')</i>';
         is_repost = true;
     }
+    
+    /* Get the First Character of the Post */
+    var words = data.text.split(" ");
+    switch ( words[0] ) {
+        case '/me':
+        case '/slap':
+        case '/slaps':
+            _html = '<div id="' + data.id + '-dtl" class="post-content" onClick="showHideActions(' + data.id + ', \'[TL]\');"' +
+                        ' onMouseOver="doMouseOver(' + data.id + ', \'[TL]\');" onMouseOut="doMouseOut(' + data.id + ', \'[TL]\');"' +
+                        ' style="width: 90%;">' +
+                        parseText( data ) +
+                    '</div>' +
+                    buildRespondBar( data );
+            break;
 
-    /* Special Handling for /me Posts (See Issue #56) */
-    if ( data.text.indexOf('/me') === 0 ) {
-        var line_text = data.text.replace('/me', '<em onClick="doShowUser(' + data.user.id + ');">' + data.user.username + '</em>' );
-        _html = '<div id="' + data.id + '-dtl" class="post-content" onClick="showHideActions(' + data.id + ', \'[TL]\');"' +
-                    ' onMouseOver="doMouseOver(' + data.id + ', \'[TL]\');" onMouseOut="doMouseOut(' + data.id + ', \'[TL]\');"' +
-                    ' style="width: 90%;">' +
-                    parseText( data ) +
-                '</div>' +
-                buildRespondBar( data );
-    } else {
-        post_time = getTimestamp( data.created_at );
-        account_age = Math.floor(( new Date() - Date.parse(data.user.created_at) ) / 86400000);
-        if ( account_age <= 7 ) { avatarClass = 'avatar-round recent-acct'; }
-        if ( account_age <= 1 ) { avatarClass = 'avatar-round new-acct'; }
-        if ( isMention( data ) ) { avatarClass = 'avatar-round mention'; }
-        _html = '<div id="' + data.id + '-po" class="post-avatar">' +
-                    '<img class="' + avatarClass + '"' +
-                        ' onClick="doShowUser(' + data.user.id + ');"' +
-                        ' src="' + data.user.avatar_image.url + '">' +
-                '</div>' +
-                '<div id="' + data.id + '-dtl" class="post-content" onClick="showHideActions(' + data.id + ', \'[TL]\');"' +
-                    ' onMouseOver="doMouseOver(' + data.id + ', \'[TL]\');" onMouseOut="doMouseOut(' + data.id + ', \'[TL]\');">' +
-                    '<h5 class="post-name"><span>' + data.user.username + repost_by + '</span></h5>' +
-                    parseText( data ) +
-                    '<p class="post-time">' +
-                        '<em id="' + post.id + '-time[TL]" name="' + post.id + '-time">' + post_time + '</em>' +
-                    '</p>' +
-                '</div>' +
-                buildRespondBar( data ) +
-                parseEmbedded( data );
+        default:
+            post_time = getTimestamp( data.created_at );
+            account_age = Math.floor(( new Date() - Date.parse(data.user.created_at) ) / 86400000);
+            if ( account_age <= 7 ) { avatarClass = 'avatar-round recent-acct'; }
+            if ( account_age <= 1 ) { avatarClass = 'avatar-round new-acct'; }
+            if ( isMention( data ) ) { avatarClass = 'avatar-round mention'; }
+            _html = '<div id="' + data.id + '-po" class="post-avatar">' +
+                        '<img class="' + avatarClass + '"' +
+                            ' onClick="doShowUser(' + data.user.id + ');"' +
+                            ' src="' + data.user.avatar_image.url + '">' +
+                    '</div>' +
+                    '<div id="' + data.id + '-dtl" class="post-content" onClick="showHideActions(' + data.id + ', \'[TL]\');"' +
+                        ' onMouseOver="doMouseOver(' + data.id + ', \'[TL]\');" onMouseOut="doMouseOut(' + data.id + ', \'[TL]\');">' +
+                        '<h5 class="post-name"><span>' + data.user.username + repost_by + '</span></h5>' +
+                        parseText( data ) +
+                        '<p class="post-time">' +
+                            '<em id="' + post.id + '-time[TL]" name="' + post.id + '-time">' + post_time + '</em>' +
+                        '</p>' +
+                    '</div>' +
+                    buildRespondBar( data ) +
+                    parseEmbedded( data );
     }
 
     return _html;
@@ -1058,9 +1063,40 @@ function parseText( post ) {
         name = '',
         cStr = ' class="post-mention" style="font-weight: bold; cursor: pointer;"';
     var highlight = readStorage('post-highlight_color');
+    var replaceHtmlEntites = (function() {
+        var translate_re = /&(#128406|#127996);/g,
+            translate = {
+                '#128406': '<i class="fa fa-hand-spock-o"></i>',
+                '#127996': ''
+            },
+            translator = function($0, $1) { return translate[$1]; };
 
-    if ( post.text.indexOf('/me') === 0 ) {
-        html = '<i class="fa fa-dot-circle-o"></i> ' + html.replace('/me', '<em onClick="doShowUser(' + post.user.id + ');">' + post.user.username + '</em>' );
+        return function(s) { return s.replace(translate_re, translator); };
+    })();
+    var words = post.text.split(" ");
+
+    switch ( words[0] ) {
+        case '/me':
+            html = '<i class="fa fa-dot-circle-o"></i> ' +
+                   html.replace(words[0], '<em onClick="doShowUser(' + post.user.id + ');">' + post.user.username + '</em>' );
+            break;
+
+        case '/slap':
+        case '/slaps':
+            html = '<i class="fa fa-hand-paper-o"></i> <em onClick="doShowUser(' + post.user.id + ');">' + post.user.username + '</em> slaps ';
+            if ( post.entities.mentions.length > 0 ) {
+                for ( var i = 0; i < post.entities.mentions.length; i++ ) {
+                    if ( i > 0 && i < (post.entities.mentions.length - 1) ) { html += ', '; }
+                    if ( i > 0 && i == (post.entities.mentions.length - 1) ) { html += ' and '; }
+                    html += '<span class="post-mention" style="font-weight: bold; cursor: pointer;"' +
+                                 ' onclick="doShowUser(' + post.entities.mentions[i].id + ');">@' + post.entities.mentions[i].name + '</span>';
+                }
+            }
+            html += ' around with a large trout';
+            break;
+
+        default:
+            /* Do Nothing */
     }
 
     /* Is This a Long Post? */
@@ -1087,6 +1123,10 @@ function parseText( post ) {
         }
     }
 
+    /* Parse the HTML for Characters Like the Vulcan Salute */
+    html = replaceHtmlEntites(html);
+
+    /* Are there Mentions or Hashtags? */
     if ( post.entities.mentions.length > 0 ) {
         for ( var i = 0; i < post.entities.mentions.length; i++ ) {
             name = '>@' + post.entities.mentions[i].name + '<';
@@ -1102,14 +1142,31 @@ function parseText( post ) {
             html = html.replace(searchRegex, cStr + ' onClick="doShowHash(\'' + post.entities.hashtags[i].name + '\');"$1');
         }
     }
+    
+    var lines = html.split('<br>'),
+        _line = '';
+    var _html = '',
+        _gaps = true;
+    for ( i = 0; i < lines.length; i++ ) {
+        _line = ' ' + lines[i] + ' ';
 
-    /* Parse the Inline Markdown (Only Bold, Italics, Code) */
-    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/\*(.*?)\*/g, '<i>$1</i>');
-    html = html.replace(/`(.*?)`/g, '<code style="background-color:#' + highlight + ';padding:0 5px;">$1</code>');
-    html = html.replace(/_(.*?)_/g, '<u>$1</u>');
+        /* Parse the Inline Markdown (Only Bold, Italics, Code) Line by Line */
+        _line = _line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        _line = _line.replace(/\*(.*?)\*/g, '<i>$1</i>');
+        _line = _line.replace(/`(.*?)`/g, '<code style="background-color:#' + highlight + ';padding:0 5px;">$1</code>');
+        _line = _line.replace(/ _(.*?)_/g, ' <u>$1</u>');
+        _line = _line.replace(/\/llap/g, '<i class="fa fa-hand-spock-o"></i>');
 
-    return html;
+        if ( _html.trim() !== '' || _gaps === false ) { _html += '<br>'; }
+        if ( _line.trim() !== '' ) {
+            _html += _line.trim();
+            _gaps = false;
+        } else {
+            _gaps = true;
+        }
+    }
+
+    return _html;
 }
 function showHideTL( tl ) {
     for (i in window.timelines) {
