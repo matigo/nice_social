@@ -1075,6 +1075,7 @@ function parseText( post ) {
                             post_body = post_body.ireplaceAll('\n', '<br>');
                             post_body = post_body.replace(/\[([^\[]+)\]\(([^\)]+)\)/g, '<a target="_blank" href="$2">$1</a>');
                             post_body = post_body.replace(/(^|\s)@(\w+)/g, '<em onclick="doShowUserByName(\'$2\');">@$2</em>');
+                            post_body = post_body.replace(/(^|\s)#(\w+)/g, '<em onclick="doShowHash(\'$2\');">#$2</em>');
                         html = ((post.annotations[i].value.title !== '') ? '<h6>' + post.annotations[i].value.title + '</h6>' : '') +
                                '<span>' + post_body + '</span>';
                     }
@@ -1095,7 +1096,10 @@ function parseText( post ) {
     if ( post.entities.hashtags.length > 0 ) {
         for ( var i = 0; i < post.entities.hashtags.length; i++ ) {
             name = '>#' + post.entities.hashtags[i].name + '<';
-            html = html.ireplaceAll(name, cStr + ' onClick="doShowHash(\'' + post.entities.hashtags[i].name + '\');"' + name);
+            // html = html.ireplaceAll(name, cStr + ' onClick="doShowHash(\'' + post.entities.hashtags[i].name + '\');"' + name);
+            
+            var searchRegex = new RegExp('(>#' + post.entities.hashtags[i].name + '<)' , 'ig');
+            html = html.replace(searchRegex, cStr + ' onClick="doShowHash(\'' + post.entities.hashtags[i].name + '\');"$1');
         }
     }
 
@@ -1103,7 +1107,7 @@ function parseText( post ) {
     html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/\*(.*?)\*/g, '<i>$1</i>');
     html = html.replace(/`(.*?)`/g, '<code style="background-color:#' + highlight + ';padding:0 5px;">$1</code>');
-    html = hmtl.replace(/_(.*?)_/g, '<u>$1</u>');
+    html = html.replace(/_(.*?)_/g, '<u>$1</u>');
 
     return html;
 }
@@ -1307,8 +1311,7 @@ function setWindowConstraints() {
     var sHeight = window.innerHeight || document.body.clientHeight;
     var sWidth = window.innerWidth || document.body.clientWidth;
     var cWidth = 0,
-        vCols = 1,
-        pAdj = 6;
+        vCols = 1;
 
     for (i in window.timelines) {
         if ( window.timelines.hasOwnProperty(i) ) { if ( window.timelines[i] ) { vCols++; } }
@@ -1318,12 +1321,9 @@ function setWindowConstraints() {
         vCols--;
         if ( vCols > 6 ) { vCols = 6; }
         if ( vCols <= 0 ) { vCols = 1; }
-        if ( sWidth <= 1024 && vCols > 3 ) { vCols = 3; pAdj = 6; }
-        if ( sWidth == 768 && vCols >= 2 ) { vCols = 2; pAdj = 10; }
-        if ( sWidth <  768 && vCols >= 2 ) { vCols = 2; pAdj = 15; }
-        if ( sWidth >= 500 && sWidth <= 568 && vCols >= 2 ) { vCols = 2; pAdj = 2; }
-        if ( sWidth <= 500 && vCols >= 1 ) { vCols = 1; pAdj = 20; }
-        if ( sWidth <= 384 && vCols >= 1 ) { vCols = 1; pAdj = 2; }
+        if ( sWidth <= 1024 && vCols > 3 ) { vCols = 3; }
+        if ( sWidth <=  768 && vCols >= 2 ) { vCols = 2; }
+        if ( sWidth <=  500 && vCols >= 1 ) { vCols = 1; }
         cWidth = ( vCols > 1 ) ? Math.floor(sWidth / vCols): sWidth;
     }
 
@@ -1335,7 +1335,7 @@ function setWindowConstraints() {
         sBar = Math.floor(sBar / vCols) + 1;
         cWidth = cWidth - sBar;
     }
-    if ( sBar === 0 ) { cWidth = cWidth - vCols - pAdj - sb_adjust; }
+    if ( sBar === 0 ) { cWidth = cWidth - vCols - sb_adjust; }
     setColumnsWidth( cWidth, vCols );
 
     var tl = document.getElementById('tl-content');

@@ -86,7 +86,7 @@ nav:not(.mm-menu) { display: none; }
     height: 100%;
     padding: 50px 0 0;
 }
-@media all and (min-device-width:768px) { .content { padding: 40px 15px 0; } }
+@media all and (min-device-width:768px) { .content { padding: 40px 0 0; } }
 .content.thanks {
     height: 100%;
     margin: 0 auto;

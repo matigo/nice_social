@@ -579,7 +579,7 @@ function getCSSPresets() {
                                         }
                             },
 
-            'solarizedlight': {        'label': "Solarized Light",
+            'solarized': {  'label': "Solarized Light",
                             'style': {  'body_background': 'fdf6e3',
                                         'header_background': 'eee8d5',
                                         'header_color': '839496',
