@@ -59,6 +59,7 @@ The list below is not very long. Let's make it impressive! Help Nice.Social by c
 * [@matigo - Jason F. Irwin](https://alpha.app.net/matigo)
 * [@lasar - Lasar Liepins](https://alpha.app.net/lasar)
 * [@mttmccb - Matt McCabe](https://alpha.app.net/mttmccb)
+* [@hutattedonmyarm - Max](https://alpha.app.net/hutattedonmyarm)
 
 **Special Thanks To:**
 

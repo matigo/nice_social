@@ -272,6 +272,7 @@ nav:not(.mm-menu) { display: none; }
     left: 0;
     right: 0;
 }
+.reply input#rpy-sendto,
 .reply input#rpy-title {
     background: #fff;
     background-color: #fff;
@@ -284,6 +285,7 @@ nav:not(.mm-menu) { display: none; }
     overflow: hidden;
     width: 98%;
 }
+.reply input#rpy-sendto,
 .reply input#rpy-title:focus { outline: 0; }
 .reply textarea {
     background: #fff;
@@ -426,13 +428,14 @@ nav:not(.mm-menu) { display: none; }
     visibility: visible;
 }
 
-.reply.longpost { max-height: 335px; }
+.reply.pm, .reply.longpost { max-height: 335px; }
+.reply.pm input#rpy-sendto { display: block; }
 .reply.longpost input#rpy-title { display: block; }
-.reply.longpost textarea { height: 150px; }
-
+.reply.pm, .reply.longpost textarea { height: 150px; }
 @media all and (min-device-width:768px) {
-    .reply.longpost textarea { height: 250px; }
+    .reply.pm, .reply.longpost textarea { height: 227px; }
 }
+
 .autobox {
     background-color: transparent;
     margin: auto;
@@ -546,7 +549,7 @@ nav:not(.mm-menu) { display: none; }
 
     max-height: 80%;
     max-width: 400px;
-    width: 80%;
+    width: 95%;
 
     top: 0;
     left: 0;
@@ -597,7 +600,7 @@ nav:not(.mm-menu) { display: none; }
 }
 .profile .names {
     display: inline-block;
-    height: 50px;
+    height: 55px;
     vertical-align: bottom;
     width: 69%;
 }
@@ -748,7 +751,10 @@ nav:not(.mm-menu) { display: none; }
     display: inline-block;
     margin: 0 1px;
     vertical-align: bottom;
-    width: 1.35%;
+    width: 1.2%;
+}
+@media all and (min-device-width:768px) {
+    .profile .numbers .history .item { width: 1.35%; }
 }
 .profile .numbers .history .item red {
     background-color: #f00;
@@ -859,11 +865,20 @@ nav:not(.mm-menu) { display: none; }
 .chat .post-item .post-avatar {
     background: transparent;
     display: inline-block;
-    margin-left: 10px;
+    margin-left: 0;
     padding-top: 5px;
-    text-align: left;
+    text-align: center;
     vertical-align: top;
-    max-width: 75px;
+    max-width: 60px;
+}
+@media all and (min-device-width:768px) {
+    .post-list .pulse-item .pulse-avatar,
+    .post-list .post-item .post-avatar,
+    .chat .post-item .post-avatar {
+        margin-left: 10px;
+        max-width: 75px;
+        text-align: left;
+    }
 }
 .post-list .pulse-item .pulse-avatar .avatar-round,
 .post-list .post-item .post-avatar .avatar-round,
@@ -875,7 +890,18 @@ nav:not(.mm-menu) { display: none; }
     max-height: 50px;
     padding: 2px;
     max-width: 50px;
-    width: 75%;
+    width: 60%;
+}
+@media all and (min-device-width:768px) {
+    .post-list .pulse-item .pulse-avatar .avatar-round,
+    .post-list .post-item .post-avatar .avatar-round,
+    .chat .post-item .post-avatar .avatar-round {
+        border-radius: 50px;
+        height: auto;
+        max-height: 50px;
+        max-width: 50px;
+        width: 75%;
+    }
 }
 .post-list .post-item .post-avatar img.avatar-round.recent-acct { border: 2px solid #d9534f; }
 .post-list .post-item .post-avatar img.avatar-round.new-acct { border: 2px solid #ff0; }
@@ -890,6 +916,19 @@ nav:not(.mm-menu) { display: none; }
     width: 70%;
     word-break: break-word;
     word-wrap: break-word;
+}
+@media all and (min-device-width:768px) {
+    .post-list .pulse-item .pulse-content,
+    .post-list .post-item .post-content,
+    .chat .post-item .post-content {
+        background: transparent;
+        display: inline-block;
+        text-align: left;
+        vertical-align: top;
+        width: 75%;
+        word-break: break-word;
+        word-wrap: break-word;
+    }
 }
 .post-list .pulse-item .pulse-content {
     display: block;
