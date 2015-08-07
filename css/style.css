@@ -297,7 +297,7 @@ nav:not(.mm-menu) { display: none; }
     margin-top: 2px;
     overflow-y: scroll !important;
     padding: 1% 2%;
-    text-align: justify;
+    text-align: left;
     width: 96%;
 }
 .reply textarea:focus { outline: 0; }
@@ -784,7 +784,7 @@ nav:not(.mm-menu) { display: none; }
 
 .profile .post-item .post-content {
     padding: 5px 10px;
-    text-align: justify;
+    text-align: left;
 }
 .profile .post-item .post-content p {
     margin: 0;
