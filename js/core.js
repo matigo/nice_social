@@ -412,8 +412,9 @@ function prepApp() {
                   60: { 'key': 'avatar_color', 'value': 'ccc', 'useStore': false },
 
                   70: { 'key': 'font_family', 'value': 'Helvetica', 'useStore': false },
-                  71: { 'key': 'font_size', 'value': 14, 'useStore': false }
+                  71: { 'key': 'font_size', 'value': 14, 'useStore': false },
 
+                  90: { 'key': 'pms_unread', 'value': 0, 'useStore': true }
                  };
     for ( idx in items ) {
         if ( readStorage( items[idx].key, items[idx].useStore ) === false ) { saveStorage( items[idx].key, items[idx].value, items[idx].useStore ); }
@@ -627,7 +628,7 @@ function getUserProfile( user_id ) {
         include_machine: 0,
         include_muted: 1,
         include_html: 1,
-        count: 20        
+        count: 50
     };
     if ( access_token !== false ) { params.access_token = access_token; }
     toggleClassIfExists('dialog','hide','show');
@@ -726,7 +727,7 @@ function parseUserProfile( data ) {
                                                             '<h4 style="color:#' + h4color + '">' + data[0].user.name + '</h4>' +
                                                             '<h5>' + getUserProfileActions( data[0] ) + '</h5>';
 
-        document.getElementById( 'usr-info' ).innerHTML = ( data[0].user.hasOwnProperty('description') ) ? data[0].user.description.html : '';
+        document.getElementById( 'usr-info' ).innerHTML = parseText( data[0].user.description );
         document.getElementById( 'usr-numbers' ).innerHTML = getUserProfileNumbers( data[0].user );
 
         if ( data[0].user.follows_you ) { action_html += '<em>Follows You</em>'; }
@@ -749,17 +750,11 @@ function parseUserProfile( data ) {
 
         // Write the Post History
         for ( var i = 0; i < data.length; i++ ) {
-            post_source = ' via ' + data[i].source.name || 'unknown';
-            html += '<div class="post-item">' +
-                        '<div class="post-content">' +
-                            parseText( data[i] ) +
-                            '<p class="post-time">' +
-                                '<em>' + getTimestamp( data[i].created_at, true ) + post_source + '</em>' +
-                            '</p>' +
-                        '</div>' +
+            html += '<div id="' + data[i].id + '-u" class="post-item">' +
+                        buildHTMLSection( data[i] ) +
                     '</div>';
         }
-        document.getElementById( 'user_posts' ).innerHTML = html;
+        document.getElementById( 'user_posts' ).innerHTML = html.replaceAll('[TL]', '-u');
         toggleClassIfExists('dialog','hide','show');
     }
 }
@@ -883,7 +878,11 @@ function getGlobalItems() {
         url: window.apiURL + '/posts/stream/global',
         crossDomain: true,
         data: params,
-        success: function( data ) { parseItems( data.data ); getInteractions(); },
+        success: function( data ) {
+            parseItems( data.data );
+            getInteractions();
+            getPMUnread();
+        },
         error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
         dataType: "json"
     });
@@ -1207,6 +1206,15 @@ function showTimelines() {
                 $('#tl-space').append( '<div id="' + i + '" class="post-list tl-' + i + '" style="overflow-x: hidden;">' +
                                            buffer.replaceAll('[TL]', '-' + i.charAt(0), '') +
                                        '</div>' );
+            } else {
+                switch ( i ) {
+                    case 'pms':
+                        saveStorage( 'net.app.core.pm-ts', '*', true );
+                        break;
+        
+                    default:
+                        /* Do Nothing */
+                }
             }
         }
     }
@@ -1252,12 +1260,32 @@ function redrawList() {
     /* Draw the Private Messages (If Required) */
     if ( window.timelines.pms === true ) {
         if ( document.getElementById('pms').innerHTML === '' ) { $( "#pms" ).prepend(buffer); }
+        var cnt = 0;
         if ( window.coredata.hasOwnProperty('net.app.core.pm') ) {
-            for ( post_id in window.coredata['net.app.core.pm'] ) {
-                if ( checkElementExists(post_id + '-pms') === false ) {
-                    var html = buildPMItem('net.app.core.pm', post_id);
-                    if ( html ) { $( "#pms" ).prepend(html); }
+            var last_ts = readStorage('net.app.core.pm-ts', true);
+            if ( last_ts !== window.coredata[ 'net.app.core.pm-ts' ] ) {
+                for ( post_id in window.coredata['net.app.core.pm'] ) {
+                    if ( checkElementExists(post_id + '-pms') ) {
+                        /* Check to see if the PM Object's Timestamp Is The Same */
+                        var objTime = $('#' + post_id + '-pms').data("content");
+                        if ( window.coredata['net.app.core.pm'][ post_id ].recent_message.created_at != objTime ) {
+                            var elem = document.getElementById( post_id + '-pms' );
+                            elem.parentNode.removeChild(elem);
+
+                            var html = buildPMItem('net.app.core.pm', post_id);
+                            if ( html ) { $( "#pms" ).prepend(html); }
+                        }
+
+                    } else {
+                        /* Draw the PM Object */
+                        var html = buildPMItem('net.app.core.pm', post_id);
+                        if ( html ) { $( "#pms" ).prepend(html); }
+                    }
+                    cnt++;
+
+                    /* TODO: If We Have Reached the Max Column Length, Exit the For Loop */
                 }
+                saveStorage( 'net.app.core.pm-ts', window.coredata[ 'net.app.core.pm-ts' ], true );
             }
         }
     }
@@ -1739,6 +1767,16 @@ function updateTimestamps() {
                     if ( html != tStr ) { document.getElementById( itms[i].id ).innerHTML = tStr; } else { break; }
                 }
         }
+        for ( post_id in window.coredata['net.app.core.pm'] ) {
+                var itms = document.getElementsByName( post_id + "-time" );
+                var tStr = humanized_time_span( window.coredata['net.app.core.pm'][post_id].recent_post.created_at ),
+                    html = '';
+
+                for ( var i = 0; i < itms.length; i++ ) {
+                    html = document.getElementById( itms[i].id ).innerHTML;
+                    if ( html != tStr ) { document.getElementById( itms[i].id ).innerHTML = tStr; } else { break; }
+                }            
+        }
     }
 }
 function collectRankSummary() {
@@ -2083,7 +2121,7 @@ function showHideGallery() {
 }
 function showHideActions( post_id, tl ) {
     if ( tl === '*' ) {
-        var tls = ['h', 'm', 'g', 'c', 'x'];
+        var tls = ['h', 'm', 'g', 'c', 'x', 'u'];
         var div = '';
         for ( var i = 0; i <= tls.length; i++ ) {
             div = '#' + post_id + '-rsp-' + tls[i];

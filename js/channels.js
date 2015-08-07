@@ -135,6 +135,31 @@ function parseChannelPost( data ) {
         showHideResponse();
     }
 }
+function getPMUnread() {
+    var access_token = readStorage('access_token');
+    if ( access_token !== false ) {
+        var params = {
+            access_token: access_token,
+            include_message_annotations: 1,
+            include_recent_message: 1,
+            include_annotations: 1,
+            include_inactive: 1,
+            include_deleted: 1,
+            include_marker: 1,
+            include_read: 0,
+            channel_types: 'net.app.core.pm',
+            count: 100
+        };
+        $.ajax({
+            url: window.apiURL + '/channels',
+            crossDomain: true,
+            data: params,
+            success: function( data ) { parsePMResults( data.meta, data.data ); },
+            error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
+            dataType: "json"
+        });
+    }
+}
 function getPMSummary( before_id ) {
     var access_token = readStorage('access_token');
     before_id = ( before_id === undefined || before_id === NaN ) ? 0 : before_id;
@@ -145,6 +170,7 @@ function getPMSummary( before_id ) {
             include_recent_message: 1,
             include_annotations: 1,
             include_inactive: 1,
+            include_deleted: 1,
             include_marker: 1,
             include_read: 1,
             channel_types: 'net.app.core.pm',
@@ -174,7 +200,10 @@ function parsePMResults( meta, data ) {
 function parsePMData( data ) {
     if ( data ) {
         for ( var i = 0; i < data.length; i++ ) {
-            if ( window.coredata.hasOwnProperty( data[i].type ) === false ) { window.coredata[ data[i].type ] = {}; }
+            if ( window.coredata.hasOwnProperty( data[i].type ) === false ) {
+                window.coredata[ data[i].type + '-ts' ] = 0;
+                window.coredata[ data[i].type ] = {};
+            }
             var pObj = data[i];
             if ( pObj.hasOwnProperty('recent_message') ) {
                 if ( pObj.recent_message.hasOwnProperty('is_deleted') === false ) { pObj.recent_message['is_deleted'] = false; }
@@ -183,6 +212,7 @@ function parsePMData( data ) {
                 pObj['recent_message']['is_deleted'] = true;
             }
             window.coredata[ data[i].type ][ data[i].id ] = pObj;
+            window.coredata[ data[i].type + '-ts' ] = Math.floor(Date.now() / 1000);
         }
     }
 }
@@ -205,7 +235,7 @@ function sortPMList() {
 function buildPMItem( post_type, post_id ) {
     var data = window.coredata[ post_type ][ post_id ];
     var msgs = ' (' + addCommas(data.counts.messages) + ' Message' + ((data.counts.messages > 1 ) ? 's' : '') + ')';
-    var post_time = ( data.recent_message.is_deleted === false ) ? humanized_time_span(data.recent_message.created_at) : '';
+    var post_time = ( data.recent_message.is_deleted === false ) ? getTimestamp( data.recent_message.created_at ) : '';
     var my_id = readStorage('user_id');
     var user_list = '';
     var html = '';
@@ -252,7 +282,7 @@ function buildPMItem( post_type, post_id ) {
                              ' src="' + ( data.recent_message.user.avatar_image.url || data.user.avatar_image.url ) + '"';
             }
 
-            html =  '<div id="' + data.id + '-pms" name="' + data.id + '" class="post-item">' +
+            html =  '<div id="' + data.id + '-pms" name="' + data.id + '" data-content="' + data.recent_message.created_at + '" class="post-item">' +
                         '<div id="' + data.id + '-po" class="post-avatar">' +
                             '<img class="avatar-round"' + avatar + '>' +
                         '</div>' +
