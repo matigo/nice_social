@@ -43,6 +43,7 @@ nav:not(.mm-menu) { display: none; }
     top: 0;
     left: 0;
 }
+.header.fixed a { cursor: pointer; }
 .header.fixed span {
     float: left;
     margin: 0 -35px 0 35px;
@@ -981,6 +982,20 @@ nav:not(.mm-menu) { display: none; }
     margin: 5px 0;
     text-align: left;
     text-decoration: none;
+}
+#user_posts .post-item .post-content .post-client {
+    font-weight: normal;
+    margin: 0;
+    text-align: right;
+    text-decoration: none;
+}
+#user_posts .post-item .post-content .post-client em {
+    font-style: italic;
+    font-weight: normal;
+}
+.post-list .post-item .post-content .post-client,
+.chat .post-item .post-content .post-client {
+    display: none;
 }
 #user_posts .post-item .post-content .post-time,
 .post-list .post-item .post-content .post-time,

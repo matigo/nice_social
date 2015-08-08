@@ -414,7 +414,7 @@ function prepApp() {
                   70: { 'key': 'font_family', 'value': 'Helvetica', 'useStore': false },
                   71: { 'key': 'font_size', 'value': 14, 'useStore': false },
 
-                  90: { 'key': 'pms_unread', 'value': 0, 'useStore': true }
+                  90: { 'key': 'net.app.global-ts', 'value': 0, 'useStore': true }
                  };
     for ( idx in items ) {
         if ( readStorage( items[idx].key, items[idx].useStore ) === false ) { saveStorage( items[idx].key, items[idx].value, items[idx].useStore ); }
@@ -925,6 +925,30 @@ function parseItems( data ) {
         var write_post = true;
         var gTL = $('#global').length;
 
+        /* Prep the CoreData Element If Needs Be */
+        if ( window.coredata.hasOwnProperty( 'net.app.global' ) === false ) {
+            window.coredata[ 'net.app.global-ts' ] = 0;
+            window.coredata[ 'net.app.global' ] = {};
+        }
+        for ( var i = 0; i < data.length; i++ ) {
+            followed = data[i].user.you_follow || (data[i].user.id === my_id) || false;
+            account_rank = parseInt( readStorage( data[i].user.id + '_rank', true) );
+            if ( isNaN(account_rank) ) { account_rank = 0.1; }
+            is_human = (use_nice === 'N') ? 'Y' : readStorage( data[i].user.id + '_human', true);
+            if ( readStorage('feeds_hide') === 'N' && data[i].user.type === 'feed' ) {
+                account_rank = 2.1;
+                is_human = 'Y';
+            }
+
+            if ( (account_rank >= min_rank && is_human == 'Y') || (data[i].user.id === my_id) || followed ) {
+                if ( write_post === false && ((data[i].user.id === my_id) || followed) ) { write_post = true; }
+                if ( write_post ) {
+                    window.coredata[ 'net.app.global' ][ data[i].id ] = data[i];
+                    window.coredata[ 'net.app.global-ts' ] = Math.floor(Date.now() / 1000);
+                }
+            }
+        }
+
         for ( var i = 0; i < data.length; i++ ) {
             if ( gTL === 0 ) { setSplashMessage('Reading Posts (' + (i + 1) + '/' + data.length + ')'); }
             followed = data[i].user.you_follow || (data[i].user.id === my_id) || false;
@@ -1021,9 +1045,8 @@ function buildHTMLSection( post ) {
                         ' onMouseOver="doMouseOver(' + data.id + ', \'[TL]\');" onMouseOut="doMouseOut(' + data.id + ', \'[TL]\');">' +
                         '<h5 class="post-name"><span>' + data.user.username + repost_by + '</span></h5>' +
                         parseText( data ) +
-                        '<p class="post-time">' +
-                            '<em id="' + post.id + '-time[TL]" name="' + post.id + '-time">' + post_time + '</em>' +
-                        '</p>' +
+                        '<p class="post-client"><em>' + data.source.name + '</em></p>' +
+                        '<p class="post-time"><em id="' + post.id + '-time[TL]" name="' + post.id + '-time">' + post_time + '</em></p>' +
                     '</div>' +
                     buildRespondBar( data ) +
                     parseEmbedded( data );
@@ -1199,7 +1222,7 @@ function showHideTL( tl ) {
 }
 function showTimelines() {
     var buffer = '<div id="0[TL]" class="post-item" style="border: 0; min-height: 75px;"></div>';
-    document.getElementById('tl-space').innerHTML = '';
+    /* document.getElementById('tl-space').innerHTML = ''; */
     for (i in window.timelines) {
         if ( window.timelines.hasOwnProperty(i) ) {
             if ( window.timelines[i] === true ) {
@@ -1207,6 +1230,11 @@ function showTimelines() {
                                            buffer.replaceAll('[TL]', '-' + i.charAt(0), '') +
                                        '</div>' );
             } else {
+                if ( checkElementExists( i ) ) {
+                    var elem = document.getElementById( i );
+                    elem.parentNode.removeChild(elem);
+                }
+
                 switch ( i ) {
                     case 'pms':
                         saveStorage( 'net.app.core.pm-ts', '*', true );
@@ -1293,56 +1321,61 @@ function redrawList() {
     /* Draw the Standard Timelines */
     var postText = '';
     var last_id = '';
+    var last_ts = readStorage('net.app.global-ts', true);
 
-    for ( post_id in window.posts ) {
-        if ( window.posts[post_id] !== false ) {
-            if ( isMutedClient(window.posts[post_id].client) ) {
-                postText = '<span onClick="showMutedPost(' + post_id + ', \'[TL]\');">' +
-                               '@' + window.posts[post_id].created_by + ' - ' + 'Muted Client (' + window.posts[post_id].client + ')' +
-                           '</span>';
-            } else {
-                postText = window.posts[post_id].html;
-            }
-
-            if ( window.posts[post_id].is_conversation === false ) {
-                if ( window.timelines.home ) {
-                    if ( checkElementExists(post_id + '-h') === false ) {
-                        if ( window.posts[post_id].is_mention || window.posts[post_id].followed ) {
-                            last_id = getPreviousElement(post_id, 'home', '-h');
-                            if ( last_id !== false ) {
-                                document.getElementById('home').insertBefore( buildNode(post_id, '-h', postText.replaceAll('[TL]', '-h', '')),
-                                                                              document.getElementById(last_id) );
-                            }
-                        }
-                    }
+    if ( last_ts != window.coredata[ 'net.app.global-ts' ] ) {
+        for ( post_id in window.posts ) {
+            if ( window.posts[post_id] !== false ) {
+                if ( isMutedClient(window.posts[post_id].client) ) {
+                    postText = '<span onClick="showMutedPost(' + post_id + ', \'[TL]\');">' +
+                                   '@' + window.posts[post_id].created_by + ' - ' + 'Muted Client (' + window.posts[post_id].client + ')' +
+                               '</span>';
+                } else {
+                    postText = window.posts[post_id].html;
                 }
 
-                if ( window.timelines.mentions ) {
-                    if ( checkElementExists(post_id + '-m') === false ) {
-                        if ( window.posts[post_id].is_mention ) {
-                            last_id = getPreviousElement(post_id, 'mentions', '-m');
-                            if ( last_id !== false ) {
-                                document.getElementById('mentions').insertBefore( buildNode(post_id, '-m', postText.replaceAll('[TL]', '-m', '')),
+                if ( window.posts[post_id].is_conversation === false ) {
+                    if ( window.timelines.home ) {
+                        if ( checkElementExists(post_id + '-h') === false ) {
+                            if ( window.posts[post_id].is_mention || window.posts[post_id].followed ) {
+                                last_id = getPreviousElement(post_id, 'home', '-h');
+                                if ( last_id !== false ) {
+                                    document.getElementById('home').insertBefore( buildNode(post_id, '-h', postText.replaceAll('[TL]', '-h', '')),
                                                                                   document.getElementById(last_id) );
+                                }
                             }
                         }
                     }
-                }
-    
-                if ( window.timelines.global ) {
-                    if ( checkElementExists(post_id + '-g') === false ) {
-                        if ( global_showall || window.posts[post_id].followed === false ) {
-                            last_id = getPreviousElement(post_id, 'global', '-g');
-                            if ( last_id !== false ) {
-                                document.getElementById('global').insertBefore( buildNode(post_id, '-g', postText.replaceAll('[TL]', '-g', '')),
-                                                                                document.getElementById(last_id) );
+
+                    if ( window.timelines.mentions ) {
+                        if ( checkElementExists(post_id + '-m') === false ) {
+                            if ( window.posts[post_id].is_mention ) {
+                                last_id = getPreviousElement(post_id, 'mentions', '-m');
+                                if ( last_id !== false ) {
+                                    document.getElementById('mentions').insertBefore( buildNode(post_id, '-m', postText.replaceAll('[TL]', '-m', '')),
+                                                                                      document.getElementById(last_id) );
+                                }
+                            }
+                        }
+                    }
+
+                    if ( window.timelines.global ) {
+                        if ( checkElementExists(post_id + '-g') === false ) {
+                            if ( global_showall || window.posts[post_id].followed === false ) {
+                                last_id = getPreviousElement(post_id, 'global', '-g');
+                                if ( last_id !== false ) {
+                                    document.getElementById('global').insertBefore( buildNode(post_id, '-g', postText.replaceAll('[TL]', '-g', '')),
+                                                                                    document.getElementById(last_id) );
+                                }
                             }
                         }
                     }
                 }
             }
         }
+        saveStorage( 'net.app.global-ts', window.coredata[ 'net.app.global-ts' ], true );
     }
+
     setWindowConstraints();
     updateTimestamps();
 }
