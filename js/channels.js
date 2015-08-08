@@ -199,6 +199,7 @@ function parsePMResults( meta, data ) {
 }
 function parsePMData( data ) {
     if ( data ) {
+        var user_list = [];
         for ( var i = 0; i < data.length; i++ ) {
             if ( window.coredata.hasOwnProperty( data[i].type ) === false ) {
                 window.coredata[ data[i].type + '-ts' ] = 0;
@@ -211,9 +212,19 @@ function parsePMData( data ) {
                 pObj['recent_message'] = {};
                 pObj['recent_message']['is_deleted'] = true;
             }
+            if ( pObj.hasOwnProperty('writers') ) {
+                for ( _id in pObj['writers']['user_ids'] ) {
+                    if ( user_list.indexOf(pObj['writers']['user_ids'][_id]) < 0 ) { user_list.push(pObj['writers']['user_ids'][_id]); }
+                }
+            }
+            if ( user_list.length > 100 ) {
+                getAccountNames( user_list );
+                user_list = [];
+            }
             window.coredata[ data[i].type ][ data[i].id ] = pObj;
             window.coredata[ data[i].type + '-ts' ] = Math.floor(Date.now() / 1000);
         }
+        if ( user_list.length > 0 ) { getAccountNames( user_list ); }
     }
 }
 function sortPMList() {
@@ -222,15 +233,15 @@ function sortPMList() {
         if (date1 < date2) return -1;
         return 0;
     };
-    var rVal = [];
+    var data = [];
     for ( post_id in window.coredata['net.app.core.pm'] ) {
         if ( window.coredata['net.app.core.pm'][post_id].hasOwnProperty('recent_message') ) {
             if ( window.coredata['net.app.core.pm'][post_id].recent_message.is_deleted !== true ) {
-                rVal.push(window.coredata['net.app.core.pm'][post_id].recent_message.created_at);
+                data.push(window.coredata['net.app.core.pm'][post_id].recent_message.created_at);
             }
         }
     }
-    return rVal.sort(sort_list);
+    return data.sort(sort_list);
 }
 function buildPMItem( post_type, post_id ) {
     var data = window.coredata[ post_type ][ post_id ];
@@ -282,20 +293,18 @@ function buildPMItem( post_type, post_id ) {
                              ' src="' + ( data.recent_message.user.avatar_image.url || data.user.avatar_image.url ) + '"';
             }
 
-            html =  '<div id="' + data.id + '-pms" name="' + data.id + '" data-content="' + data.recent_message.created_at + '" class="post-item">' +
-                        '<div id="' + data.id + '-po" class="post-avatar">' +
-                            '<img class="avatar-round"' + avatar + '>' +
-                        '</div>' +
-                        '<div id="' + data.id + '-dtl" class="post-content">' +
-                            '<h5 class="post-name" style="cursor: pointer;" onClick="doShowChan(' + data.id + ');">' +
-                                '<span id="' + data.id + '-ni">' + user_list + msgs + '</span>' +
-                            '</h5>' +
-                            parseRecentText( data ) +
-                            '<p class="post-time">' +
-                                '<em id="' + data.id + '-time-pms" name="' + data.id + '-time"' +
-                                     ' onClick="doShowChan(' + data.id + ');">' + post_time + '</em>' +
-                            '</p>' +
-                        '</div>' +
+            html =  '<div id="' + data.id + '-po" class="post-avatar">' +
+                        '<img class="avatar-round"' + avatar + '>' +
+                    '</div>' +
+                    '<div id="' + data.id + '-dtl" class="post-content">' +
+                        '<h5 class="post-name" style="cursor: pointer;" onClick="doShowChan(' + data.id + ');">' +
+                            '<span id="' + data.id + '-ni">' + user_list + msgs + '</span>' +
+                        '</h5>' +
+                        parseRecentText( data ) +
+                        '<p class="post-time">' +
+                            '<em id="' + data.id + '-time-pms" name="' + data.id + '-time"' +
+                                 ' onClick="doShowChan(' + data.id + ');">' + post_time + '</em>' +
+                        '</p>' +
                     '</div>';
             break;
     }

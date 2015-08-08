@@ -1066,11 +1066,12 @@ function isValidClient( post ) {
     if ( account_age <= 7 ) { if ( mute_client.indexOf(post_client) >= 0 ) { rVal = false; } }
     return rVal;
 }
-function buildNode( post_id, tl_ref, html ) {
+function buildNode( post_id, tl_ref, data, html ) {
     var elem = document.createElement("div");
     elem.setAttribute('id', post_id + tl_ref);
     elem.setAttribute('name', post_id);
     elem.setAttribute('class', 'post-item');
+    elem.setAttribute('data-content', data);
     elem.innerHTML = html;
 
     return elem;
@@ -1222,7 +1223,7 @@ function showHideTL( tl ) {
     }
 }
 function showTimelines() {
-    var buffer = '<div id="0[TL]" class="post-item" style="border: 0; min-height: 75px;"></div>';
+    var buffer = '<div id="0[TL]" class="post-item" style="border: 0; min-height: 75px;" data-content="2000-01-01T00:00:00Z"></div>';
     for (i in window.timelines) {
         if ( window.timelines.hasOwnProperty(i) ) {
             if ( window.timelines[i] === true ) {
@@ -1294,25 +1295,50 @@ function redrawList() {
         var cnt = 0;
         if ( window.coredata.hasOwnProperty('net.app.core.pm') ) {
             var last_ts = readStorage('net.app.core.pm-ts', true);
-            if ( last_ts !== window.coredata[ 'net.app.core.pm-ts' ] ) {
-                for ( post_id in window.coredata['net.app.core.pm'] ) {
-                    if ( checkElementExists(post_id + '-pms') ) {
-                        /* Check to see if the PM Object's Timestamp Is The Same */
-                        var objTime = $('#' + post_id + '-pms').data("content");
-                        if ( window.coredata['net.app.core.pm'][ post_id ].recent_message.created_at != objTime ) {
-                            var elem = document.getElementById( post_id + '-pms' );
-                            elem.parentNode.removeChild(elem);
+            var pm_list = sortPMList();
 
+            if ( last_ts !== window.coredata[ 'net.app.core.pm-ts' ] ) {
+                for ( var idx = 0; idx < pm_list.length; idx++ ) {
+                    var post_id = '';
+                    for ( _id in window.coredata['net.app.core.pm'] ) {
+                        if ( window.coredata['net.app.core.pm'][ _id ].recent_message.created_at === pm_list[idx] ) {
+                            post_id = _id;
+                            break;
+                        }
+                    }
+
+                    if ( post_id !== '' ) {
+                        if ( checkElementExists(post_id + '-pms') ) {
+                            /* Check to see if the PM Object's Timestamp Is The Same */
+                            var objTime = $('#' + post_id + '-pms').data("content");
+                            if ( window.coredata['net.app.core.pm'][ post_id ].recent_message.created_at != objTime ) {
+                                var elem = document.getElementById( post_id + '-pms' );
+                                elem.parentNode.removeChild(elem);
+
+                                var html = buildPMItem('net.app.core.pm', post_id);
+                                var last_id = getPreviousElementByTime(pm_list[idx], 'pms', '-pms' );
+                                if ( last_id !== false ) {
+                                    document.getElementById('pms').insertBefore( buildNode(post_id, '-pms', pm_list[idx], html),
+                                                                                 document.getElementById(last_id) );
+                                }
+                            }
+    
+                        } else {
+                            /* Draw the PM Object */
+                            /*
                             var html = buildPMItem('net.app.core.pm', post_id);
                             if ( html ) { $( "#pms" ).prepend(html); }
-                        }
+                            */
 
-                    } else {
-                        /* Draw the PM Object */
-                        var html = buildPMItem('net.app.core.pm', post_id);
-                        if ( html ) { $( "#pms" ).prepend(html); }
+                            var html = buildPMItem('net.app.core.pm', post_id);
+                            var last_id = getPreviousElementByTime(pm_list[idx], 'pms', '-pms' );
+                            if ( last_id !== false ) {
+                                document.getElementById('pms').insertBefore( buildNode(post_id, '-pms', pm_list[idx], html),
+                                                                             document.getElementById(last_id) );
+                            }
+                        }
+                        cnt++;
                     }
-                    cnt++;
 
                     /* TODO: If We Have Reached the Max Column Length, Exit the For Loop */
                 }
@@ -1343,7 +1369,7 @@ function redrawList() {
                             if ( window.posts[post_id].is_mention || window.posts[post_id].followed ) {
                                 last_id = getPreviousElement(post_id, 'home', '-h');
                                 if ( last_id !== false ) {
-                                    document.getElementById('home').insertBefore( buildNode(post_id, '-h', postText.replaceAll('[TL]', '-h', '')),
+                                    document.getElementById('home').insertBefore( buildNode(post_id, '-h', '0', postText.replaceAll('[TL]', '-h', '')),
                                                                                   document.getElementById(last_id) );
                                 }
                             }
@@ -1355,7 +1381,7 @@ function redrawList() {
                             if ( window.posts[post_id].is_mention ) {
                                 last_id = getPreviousElement(post_id, 'mentions', '-m');
                                 if ( last_id !== false ) {
-                                    document.getElementById('mentions').insertBefore( buildNode(post_id, '-m', postText.replaceAll('[TL]', '-m', '')),
+                                    document.getElementById('mentions').insertBefore( buildNode(post_id, '-m', '0', postText.replaceAll('[TL]', '-m', '')),
                                                                                       document.getElementById(last_id) );
                                 }
                             }
@@ -1367,7 +1393,7 @@ function redrawList() {
                             if ( global_showall || window.posts[post_id].followed === false ) {
                                 last_id = getPreviousElement(post_id, 'global', '-g');
                                 if ( last_id !== false ) {
-                                    document.getElementById('global').insertBefore( buildNode(post_id, '-g', postText.replaceAll('[TL]', '-g', '')),
+                                    document.getElementById('global').insertBefore( buildNode(post_id, '-g', '0', postText.replaceAll('[TL]', '-g', '')),
                                                                                     document.getElementById(last_id) );
                                 }
                             }
@@ -1390,6 +1416,17 @@ function getPreviousElement( post_id, timeline, tl_ref ) {
         if ( parseInt(elems.children[idx].id.replaceAll(tl_ref, '', '')) < parseInt(post_id) ) { return elems.children[idx].id; }
     }
     return '0' + tl_ref;
+}
+function getPreviousElementByTime( time_str, timeline, tl_ref ) {
+    var elems = document.getElementById(timeline);
+    var c_max = parseInt(readStorage('column_max'));
+    var comTime = new Date( time_str );
+    for ( var idx = 0; idx < elems.children.length; idx++ ) {
+        if ( idx >= (c_max - 5) ) { return false; }
+        var objTime = new Date( $('#' + elems.children[idx].id).data("content") );        
+        if ( objTime < comTime ) { return elems.children[idx].id; }
+    }
+    return '0' + tl_ref;    
 }
 function checkElementExists( div_id ) {
     var element =  document.getElementById( div_id );
