@@ -868,6 +868,7 @@ nav:not(.mm-menu) { display: none; }
 .post-list .pulse-item { text-align: left; }
 .post-list .pulse-item .pulse-avatar,
 #user_posts .post-item .post-avatar { display: none; }
+#user_posts .post-item .post-avatar.repost,
 .post-list .post-item .post-avatar,
 .chat .post-item .post-avatar {
     background: transparent;
@@ -914,6 +915,7 @@ nav:not(.mm-menu) { display: none; }
 .post-list .post-item .post-avatar img.avatar-round.recent-acct { border: 2px solid #d9534f; }
 .post-list .post-item .post-avatar img.avatar-round.new-acct { border: 2px solid #ff0; }
 .post-list .post-item .post-avatar img.avatar-round.mention { border: 2px solid #00f; }
+#user_posts .post-item .post-content,
 .post-list .pulse-item .pulse-content,
 .post-list .post-item .post-content,
 .chat .post-item .post-content {
@@ -926,18 +928,20 @@ nav:not(.mm-menu) { display: none; }
     word-wrap: break-word;
 }
 @media all and (min-device-width:768px) {
+    #user_posts .post-item .post-content,
     .post-list .pulse-item .pulse-content,
     .post-list .post-item .post-content,
     .chat .post-item .post-content {
-        background: transparent;
-        display: inline-block;
-        text-align: left;
-        vertical-align: top;
         width: 75%;
-        word-break: break-word;
-        word-wrap: break-word;
     }
 }
+#user_posts .post-item .post-content { width: 93%; }
+#user_posts .post-item .post-content.repost { width: 70%; }
+@media all and (min-device-width:768px) {
+    #user_posts .post-item .post-content { width: 93%; }
+    #user_posts .post-item .post-content.repost { width: 77%; }
+}
+
 .post-list .pulse-item .pulse-content {
     display: block;
     padding: 0 5%;
@@ -976,9 +980,11 @@ nav:not(.mm-menu) { display: none; }
     font-style: normal;
 }
 #user_posts .post-item .post-content .post-name { display: none; }
+#user_posts .post-item .post-content .post-name.repost,
 .post-list .post-item .post-content .post-name,
 .chat .post-item .post-content .post-name {
     background: transparent;
+    display: block;
     margin: 5px 0;
     text-align: left;
     text-decoration: none;

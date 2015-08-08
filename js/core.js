@@ -1036,14 +1036,15 @@ function buildHTMLSection( post ) {
             if ( account_age <= 7 ) { avatarClass = 'avatar-round recent-acct'; }
             if ( account_age <= 1 ) { avatarClass = 'avatar-round new-acct'; }
             if ( isMention( data ) ) { avatarClass = 'avatar-round mention'; }
-            _html = '<div id="' + data.id + '-po" class="post-avatar">' +
+            _html = '<div id="' + data.id + '-po" class="post-avatar' + ((is_repost) ? ' repost' : '') + '">' +
                         '<img class="' + avatarClass + '"' +
                             ' onClick="doShowUser(' + data.user.id + ');"' +
                             ' src="' + data.user.avatar_image.url + '">' +
                     '</div>' +
-                    '<div id="' + data.id + '-dtl" class="post-content" onClick="showHideActions(' + data.id + ', \'[TL]\');"' +
+                    '<div id="' + data.id + '-dtl" class="post-content' + ((is_repost) ? ' repost' : '') + '"' +
+                        ' onClick="showHideActions(' + data.id + ', \'[TL]\');"' +
                         ' onMouseOver="doMouseOver(' + data.id + ', \'[TL]\');" onMouseOut="doMouseOut(' + data.id + ', \'[TL]\');">' +
-                        '<h5 class="post-name"><span>' + data.user.username + repost_by + '</span></h5>' +
+                        '<h5 class="post-name' + ((is_repost) ? ' repost' : '') + '"><span>' + data.user.username + repost_by + '</span></h5>' +
                         parseText( data ) +
                         '<p class="post-client"><em>' + data.source.name + '</em></p>' +
                         '<p class="post-time"><em id="' + post.id + '-time[TL]" name="' + post.id + '-time">' + post_time + '</em></p>' +
@@ -1222,13 +1223,14 @@ function showHideTL( tl ) {
 }
 function showTimelines() {
     var buffer = '<div id="0[TL]" class="post-item" style="border: 0; min-height: 75px;"></div>';
-    /* document.getElementById('tl-space').innerHTML = ''; */
     for (i in window.timelines) {
         if ( window.timelines.hasOwnProperty(i) ) {
             if ( window.timelines[i] === true ) {
-                $('#tl-space').append( '<div id="' + i + '" class="post-list tl-' + i + '" style="overflow-x: hidden;">' +
-                                           buffer.replaceAll('[TL]', '-' + i.charAt(0), '') +
-                                       '</div>' );
+                if ( checkElementExists( i ) === false ) {
+                    $('#tl-space').append( '<div id="' + i + '" class="post-list tl-' + i + '" style="overflow-x: hidden;">' +
+                                               buffer.replaceAll('[TL]', '-' + i.charAt(0), '') +
+                                           '</div>' );
+                }
             } else {
                 if ( checkElementExists( i ) ) {
                     var elem = document.getElementById( i );
@@ -1241,6 +1243,7 @@ function showTimelines() {
                         break;
         
                     default:
+                        saveStorage( 'net.app.global-ts', '*', true );
                         /* Do Nothing */
                 }
             }
