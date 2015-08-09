@@ -955,24 +955,34 @@ nav:not(.mm-menu) { display: none; }
         width: 70%;
     }
 }
+.post-list .pulse-item .pulse-content item {
+    background-color: #eee;
+    display: block;
+    padding: 2% 2.5%;
+    width: 95%;
+}
 .chat .post-item.post-grey { background: #eee; }
 #user_posts .post-item .post-content a,
+.post-list .pulse-item .pulse-content item a,
 .post-list .post-item .post-content a,
 .chat .post-item .post-content a {
     font-weight: bold;
     text-decoration: none;
 }
 #user_posts .post-item .post-content p,
+.post-list .pulse-item .pulse-content item,
 .post-list .post-item .post-content p,
 .chat .post-item .post-content p {
     text-align: left;
 }
 #user_posts .post-item .post-content span,
+.post-list .pulse-item .pulse-content item,
 .post-list .post-item .post-content span,
 .chat .post-item .post-content span {
     font-weight: normal;
 }
 #user_posts .post-item .post-content em,
+.post-list .pulse-item .pulse-content item em,
 .post-list .post-item .post-content em,
 .chat .post-item .post-content em {
     cursor: pointer;

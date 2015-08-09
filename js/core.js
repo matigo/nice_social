@@ -15,7 +15,6 @@ jQuery(function($) {
     window.store = new Object();
     window.coredata = {};
     window.posts = {};
-    window.pulse = {};
     window.users = {};
     window.files = {};
     window.activate = false;
@@ -1306,21 +1305,22 @@ function redrawList() {
         if ( _home === 'Y' && _ment === 'Y' ) { setSplashMessage(''); }
         window.activate = true;
     }
-    
+
+    /* Draw the Interactions (If Required) */
     if ( window.timelines.interact === true ) {
-        if ( document.getElementById('interact').innerHTML === '' ) { $( "#interact" ).prepend(buffer); }
-        for ( post_id in window.pulse ) {
-            if ( window.pulse[post_id] !== false ) {
-                if ( checkElementExists( post_id + '-in') === false ) {
-                    $( "#interact" ).prepend( buildInteractionHTML(post_id) );
+        if ( window.coredata.hasOwnProperty('net.app.interactions') ) {
+            var last_ts = readStorage('net.app.interactions-ts', true);
+            if ( last_ts !== window.coredata[ 'net.app.interactions-ts' ] ) {
+                for ( _id in window.coredata['net.app.interactions'] ) {
+                    if ( checkElementExists( _id + '-i') === false ) { $( "#interact" ).prepend( buildInteractionItem( _id ) ); }
                 }
             }
+            saveStorage( 'net.app.interactions-ts', window.coredata[ 'net.app.interactions-ts' ], true );
         }
     }
 
     /* Draw the Private Messages (If Required) */
     if ( window.timelines.pms === true ) {
-        if ( document.getElementById('pms').innerHTML === '' ) { $( "#pms" ).prepend(buffer); }
         var cnt = 0;
         if ( window.coredata.hasOwnProperty('net.app.core.pm') ) {
             var last_ts = readStorage('net.app.core.pm-ts', true);
@@ -3313,95 +3313,6 @@ function parseUserList( resp ) {
         }
     }
     setSplashMessage('');
-}
-function getInteractions() {
-    var access_token = readStorage('access_token');
-
-    if ( access_token !== false ) {
-        var params = {
-            access_token: access_token,
-            interaction_actions: 'follow,repost,star',
-            include_annotations: 1,
-            include_deleted: 0,
-            include_machine: 0,
-            include_html: 1,
-            count: 200
-        }; 
-        $.ajax({
-            url: window.apiURL + '/users/me/interactions',
-            crossDomain: true,
-            data: params,
-            type: 'GET',
-            success: function( data ) { parseInteractions( data ); },
-            error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
-            dataType: "json"
-        });
-    }
-}
-function parseInteractions( resp ) {
-    var data = resp.data;
-    if ( data ) {
-        var acct_ids = [];
-
-        for ( var i = 0; i < data.length; i++ ) {
-            acct_ids = [];
-            if ( data[i].hasOwnProperty('users') ) {
-                if ( data[i].users.length > 0 ) {
-                    for ( var idx = 0; idx < data[i].users.length; idx++ ) {
-                        acct_ids.push({  user_id: data[i].users[idx].id,
-                                          avatar: data[i].users[idx].avatar_image.url,
-                                        username: data[i].users[idx].username
-                                       });
-                    }
-                }
-            }
-
-            addInteractionItem( data[i].action, data[i].event_date, acct_ids, data[i].objects[0].id, data[i].objects[0].html );
-        }
-    }
-}
-function buildInteractionHTML( post_id ) {
-    var data = window.pulse[ post_id ];
-    var _html = '',
-        what = '',
-        icon = '';
-
-    if ( data.repost_by.length > 0 ) {
-        what += data.repost_by.length + ((data.repost_by.length === 1) ? ' person' : ' people') + ' reposted';
-        icon += '<i class="fa fa-retweet"></i> ';
-    }
-    if ( data.star_by.length > 0 ) {
-        if ( what !== '' ) { what += ' &amp; '; }
-        what += data.star_by.length + ((data.star_by.length === 1) ? ' person' : ' people') + ' starred';
-        icon += '<i class="fa fa-star"></i> ';
-    }
-
-    if ( what !== '' ) {
-        _html = '<div id="' + post_id + '-in" name="' + data.post_id + '" class="pulse-item">' +
-                    '<div class="pulse-content">' +
-                        icon + what +
-                        ' <span onClick="doShowConv(' + data.post_id + ');">your post.</span> ' +
-                    '</div>' +
-                '</div>';
-    }
-    return _html;
-}
-function addInteractionItem( action_type, action_at, action_by, post_id, html ) {
-    if ( !window.pulse.hasOwnProperty( post_id ) ) {
-        window.pulse[ post_id ] = { action_last: action_at,
-                                    follow_by: (action_type === 'follow') ? action_by : [],
-                                    repost_by: (action_type === 'repost') ? action_by : [],
-                                    star_by: (action_type === 'star') ? action_by : [],
-                                    post_id: (action_type !== 'follow') ? post_id : 0,
-                                    html: html
-                                   };
-    } else {
-        if ( window.pulse[ post_id ].html === '' ) { window.pulse[ post_id ].html = (action_type !== 'follow') ? html : ''; }
-        if ( action_at > window.pulse[ post_id ].action_last ) { window.pulse[ post_id ].action_last = action_at; }
-        if ( action_type === 'follow' ) { window.pulse[ post_id ].follow_by = action_by; }
-        if ( action_type === 'repost' ) { window.pulse[ post_id ].repost_by = action_by; }
-        if ( action_type === 'star' ) { window.pulse[ post_id ].star_by = action_by; }
-    }
 }
 function buildGenericNode( elID, elName, elClass, html ) {
     var elem = document.createElement("div");

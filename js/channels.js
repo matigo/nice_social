@@ -154,7 +154,7 @@ function getPMUnread() {
             url: window.apiURL + '/channels',
             crossDomain: true,
             data: params,
-            success: function( data ) { parsePMResults( data.meta, data.data ); },
+            success: function( data ) { parsePMResults( data ); },
             error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
             dataType: "json"
         });
@@ -181,19 +181,19 @@ function getPMSummary( before_id ) {
             url: window.apiURL + '/channels',
             crossDomain: true,
             data: params,
-            success: function( data ) { parsePMResults( data.meta, data.data ); },
+            success: function( data ) { parsePMResults( data ); },
             error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
             dataType: "json"
         });
     }
 }
-function parsePMResults( meta, data ) {
-    if ( meta ) {
-        if ( meta.code === 200 ) {
-            parsePMData(data);
-            if ( meta.more === true ) { getPMSummary(meta.min_id); }
+function parsePMResults( ds ) {
+    if ( ds.meta ) {
+        if ( ds.meta.code === 200 ) {
+            parsePMData(ds.data);
+            if ( ds.meta.more === true ) { getPMSummary(ds.meta.min_id); }
         } else {
-            alert("Uh Oh. We've Got a [" + meta.code + "] from App.Net");
+            alert("Uh Oh. We've Got a [" + ds.meta.code + "] from App.Net");
         }
     }
 }
