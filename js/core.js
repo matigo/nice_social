@@ -1102,10 +1102,15 @@ function parseText( post ) {
         cStr = ' class="post-mention" style="font-weight: bold; cursor: pointer;"';
     var highlight = readStorage('post-highlight_color');
     var replaceHtmlEntites = (function() {
-        var translate_re = /&(#128406|#127996);/g,
+        var translate_re = /&(#128406|#127996|[\u1F3FB-\u1F3Ff]);/g,
             translate = {
                 '#128406': '<i class="fa fa-hand-spock-o"></i>',
-                '#127996': ''
+                '#127996': '',
+                '\u1F3FB': '',
+                '\u1F3FC': '',
+                '\u1F3FD': '',
+                '\u1F3FE': '',
+                '\u1F3FF': ''
             },
             translator = function($0, $1) { return translate[$1]; };
 
@@ -1226,11 +1231,35 @@ function showTimelines() {
     var buffer = '<div id="0[TL]" class="post-item" style="border: 0; min-height: 75px;" data-content="2000-01-01T00:00:00Z"></div>';
     for (i in window.timelines) {
         if ( window.timelines.hasOwnProperty(i) ) {
-            if ( window.timelines[i] === true ) {
+            if ( window.timelines[i] ) {
                 if ( checkElementExists( i ) === false ) {
-                    $('#tl-space').append( '<div id="' + i + '" class="post-list tl-' + i + '" style="overflow-x: hidden;">' +
-                                               buffer.replaceAll('[TL]', '-' + i.charAt(0), '') +
-                                           '</div>' );
+                    /* Should We Append the Column, Or Insert It At A Set Location? */
+                    var next_tl = '';
+                    var do_next = false;
+                    for ( itl in window.timelines ) {
+                        if ( do_next && window.timelines[itl] ) {
+                            next_tl = itl;
+                            do_next = false;
+                            break;
+                        }
+                        if ( itl === i ) { do_next = true; }
+                    }
+                    
+
+                    if ( next_tl === '' ) {
+                        $('#tl-space').append( '<div id="' + i + '" class="post-list tl-' + i + '" style="overflow-x: hidden;">' +
+                                                   buffer.replaceAll('[TL]', '-' + i.charAt(0), '') +
+                                               '</div>' );
+                    } else {
+                        var elem = document.createElement("div");
+                        elem.setAttribute('id', i);
+                        elem.setAttribute('class', 'post-list tl-' + i);
+                        elem.setAttribute('style', 'overflow-x: hidden;');
+                        elem.innerHTML = buffer.replaceAll('[TL]', '-' + i.charAt(0), '');
+
+                        document.getElementById('tl-space').insertBefore( elem, document.getElementById(next_tl) );
+                    }
+
                 }
             } else {
                 if ( checkElementExists( i ) ) {
@@ -1325,11 +1354,6 @@ function redrawList() {
     
                         } else {
                             /* Draw the PM Object */
-                            /*
-                            var html = buildPMItem('net.app.core.pm', post_id);
-                            if ( html ) { $( "#pms" ).prepend(html); }
-                            */
-
                             var html = buildPMItem('net.app.core.pm', post_id);
                             var last_id = getPreviousElementByTime(pm_list[idx], 'pms', '-pms' );
                             if ( last_id !== false ) {
