@@ -23,7 +23,13 @@ jQuery(function($) {
                          global   : true,
                          pms      : false,
                          interact : false
-    }
+                        };
+    window.tl_order = { 1: 'home',
+                        2: 'mentions',
+                        3: 'global',
+                        4: 'pms',
+                        5: 'interact'
+                       };
     loadConfigFile();
     window.KEY_ENTER = 13;
     window.KEY_ESCAPE = 27;
@@ -331,7 +337,11 @@ function parseMyToken( data ) {
         saveStorage('user_id', data.id);
         saveStorage('name', data.name);
 
-        if ( readStorage('tl_home') === 'N' && readStorage('tl_mentions') === 'N' ) {
+        var col_count = 0;
+        for (i in window.timelines) {
+            if ( readStorage('tl_' + i) === 'Y' ) { col_count++; }
+        }
+        if ( col_count <= 1 ) {
             window.timelines.mentions = true;
             saveStorage('tl_mentions', 'Y', true);
             window.timelines.home = true;
@@ -1096,7 +1106,7 @@ function addPostItem( post_id, created_at, html, is_mention, followed, post_by, 
     }
 }
 function parseText( post ) {
-    var html = post.html.replaceAll('<a href=', '<a target="_blank" href=', '') + ' ',
+    var html = ( post.hasOwnProperty('html') ) ? post.html.replaceAll('<a href=', '<a target="_blank" href=', '') + ' ' : '',
         name = '',
         cStr = ' class="post-mention" style="font-weight: bold; cursor: pointer;"';
     var highlight = readStorage('post-highlight_color');
@@ -1235,15 +1245,14 @@ function showTimelines() {
                     /* Should We Append the Column, Or Insert It At A Set Location? */
                     var next_tl = '';
                     var do_next = false;
-                    for ( itl in window.timelines ) {
-                        if ( do_next && window.timelines[itl] ) {
-                            next_tl = itl;
+                    for ( itl in window.tl_order ) {
+                        if ( do_next && checkElementExists( window.tl_order[itl] ) ) {
+                            next_tl = window.tl_order[itl];
                             do_next = false;
                             break;
                         }
-                        if ( itl === i ) { do_next = true; }
+                        if ( i === window.tl_order[itl] ) { do_next = true; }
                     }
-                    
 
                     if ( next_tl === '' ) {
                         $('#tl-space').append( '<div id="' + i + '" class="post-list tl-' + i + '" style="overflow-x: hidden;">' +
@@ -1270,9 +1279,14 @@ function showTimelines() {
                     case 'pms':
                         saveStorage( 'net.app.core.pm-ts', '*', true );
                         break;
-        
-                    default:
+
+                    case 'global':
+                    case 'mention':
+                    case 'home':
                         saveStorage( 'net.app.global-ts', '*', true );
+                        break;
+
+                    default:
                         /* Do Nothing */
                 }
             }

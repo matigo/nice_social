@@ -129,9 +129,9 @@ function parseChannelPost( data ) {
 
         var el = document.getElementById(ds.channel_id + '-pms');
         el.parentNode.removeChild(el);
-        $( "#pms" ).prepend( buildPMItem('net.app.core.pm', ds.channel_id) );
-        window.store['location'] = false;
         toggleClassIfExists('conversation', 'show', 'hide');
+        saveStorage( 'net.app.core.pm-ts', '*', true );
+        window.store['location'] = false;
         showHideResponse();
     }
 }
@@ -211,6 +211,7 @@ function parsePMData( data ) {
             } else {
                 pObj['recent_message'] = {};
                 pObj['recent_message']['is_deleted'] = true;
+                pObj['recent_message']['created_at'] = '';
             }
             if ( pObj.hasOwnProperty('writers') ) {
                 for ( _id in pObj['writers']['user_ids'] ) {
