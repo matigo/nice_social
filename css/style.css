@@ -1213,7 +1213,10 @@ nav:not(.mm-menu) { display: none; }
     border: 1px solid #000;
     display: inline-block;
     height: 20px;
-    width: 10%;
+    width: 5%;
+}
+@media all and (min-device-width:768px) {
+    .chatbox div#pref-list.chat ex { width: 10%; }
 }
 .chatbox div#pref-list.chat select {
     padding: 5px 10px;
