@@ -14,9 +14,9 @@ function fillPrefsWindow( opt ) {
     switch ( opt ) {
         case 'main':
             var items = { 'streams': { 'label': "Streams", 'icon': "fa-bullhorn", 'action': "fillPrefsWindow('streams');" },
-                          'prefs': { 'label': "Preferences", 'icon': "fa-sliders", 'action': "fillPrefsWindow('prefs');" },
-                          'accts': { 'label': "Accounts", 'icon': "fa-users", 'action': "fillAcctsWindows();"},
-                          'logout': { 'label': "Log Out", 'icon': "fa-sign-out", 'action': "doLogout();" }
+                          'prefs'  : { 'label': "Preferences", 'icon': "fa-sliders", 'action': "fillPrefsWindow('prefs');" },
+                          'accts'  : { 'label': "Accounts", 'icon': "fa-users", 'action': "fillPrefsWindow('accts');"},
+                          'logout' : { 'label': "Log Out", 'icon': "fa-sign-out", 'action': "doLogout();" }
                         };
             for ( item in items ) {
                 html += '<button class="btn btn-prefs" style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
@@ -25,15 +25,45 @@ function fillPrefsWindow( opt ) {
                             '<span>' + items[item].label + '</span>' +
                         '</button>';
             }
-            var version_str = ('0' + version).slice(((version.toString().length) < 3 ? 3 : version.toString().length) * -1),
+            var version_str = ('00' + version).slice(((version.toString().length) < 4 ? 4 : version.toString().length) * -1),
                 version_no = '';
             var cnt = 0;
             for ( var i = (version_str.length - 1); i >= 0; i-- ) {
-                if ( cnt === 1 || cnt === 2 ) { version_no = '.' + version_no; }
-                version_no = version_str[i] + version_no;
+                if ( cnt >= 1 && cnt <= 3 ) { version_no = ( version_no === '' ) ? '' : '.' + version_no; }
+                version_no = ( i === (version_str.length - 1) && version_str[i] === '0' ) ? '' : version_str[i] + version_no;
                 cnt++;
             }
             html += '<version>Version: ' + version_no + '</version>';
+            break;
+
+        case 'accts':
+            var uname = readStorage('username');
+            var items = {};
+            for (var key in localStorage){
+                if ( key.substring(0, 5) === 'acct_' ) { items[key] = JSON.parse(readStorage(key)); }
+            }
+            html = '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">Choose an Account</strong>';
+            for ( i in items ) {
+                if ( items[i].account === uname ) {
+                    var bg = '#' + readStorage('header_color'),
+                        fr = '#' + readStorage('header_background');
+                } else {
+                    var bg = '#' + readStorage('header_background'),
+                        fr = '#' + readStorage('header_color');
+                }
+                var on_click = ( items[i].account === uname ) ? '' : ' onClick="switchAccount(\'' + i + '\');"';
+                html += '<button class="btn btn-prefs" style="background-color: ' + bg + '; color: ' + fr + '"' + on_click + '>' +
+                            '<img class="avatar-round" src="' + items[i].avatar + '">' +
+                            '<span>' + items[i].account + '</span>' +
+                        '</button>';
+            }
+            html += '<button class="btn btn-prefs" style="background-color: ' + bgColor + '; color: ' + frColor + '" onClick="addAccount();">' +
+                        '<i class="fa fa-plus" style="padding: 15px 0;"></i>' +
+                        '<span>Add Account</span>' +
+                    '</button>' +
+                    '<br><br>' +
+                    '<button style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
+                           ' onClick="fillPrefsWindow(\'main\');"><i class="fa fa-reply"></i> Back</button>';
             break;
 
         case 'color':
@@ -50,7 +80,7 @@ function fillPrefsWindow( opt ) {
                                               'avatar_color': "Regular Ring" }
                          };
             var presets = getCSSPresets();
-            html = '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">Choose a Colour Scheme You Like:</strong>' +
+            html = '<strong class="lbltxt" style="width: 95%; padding: 0 2.5%;">Choose a Colour Scheme You Like:</strong>' +
                    '<label class="lbltxt" for="preset">Presets:</label>' +
                    '<select id="preset" onChange="loadCSSPreset(this.value);">';
             for ( idx in presets ) {
@@ -59,7 +89,7 @@ function fillPrefsWindow( opt ) {
             html +='</select>';
 
             for ( item in items ) {
-                html += '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' + item + '</strong>';
+                html += '<strong class="lbltxt" style="width: 95%; padding: 0 2.5%;">' + item + '</strong>';
                 for ( itm in items[item] ) {
                     html += '<label class="lbltxt" for="' + itm + '">' + items[item][itm] + ':</label>' +
                             '<input type="text" id="' + itm + '" value="' + readStorage( itm ) + '"' +
@@ -108,11 +138,11 @@ function fillPrefsWindow( opt ) {
                          };
             for ( idx in items ) {
                 html += spacer +
-                        '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' +
+                        '<strong class="lbltxt" style="width: 95%; padding: 0 2.5%;">' +
                             '<i class="fa ' + items[idx].icon + '"></i> ' + items[idx].label +
                         '</strong>';
                 if ( items[idx].notes !== '' ) {
-                    html += '<em class="lbltxt" style="display: block; width: 95%; text-align: justify; padding: 0 2.5%;">' + items[idx].notes + '</em>';
+                    html += '<em class="lbltxt" style="display: block; width: 95%; padding: 0 2.5%;">' + items[idx].notes + '</em>';
                 }
                 for ( i in items[idx].items ) {
                     html += '<label class="lbltxt">' + items[idx].items[i].label + '</label>' +
@@ -141,7 +171,7 @@ function fillPrefsWindow( opt ) {
                             'Palatino Linotype', 'Sans Serif', 'Serif', 'Tahoma', 'Times New Roman', 'Verdana'];
             var size_px = readStorage('font_size');
             var ff = readStorage('font_family');
-            html = '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">Choose Your Text Preferences.</strong>' +
+            html = '<strong class="lbltxt" style="width: 95%; padding: 0 2.5%;">Choose Your Text Preferences.</strong>' +
                    '<label class="lbltxt" for="preset">Font Family:</label>' +
                    '<select id="preset" onChange="setFontFamily(this.value);">';
             for ( idx in families ) {
@@ -356,7 +386,7 @@ function fillPrefsWindow( opt ) {
                           '99999': { 'label': "Posts", 'icon': "&infin;" },
                         };
             var ppc = readStorage('column_max');
-            html += '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' +
+            html += '<strong class="lbltxt" style="width: 95%; padding: 0 2.5%;">' +
                         'What&apos;s The Maximum Number of Posts You Want in Each Column?' +
                     '</strong>';
             for ( item in items ) {
@@ -411,7 +441,7 @@ function fillPrefsWindow( opt ) {
                           '99999': { 'label': "Never", 'icon': "&infin;" }
                         };
             var rrate = readStorage('refresh_rate');
-            html += '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' +
+            html += '<strong class="lbltxt" style="width: 95%; padding: 0 2.5%;">' +
                         'How Often Should the Timelines Be Updated?' +
                     '</strong>';
             for ( item in items ) {
@@ -463,7 +493,7 @@ function fillPrefsWindow( opt ) {
             var sWidth = window.innerWidth || document.body.clientWidth;
 
             if ( isNaN(sb_adjust) || sb_adjust === false ) { sb_adjust = 0; } else { sb_adjust = parseInt(sb_adjust); }
-            html  = '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' +
+            html  = '<strong class="lbltxt" style="width: 95%; padding: 0 2.5%;">' +
                         'Column Widths Off a Bit? Adjust Them Here.' +
                     '</strong>' +
                     '<em class="lbltxt" style="display: block; width: 95%; text-align: justify; padding: 0 2.5%;">' +
@@ -726,8 +756,23 @@ function removeHashFilter( name ) {
         }
     }
 }
-function fillAcctsWindows() {
-    saveStorage('msgTitle', 'Ack!', true);
-    saveStorage('msgText', 'I wish this were ready to go. I really do. Check back later :)', true);
-    if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
+function switchAccount( _key ) {
+    var data = JSON.parse(readStorage(_key));
+    if ( data.token !== undefined && data.token !== '' ) {
+        saveStorage('access_token', data.token);
+        saveStorage('username', data.username);
+        saveStorage('avatar', data.avatar);
+        saveStorage('user_id', data.id);
+        saveStorage('name', data.name);
+
+        window.location = window.location.protocol + '//' + window.location.hostname;
+    }
+}
+function addAccount() {
+    deleteStorage( 'access_token' );
+    deleteStorage( 'username' );
+    deleteStorage( 'user_id' );
+    deleteStorage( 'avatar' );
+    deleteStorage( 'name' );
+    getAuthorisation();
 }

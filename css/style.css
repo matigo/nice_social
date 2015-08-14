@@ -432,7 +432,8 @@ nav:not(.mm-menu) { display: none; }
 .reply.pm, .reply.longpost { max-height: 335px; }
 .reply.pm input#rpy-sendto { display: block; }
 .reply.longpost input#rpy-title { display: block; }
-.reply.pm, .reply.longpost textarea { height: 150px; }
+.reply.pm { height: 175px; }
+.reply.longpost textarea { height: 150px; }
 @media all and (min-device-width:768px) {
     .reply.pm, .reply.longpost textarea { height: 227px; }
 }
@@ -1176,7 +1177,7 @@ nav:not(.mm-menu) { display: none; }
 }
 .chatbox div#pref-list.chat strong {
     display: block;
-    width: 80%;
+    width: 95%;
 }
 .chatbox div#pref-list.chat b {
     display: inline-block;
@@ -1254,12 +1255,32 @@ nav:not(.mm-menu) { display: none; }
 }
 .chatbox div#pref-list.chat button.btn-prefs i {
     display: block;
-    font-size: 400%;
+    font-size: 225%;
     width: 100%;
+}
+@media all and (min-device-width:768px) {
+    .chatbox div#pref-list.chat button.btn-prefs i { font-size: 400%; }
 }
 .chatbox div#pref-list.chat button.btn-prefs span {
     display: block;
     margin: 3px 0 2px;
+}
+.chatbox div#pref-list.chat button.btn-prefs img {
+    border: 1px solid #eee;
+    border-radius: 50px;
+    padding: 3px;
+    height: 65px;
+    width: 65px;
+    max-width: 65px;
+    max-height: 65px;
+}
+@media all and (min-device-width:768px) {
+    .chatbox div#pref-list.chat button.btn-prefs img {
+        height: 75px;
+        width: 75px;
+        max-width: 75px;
+        max-height: 75px;
+    }
 }
 .fileUpload {
     display: inline-block;

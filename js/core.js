@@ -333,9 +333,19 @@ function parseMyToken( data ) {
         saveStorage('isGood', 'Y', true);
 
         saveStorage('username', data.username);
+        saveStorage('avatar', data.avatar_image.url);
         saveStorage('locale', data.locale);
         saveStorage('user_id', data.id);
         saveStorage('name', data.name);
+
+        var key_name = 'acct_' + data.id;
+        var items = { 'account': data.username,
+                       'avatar': data.avatar_image.url,
+                         'name': data.name,
+                           'id': data.id,
+                        'token': readStorage('access_token')
+                     };
+        saveStorage(key_name, JSON.stringify(items));
 
         var col_count = 0;
         for (i in window.timelines) {
@@ -362,7 +372,7 @@ function getADNAccessToken() {
     var token = readStorage('access_token');
     if ( token === false ) {
         token = getURLHash('access_token') || false;
-        if ( token !== false ) { saveStorage( 'access_token', token ); }
+        if ( token !== false ) { saveStorage('access_token', token); }
     }
     return token;
 }
@@ -1111,7 +1121,7 @@ function parseText( post ) {
         cStr = ' class="post-mention" style="font-weight: bold; cursor: pointer;"';
     var highlight = readStorage('post-highlight_color');
     var replaceHtmlEntites = (function() {
-        var translate_re = /&(#128406|#127996|[\u1F3FB-\u1F3Ff]);/g,
+        var translate_re = /&(#128406|#127996|[\u1F3FB-\u1F3FF]);/g,
             translate = {
                 '#128406': '<i class="fa fa-hand-spock-o"></i>',
                 '#127996': '',
@@ -2311,10 +2321,13 @@ function showImage( image_url ) {
     }
 }
 function doLogout() {
+    var _key = 'acct_' + readStorage('user_id');
     deleteStorage( 'access_token' );
     deleteStorage( 'username' );
     deleteStorage( 'user_id' );
+    deleteStorage( 'avatar' );
     deleteStorage( 'name' );
+    deleteStorage( _key );
 
     for ( i in window.timelines ) {
         window.timelines[i] = ( i === 'global' );
