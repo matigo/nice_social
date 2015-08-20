@@ -1763,6 +1763,7 @@ function buildRespondBar( post, is_convo ) {
         html += '<span onclick="doDelete(' + post.id + ');"><i class="fa fa-trash"></i></span>';
     }
     html += '<span onclick="doShowConv(' + post_id + ');"><i class="fa fa-comments-o"></i></span>' +
+            '<span onclick="doQuote(' + post_id + ');" style="font-size: 90%;"><i class="fa fa-quote-right"></i></span>' +
             '<span id="' + post_id + '-star[TL]" name="' + post_id + '-star" onclick="doStar(' + post_id + ');" class="' + css_s + '">' +
                 '<i class="fa ' + icn_s + '"></i>' +
             '</span>';
@@ -1772,6 +1773,9 @@ function buildRespondBar( post, is_convo ) {
     }
     html += '</div>';
     return html;
+}
+function doQuote( post_id ) {
+    alert("Whoops! This is coming in the next version. Sorry.");
 }
 function isMention( post ) {
     var my_id = readStorage('user_id');
