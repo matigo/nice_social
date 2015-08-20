@@ -14,7 +14,6 @@ jQuery.fn.scrollTo = function(elem, speed) {
 jQuery(function($) {
     window.store = new Object();
     window.coredata = {};
-    window.posts = {};
     window.users = {};
     window.files = {};
     window.activate = false;
@@ -33,7 +32,6 @@ jQuery(function($) {
     loadConfigFile();
     window.KEY_ENTER = 13;
     window.KEY_ESCAPE = 27;
-    window.KEY_K = 75;
     window.KEY_N = 78;
     window.KEY_P = 80;
     window.KEY_F2 = 113;
@@ -73,9 +71,6 @@ jQuery(function($) {
     });
     $(document).keydown(function(e) {
         var cancelKeyPress = false;
-        if ( readStorage('shortkey_cmdk') == 'Y' ) {
-            if ( (e.metaKey || e.ctrlKey) && e.keyCode == KEY_K ) { clearTimelines(); cancelKeyPress = true; }
-        }
         if (e.keyCode === KEY_ESCAPE && readStorage('shortkey_esc') == 'Y' ) {
             var items = ['conversation', 'gallery', 'hashbox', 'dialog', 'okbox', 'prefs'];
             for ( idx in items ) {
@@ -922,27 +917,17 @@ function parseMeta( meta ) {
 }
 function parseItems( data ) {
     if ( data ) {
-        data = sortByKey(data, "id");
         saveStorage('adn_action', 'N', true);
 
-        var html = '';
         var is_mention = false,
             followed = false;
         var account_rank = 0,
             show_time = readStorage('show_live_timestamps'),
             use_nice = readStorage('nicerank');
         var min_rank = (use_nice === 'N') ? 0 : parseInt( readStorage('min_rank', true) );
-        var post_mentions = [],
-            post_reposted = false,
-            post_starred = false,
-            post_source = '',
-            post_client = '',
-            post_time = '',
-            post_by = '';
         var my_id = readStorage('user_id');
         var muted_hashes = readMutedHashtags();
         var write_post = true;
-        var gTL = $('#global').length;
 
         /* Prep the CoreData Element If Needs Be */
         if ( window.coredata.hasOwnProperty( 'net.app.global' ) === false ) {
@@ -963,53 +948,12 @@ function parseItems( data ) {
                 if ( write_post === false && ((data[i].user.id === my_id) || followed) ) { write_post = true; }
                 if ( write_post ) {
                     window.coredata[ 'net.app.global' ][ data[i].id ] = data[i];
+                    if ( data[i].hasOwnProperty('repost_of') ) {
+                        if ( window.coredata['net.app.global'].hasOwnProperty(data[i].repost_of.id) === false ) {
+                            window.coredata[ 'net.app.global' ][ data[i].repost_of.id ] = data[i].repost_of;
+                        }
+                    }
                     window.coredata[ 'net.app.global-ts' ] = Math.floor(Date.now() / 1000);
-                }
-            }
-        }
-
-        for ( var i = 0; i < data.length; i++ ) {
-            if ( gTL === 0 ) { setSplashMessage('Reading Posts (' + (i + 1) + '/' + data.length + ')'); }
-            followed = data[i].user.you_follow || (data[i].user.id === my_id) || false;
-            account_rank = parseInt( readStorage( data[i].user.id + '_rank', true) );
-            if ( isNaN(account_rank) ) { account_rank = 0.1; }
-            is_human = (use_nice === 'N') ? 'Y' : readStorage( data[i].user.id + '_human', true);
-            if ( readStorage('feeds_hide') === 'N' && data[i].user.type === 'feed' ) {
-                account_rank = 2.1;
-                is_human = 'Y';
-            }
-            saveStorage( 'since', data[i].id, true);
-            write_post = isValidClient(data[i]);
-
-            if ( (account_rank >= min_rank && is_human == 'Y') || (data[i].user.id === my_id) || followed ) {
-                if ( write_post === false && ((data[i].user.id === my_id) || followed) ) { write_post = true; }
-                post_by = data[i].user.username;
-                post_reposted = data[i].you_reposted || false;
-                post_starred = data[i].you_starred || false;
-                post_mentions = [];
-
-                if ( write_post ) {
-                    if ( data[i].entities.hasOwnProperty('mentions') ) {
-                        if ( data[i].entities.mentions.length > 0 ) {
-                            for ( var idx = 0; idx < data[i].entities.mentions.length; idx++ ) {
-                                post_mentions.push( data[i].entities.mentions[idx].name );
-                            }
-                        }
-                    }
-                    if ( data[i].entities.hasOwnProperty('hashtags') ) {
-                        if ( data[i].entities.hashtags.length > 0 ) {
-                            for ( var idx = 0; idx < data[i].entities.hashtags.length; idx++ ) {
-                                if ( muted_hashes.indexOf( data[i].entities.hashtags[idx].name ) >= 0 ) { write_post = false; }
-                            }
-                        }
-                    }
-
-                    parseAccountNames( data[i].user );
-                    post_client = data[i].source.name || 'unknown';
-                    is_mention = isMention( data[i] );
-                    html = buildHTMLSection( data[i] );
-                    addPostItem( data[i].id, data[i].created_at, html, is_mention, followed, post_by, data[i].user.id,
-                                 post_mentions, post_reposted, post_starred, false, post_client );
                 }
             }
         }
@@ -1034,7 +978,7 @@ function buildHTMLSection( post ) {
         repost_by = ' <i style="float: right;">(<i class="fa fa-retweet"></i> ' + post.user.username + ')</i>';
         is_repost = true;
     }
-    
+
     /* Get the First Character of the Post */
     var words = data.text.split(" ");
     switch ( words[0] ) {
@@ -1050,7 +994,7 @@ function buildHTMLSection( post ) {
             break;
 
         default:
-            post_time = getTimestamp( data.created_at );
+            post_time = getTimestamp( post.created_at );
             account_age = Math.floor(( new Date() - Date.parse(data.user.created_at) ) / 86400000);
             if ( account_age <= 7 ) { avatarClass = 'avatar-round recent-acct'; }
             if ( account_age <= 1 ) { avatarClass = 'avatar-round new-acct'; }
@@ -1068,7 +1012,7 @@ function buildHTMLSection( post ) {
                         '<p class="post-client"><em>' + data.source.name + '</em></p>' +
                         '<p class="post-time"><em id="' + post.id + '-time[TL]" name="' + post.id + '-time">' + post_time + '</em></p>' +
                     '</div>' +
-                    buildRespondBar( data ) +
+                    buildRespondBar( post ) +
                     parseEmbedded( data );
     }
 
@@ -1094,26 +1038,6 @@ function buildNode( post_id, tl_ref, data, html ) {
     elem.innerHTML = html;
 
     return elem;
-}
-function addPostItem( post_id, created_at, html, is_mention, followed, post_by, acct_id, post_mentions, post_reposted, post_starred, is_convo, client_name ) {
-    if ( !window.posts.hasOwnProperty( post_id ) ) {
-        window.posts[post_id] = { type_cd: 'post',
-                                  post_id: post_id,
-                                  is_new: false,
-                                  created_at: created_at,
-                                  created_by: post_by,
-                                  account_id: acct_id,
-                                  html: html,
-                                  is_mention: is_mention,
-                                  followed: followed,
-                                  mentions: post_mentions,
-                                  reposted: post_reposted,
-                                  starred: post_starred,
-                                  is_conversation: is_convo,
-                                  client: client_name,
-                                  item_dts: new Date().getTime()
-                                 }
-    }
 }
 function parseText( post ) {
     var html = ( post.hasOwnProperty('html') ) ? post.html.replaceAll('<a href=', '<a target="_blank" href=', '') + ' ' : '',
@@ -1241,7 +1165,26 @@ function showHideTL( tl ) {
     for (i in window.timelines) {
         if ( window.timelines.hasOwnProperty(i) ) {
             if ( tl === i ) { window.timelines[i] = !window.timelines[i]; }
-            if ( window.timelines[i] ) { saveStorage('tl_' + i, 'Y'); } else { saveStorage('tl_' + i, 'N'); }
+            if ( window.timelines[i] ) {
+                saveStorage('tl_' + i, 'Y');
+                switch ( i ) {
+                    case 'pms':
+                        saveStorage( 'net.app.core.pm-ts', '*', true );
+                        break;
+
+                    case 'global':
+                    case 'mention':
+                    case 'home':
+                        saveStorage( 'net.app.global-ts', '*', true );
+                        break;
+
+                    default:
+                        /* Do Nothing */
+                }
+
+            } else {
+                saveStorage('tl_' + i, 'N');
+            }
             showTimelines();
         }
     }
@@ -1284,21 +1227,6 @@ function showTimelines() {
                     var elem = document.getElementById( i );
                     elem.parentNode.removeChild(elem);
                 }
-
-                switch ( i ) {
-                    case 'pms':
-                        saveStorage( 'net.app.core.pm-ts', '*', true );
-                        break;
-
-                    case 'global':
-                    case 'mention':
-                    case 'home':
-                        saveStorage( 'net.app.global-ts', '*', true );
-                        break;
-
-                    default:
-                        /* Do Nothing */
-                }
             }
         }
     }
@@ -1307,7 +1235,7 @@ function showTimelines() {
 }
 function showMutedPost( post_id, tl ) {
     var _html = '<div id="' + post_id + tl + '" name="' + post_id + '" class="post-item">' +
-                    window.posts[post_id].html.replaceAll('[TL]', tl, '') +
+                    window.coredata['net.app.global'][post_id].html.replaceAll('[TL]', tl, '') +
                 '</div>';
     $('#' + post_id + tl ).replaceWith( _html );
 }
@@ -1375,7 +1303,7 @@ function redrawList() {
                                                                                  document.getElementById(last_id) );
                                 }
                             }
-    
+
                         } else {
                             /* Draw the PM Object */
                             var html = buildPMItem('net.app.core.pm', post_id);
@@ -1401,49 +1329,57 @@ function redrawList() {
     var last_ts = readStorage('net.app.global-ts', true);
 
     if ( last_ts != window.coredata[ 'net.app.global-ts' ] ) {
-        for ( post_id in window.posts ) {
-            if ( window.posts[post_id] !== false ) {
-                if ( isMutedClient(window.posts[post_id].client) ) {
-                    postText = '<span onClick="showMutedPost(' + post_id + ', \'[TL]\');">' +
-                                   '@' + window.posts[post_id].created_by + ' - ' + 'Muted Client (' + window.posts[post_id].client + ')' +
-                               '</span>';
+        var my_id = readStorage('user_id');
+        var is_mention = false,
+            is_follow = false;
+
+        for ( post_id in window.coredata['net.app.global'] ) {
+            if ( window.coredata['net.app.global'][post_id] !== false ) {
+                var muted = isMutedItem(post_id);
+                if ( muted === false ) {
+                    postText = buildHTMLSection( window.coredata['net.app.global'][post_id] );
                 } else {
-                    postText = window.posts[post_id].html;
+                    postText = '<span onClick="showMutedPost(' + post_id + ', \'[TL]\');">' +
+                                   '@' + window.coredata['net.app.global'][post_id].user.username + ' - ' + muted +
+                               '</span>';
                 }
 
-                if ( window.posts[post_id].is_conversation === false ) {
-                    if ( window.timelines.home ) {
-                        if ( checkElementExists(post_id + '-h') === false ) {
-                            if ( window.posts[post_id].is_mention || window.posts[post_id].followed ) {
-                                last_id = getPreviousElement(post_id, 'home', '-h');
-                                if ( last_id !== false ) {
-                                    document.getElementById('home').insertBefore( buildNode(post_id, '-h', '0', postText.replaceAll('[TL]', '-h', '')),
+                is_mention = isMention( window.coredata['net.app.global'][post_id] );
+                is_follow = (window.coredata['net.app.global'][post_id].user.you_follow 
+                            || (window.coredata['net.app.global'][post_id].user.id === my_id) 
+                            || false);
+
+                if ( window.timelines.home ) {
+                    if ( checkElementExists(post_id + '-h') === false ) {
+                        if ( is_mention || is_follow ) {
+                            last_id = getPreviousElement(post_id, 'home', '-h');
+                            if ( last_id !== false ) {
+                                document.getElementById('home').insertBefore( buildNode(post_id, '-h', '0', postText.replaceAll('[TL]', '-h', '')),
+                                                                              document.getElementById(last_id) );
+                            }
+                        }
+                    }
+                }
+
+                if ( window.timelines.mentions ) {
+                    if ( checkElementExists(post_id + '-m') === false ) {
+                        if ( is_mention ) {
+                            last_id = getPreviousElement(post_id, 'mentions', '-m');
+                            if ( last_id !== false ) {
+                                document.getElementById('mentions').insertBefore( buildNode(post_id, '-m', '0', postText.replaceAll('[TL]', '-m', '')),
                                                                                   document.getElementById(last_id) );
-                                }
                             }
                         }
                     }
+                }
 
-                    if ( window.timelines.mentions ) {
-                        if ( checkElementExists(post_id + '-m') === false ) {
-                            if ( window.posts[post_id].is_mention ) {
-                                last_id = getPreviousElement(post_id, 'mentions', '-m');
-                                if ( last_id !== false ) {
-                                    document.getElementById('mentions').insertBefore( buildNode(post_id, '-m', '0', postText.replaceAll('[TL]', '-m', '')),
-                                                                                      document.getElementById(last_id) );
-                                }
-                            }
-                        }
-                    }
-
-                    if ( window.timelines.global ) {
-                        if ( checkElementExists(post_id + '-g') === false ) {
-                            if ( global_showall || window.posts[post_id].followed === false ) {
-                                last_id = getPreviousElement(post_id, 'global', '-g');
-                                if ( last_id !== false ) {
-                                    document.getElementById('global').insertBefore( buildNode(post_id, '-g', '0', postText.replaceAll('[TL]', '-g', '')),
-                                                                                    document.getElementById(last_id) );
-                                }
+                if ( window.timelines.global ) {
+                    if ( checkElementExists(post_id + '-g') === false ) {
+                        if ( global_showall || is_follow === false ) {
+                            last_id = getPreviousElement(post_id, 'global', '-g');
+                            if ( last_id !== false ) {
+                                document.getElementById('global').insertBefore( buildNode(post_id, '-g', '0', postText.replaceAll('[TL]', '-g', '')),
+                                                                                document.getElementById(last_id) );
                             }
                         }
                     }
@@ -1813,8 +1749,11 @@ function buildRespondBar( post, is_convo ) {
     var css_s = ( post.you_starred ) ? 'highlight' : 'plain';
     var icn_s = ( post.you_starred ) ? 'fa-star' : 'fa-star-o';
     if ( is_convo !== true ) { is_convo = false; }
+    
+    var post_id = post.id;
+    if ( post.hasOwnProperty('repost_of') ) { post_id = post.repost_of.id; }
 
-    var html =  '<div id="' + post.id + '-rsp[TL]" class="post-actions hide">' +
+    var html =  '<div id="' + post_id + '-rsp[TL]" class="post-actions hide">' +
                     '<span onclick="doReply(' + post.id + ');"><i class="fa fa-reply-all"></i></span>';
     if ( post.user.id !== my_id ) {
         html += '<span id="' + post.id + '-repost[TL]" name="' + post.id + '-repost" onclick="doRepost(' + post.id + ');" class="' + css_r + '">' +
@@ -1823,8 +1762,8 @@ function buildRespondBar( post, is_convo ) {
     } else {
         html += '<span onclick="doDelete(' + post.id + ');"><i class="fa fa-trash"></i></span>';
     }
-    html += '<span onclick="doShowConv(' + post.id + ');"><i class="fa fa-comments-o"></i></span>' +
-            '<span id="' + post.id + '-star[TL]" name="' + post.id + '-star" onclick="doStar(' + post.id + ');" class="' + css_s + '">' +
+    html += '<span onclick="doShowConv(' + post_id + ');"><i class="fa fa-comments-o"></i></span>' +
+            '<span id="' + post_id + '-star[TL]" name="' + post_id + '-star" onclick="doStar(' + post_id + ');" class="' + css_s + '">' +
                 '<i class="fa ' + icn_s + '"></i>' +
             '</span>';
     if ( is_convo ) {
@@ -1878,9 +1817,9 @@ function getAccountNames( ids ) {
 function updateTimestamps() {
     if ( readStorage('absolute_times') === 'Y' ) { return false; }
     if ( readStorage('show_live_timestamps') === 'Y' ) {
-        for ( post_id in window.posts ) {
+        for ( post_id in window.coredata['net.app.global'] ) {
                 var itms = document.getElementsByName( post_id + "-time" );
-                var tStr = humanized_time_span( window.posts[post_id].created_at ),
+                var tStr = humanized_time_span( window.coredata['net.app.global'][post_id].created_at ),
                     html = '';
     
                 for ( var i = 0; i < itms.length; i++ ) {
@@ -1890,7 +1829,7 @@ function updateTimestamps() {
         }
         for ( post_id in window.coredata['net.app.core.pm'] ) {
                 var itms = document.getElementsByName( post_id + "-time" );
-                var tStr = humanized_time_span( window.coredata['net.app.core.pm'][post_id].recent_post.created_at ),
+                var tStr = humanized_time_span( window.coredata['net.app.core.pm'][post_id].recent_message.created_at ),
                     html = '';
 
                 for ( var i = 0; i < itms.length; i++ ) {
@@ -1955,16 +1894,15 @@ function doDelete( post_id ) {
 }
 function setDelete( post_id ) {
     var itms = document.getElementsByName( post_id );
-
     for ( var i = 0; i < itms.length; i++ ) {
         var elem = document.getElementById( itms[i].id );
         elem.parentNode.removeChild(elem);
     }
-    window.posts[post_id] = false;
+    window.coredata['net.app.global'][post_id] = false;
 }
 function doRepost( post_id ) {
     var access_token = readStorage('access_token');
-    var action_type = ( window.posts[post_id].reposted ) ? 'DELETE' : 'POST';
+    var action_type = ( window.coredata['net.app.global'][post_id].you_reposted ) ? 'DELETE' : 'POST';
 
     if ( access_token !== false ) {
         var params = { access_token: access_token };
@@ -1990,10 +1928,10 @@ function doRepost( post_id ) {
 function setRepost( post_id ) {
     if ( post_id > 0 ) {
         var itms = document.getElementsByName( post_id + "-repost" );
-        window.posts[post_id].reposted = !window.posts[post_id].reposted;
+        window.coredata['net.app.global'][post_id].you_reposted = !window.coredata['net.app.global'][post_id].you_reposted;
 
         for ( var i = 0; i < itms.length; i++ ) {
-            if ( window.posts[post_id].reposted ) {
+            if ( window.coredata['net.app.global'][post_id].you_reposted ) {
                 toggleClassIfExists(itms[i].id,'plain','highlight');
             } else {
                 toggleClassIfExists(itms[i].id,'highlight','plain');
@@ -2003,7 +1941,7 @@ function setRepost( post_id ) {
 }
 function doStar( post_id ) {
     var access_token = readStorage('access_token');
-    var action_type = ( window.posts[post_id].starred ) ? 'DELETE' : 'POST';
+    var action_type = ( window.coredata['net.app.global'][post_id].you_starred ) ? 'DELETE' : 'POST';
 
     if ( access_token !== false ) {
         var params = { access_token: access_token };
@@ -2029,10 +1967,10 @@ function doStar( post_id ) {
 function setStar( post_id ) {
     if ( post_id > 0 ) {
         var itms = document.getElementsByName( post_id + "-star" );
-        window.posts[post_id].starred = !window.posts[post_id].starred;
+        window.coredata['net.app.global'][post_id].you_starred = !window.coredata['net.app.global'][post_id].you_starred;
 
         for ( var i = 0; i < itms.length; i++ ) {
-            if ( window.posts[post_id].starred ) {
+            if ( window.coredata['net.app.global'][post_id].you_starred ) {
                 if( $('#' + itms[i].id).hasClass('plain') ) {
                     toggleClass(itms[i].id,'plain','highlight');
                     document.getElementById( itms[i].id ).innerHTML = '<i class="fa fa-star"></i>';
@@ -2200,8 +2138,6 @@ function parseConversation( data, post_id ) {
                         '</div>' +
                         respond.replaceAll('[TL]', '-c') +
                     '</div>';
-            addPostItem( data[i].id, data[i].created_at, html, is_mention, followed, post_by, data[i].user.id,
-                         post_mentions, post_reposted, post_starred, true, post_client );
         }
         document.getElementById( 'chat_posts' ).innerHTML = html;
         toggleClassIfExists('conversation','hide','show');
@@ -2287,18 +2223,25 @@ function showHideResponse() {
 }
 function getReplyText() {
     var _id = readStorage('in_reply_to');
-    var txt = '';
+    var txt = '',
+        suffix = '';
 
     if ( _id > 0 ) {
-        var my_name = readStorage('username');
-        var suffix = '';
-        if ( window.posts[_id].created_by != my_name ) { txt = '@' + window.posts[_id].created_by + ' '; }
-        if ( window.posts[_id].mentions.length > 0 ) {
-            for ( var i = 0; i < window.posts[_id].mentions.length; i++ ) {
-                if ( window.posts[_id].mentions[i] !== my_name ) {
-                    if ( suffix.indexOf('@' + window.posts[_id].mentions[i]) < 0 ) {
+        var my_id = readStorage('user_id');
+        var mentions = false;
+        var data = window.coredata['net.app.global'][_id];
+        if ( data.hasOwnProperty('repost_of') ) {
+            if ( data.user.id != my_id ) { suffix = '@' + data.user.username + ' '; }
+            data = data.repost_of;
+        }
+        if ( data.entities.hasOwnProperty('mentions') ) { mentions = data.entities.mentions; }
+        if ( data.user.id != my_id ) { txt = '@' + data.user.username + ' '; }
+        if ( mentions !== false ) {
+            for ( var i = 0; i < mentions.length; i++ ) {
+                if ( mentions[i].id !== my_id ) {
+                    if ( (txt + ' ' + suffix).indexOf('@' + mentions[i].name) < 0 ) {
                         if ( suffix != '' ) { suffix += ' '; }
-                        suffix += '@' + window.posts[_id].mentions[i];
+                        suffix += '@' + mentions[i].name;
                     }
                 }
             }
@@ -2462,22 +2405,6 @@ function parseEmbedded( post ) {
     }
     return html;
 }
-function clearTimelines() {
-    window.posts = {};
-    showTimelines();
-}
-function sortPMListOLD() {
-    var sort_list = function (date1, date2) {
-        if (date1 > date2) return 1;
-        if (date1 < date2) return -1;
-        return 0;
-    };
-    var rVal = [];
-    for ( chan_id in window.chans ) {
-        if ( window.chans[chan_id] !== false ) { if ( window.chans[chan_id].is_new === true ) { rVal.push(window.chans[chan_id].updated_at); } }
-    }
-    return rVal.sort(sort_list);
-}
 function doShowUserByName( user_name ) {
     if ( user_name === '' || user_name === undefined ) {
         toggleClass('dialog','show','hide');
@@ -2595,8 +2522,6 @@ function parseHashDetails( data, name ) {
                         respond.replaceAll('[TL]', '-x') +
                         parseEmbedded( data[i] ) +
                     '</div>';
-            addPostItem( data[i].id, data[i].created_at, html, is_mention, followed, post_by, data[i].user.id,
-                         post_mentions, post_reposted, post_starred, true, post_client );
         }
         document.getElementById( 'hash_posts' ).innerHTML = html;
         toggleClassIfExists('hashbox','hide','show');        
@@ -3058,6 +2983,17 @@ function isMutedClient( name ) {
     for ( var idx = 0; idx <= clients.length; idx++ ) { if ( clients[idx] === name ) { return true; } }
     return false;    
 }
+function isMutedItem( post_id ) {
+    var clients = readMutedClients();
+    if ( window.coredata['net.app.global'][post_id].source.name === undefined || window.coredata['net.app.global'][post_id].source.name === '' ) {
+        return 'Unknown Client';
+    }
+    var name = window.coredata['net.app.global'][post_id].source.name.trim();
+    for ( var idx = 0; idx <= clients.length; idx++ ) { 
+        if ( clients[idx] === name ) { 'Muted Client (' + name + ')'; }
+    }
+    return false;
+}
 function muteAccount( ismuted, account_id ) {
     var access_token = readStorage('access_token');
     var action_type = ( ismuted ) ? 'DELETE' : 'POST';
@@ -3160,8 +3096,8 @@ function parseReport( data, account_id ) {
     showHideDialog();
 }
 function showHidePostsFromAccount( account_id, hide ) {
-    for ( idx in window.posts ) {
-        if ( window.posts[idx].account_id === account_id.toString() ) {
+    for ( idx in window.coredata['net.app.global'] ) {
+        if ( window.coredata['net.app.global'][idx].account_id === account_id.toString() ) {
             var elems = document.getElementsByName(idx);
             for (e in elems) {
                 var elementExists = document.getElementById(elems[e].id);

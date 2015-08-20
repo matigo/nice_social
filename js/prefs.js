@@ -347,7 +347,6 @@ function fillPrefsWindow( opt ) {
                                'notes': "Choose the Keyboard Shortcuts You Use",
                                'icon' : "fa-keyboard-o",
                                'items': { 'shortkey_n': { 'label': "New Post (N)", 'type': "yn", 'js':"" },
-                                          'shortkey_cmdk': { 'label': "Clear Posts (Ctrl+K / ⌘+K)", 'type': "yn", 'js':"" },
                                           'shortkey_f3': { 'label': "Preferences (F3)", 'type': "yn", 'js':"" },
                                           'shortkey_down': { 'label': "Auto-Complete (▼)", 'type': "yn", 'js':"" },
                                           'shortkey_esc': { 'label': "Escape (Esc)", 'type': "yn", 'js':"" },
