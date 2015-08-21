@@ -16,6 +16,7 @@ function fillPrefsWindow( opt ) {
             var items = { 'streams': { 'label': "Streams", 'icon': "fa-bullhorn", 'action': "fillPrefsWindow('streams');" },
                           'prefs'  : { 'label': "Preferences", 'icon': "fa-sliders", 'action': "fillPrefsWindow('prefs');" },
                           'accts'  : { 'label': "Accounts", 'icon': "fa-users", 'action': "fillPrefsWindow('accts');"},
+                          'tools'  : { 'label': "Tools", 'icon': "fa-wrench", 'action': "fillPrefsWindow('tools');"},
                           'logout' : { 'label': "Log Out", 'icon': "fa-sign-out", 'action': "doLogout();" }
                         };
             for ( item in items ) {
@@ -64,6 +65,41 @@ function fillPrefsWindow( opt ) {
                     '<br><br>' +
                     '<button style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
                            ' onClick="fillPrefsWindow(\'main\');"><i class="fa fa-reply"></i> Back</button>';
+            break;
+        
+        case 'tools':
+            var uname = readStorage('username');
+            var items = { 'archive': { 'label': "Archive", 'icon': "fa-cloud-download" },
+                          'files': { 'label': "Files", 'icon': "fa-th-list" },
+                          'follows': { 'label': "Following", 'icon': "fa-users" }
+                        };
+            html += '<strong class="lbltxt">What Would You Like to See?</strong>';
+            for ( item in items ) {
+                html += '<button id="btn-tl-' + item + '" class="btn btn-prefs" style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
+                               ' onClick="fillPrefsWindow(\'' + item + '\')">' +
+                            '<i class="fa ' + items[item].icon + '"></i>' +
+                            '<span>' + items[item].label + '</span>' +
+                        '</button>';
+            }
+            html += '<br><br>' +
+                    '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">PLEASE READ THIS!</strong>' +
+                    '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">Using any of these functions means that you will be accessing your App.Net data through the Nice.Social API created by me (@matigo). I don&apos;t track your data, nor will I be keeping your ADN Access Token on my servers. The Nice.Social API is being used to ensure consistent information and to return more data with fewer API calls. This means you receive more information in less time with fewer inconsistencies.</p>' +
+                    '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">If you do not want your App.Net credentials going through the Nice.Social API, then please do not use any of the "tool" functions. Have any questions? Get in touch with me at @matigo.</p>' +
+                    '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
+                           ' onClick="fillPrefsWindow(\'main\');"><i class="fa fa-reply"></i> Back</button>';
+            break;
+        
+        case 'archive':
+        case 'files':
+            html += '<strong class="lbltxt">Sadly, this has not been coded. Check back soon, though!</strong>' +
+                    '<br><br>' +
+                    '<button style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
+                           ' onClick="fillPrefsWindow(\'main\');"><i class="fa fa-reply"></i> Back</button>';
+            break;
+
+        case 'follows':
+            showFullUserList();
+            doShowPrefs();
             break;
 
         case 'color':

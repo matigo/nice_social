@@ -21,7 +21,7 @@
         <script type="text/javascript" src="js/jquery.min.js"></script>
         <script type="text/javascript" src="js/jss.min.js"></script>
         <script type="text/javascript">
-            var version = 986,
+            var version = 990,
                 srclist = {};
             var items = { 0: { el: 'link', rel: 'stylesheet', type: 'text/css', url: 'css/style.css' },
                           1: { el: 'link', rel: 'stylesheet', type: 'text/css', url: 'css/font-awesome.css' },
@@ -37,14 +37,14 @@
             for ( idx in items ) {
                 if ( window.srclist.hasOwnProperty( items[idx].url ) === false ) {
                     var link = document.createElement( items[idx].el );
-                        if ( items[idx].el === 'link' ) {
-                            link.href = items[idx].url + '?v=' + version;
-                        } else {
-                            link.src = items[idx].url + '?v=' + version;
-                        }
-                        if ( items[idx].rel ) { link.rel = items[idx].rel; }
-                        link.type = items[idx].type;
-    
+                    if ( items[idx].el === 'link' ) {
+                        link.href = items[idx].url + '?v=' + version;
+                    } else {
+                        link.src = items[idx].url + '?v=' + version;
+                    }
+                    if ( items[idx].rel ) { link.rel = items[idx].rel; }
+                    link.type = items[idx].type;
+
                     document.getElementsByTagName("head")[0].appendChild( link );
                     window.srclist[items[idx].url] = true;
                 }

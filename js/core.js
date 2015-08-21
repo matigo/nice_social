@@ -694,8 +694,18 @@ function parseUserUsage( data ) {
     }
 }
 function getUserProfileActions( data ) {
-    if ( data.user.id === readStorage('user_id') ) { return ''; }
-    var _html = '<ul>' +
+    var _html = '';
+    if ( data.user.id === readStorage('user_id') ) {
+        _html = '<ul>' +
+                    '<li id="profile-drop" class="hide" onclick="toggleProfileDrop();">' +
+                        '<i class="fa fa-cog"></i>' +
+                        '<ul>' +
+                            '<li onClick="editProfile();">Edit My Profile</li>' +
+                        '</ul>' +
+                    '</li>' +
+                '</ul>';
+    } else {
+        _html = '<ul>' +
                     '<li id="profile-drop" class="hide" onclick="toggleProfileDrop();">' +
                         '<i class="fa fa-cog"></i>' +
                         '<ul>' +
@@ -709,6 +719,7 @@ function getUserProfileActions( data ) {
                         '</ul>' +
                     '</li>' +
                 '</ul>';
+    }
     return _html;
 }
 function getUserProfileNumbers( data ) {
@@ -1165,32 +1176,19 @@ function showHideTL( tl ) {
     for (i in window.timelines) {
         if ( window.timelines.hasOwnProperty(i) ) {
             if ( tl === i ) { window.timelines[i] = !window.timelines[i]; }
-            if ( window.timelines[i] ) {
-                saveStorage('tl_' + i, 'Y');
-                switch ( i ) {
-                    case 'pms':
-                        saveStorage( 'net.app.core.pm-ts', '*', true );
-                        break;
-
-                    case 'global':
-                    case 'mention':
-                    case 'home':
-                        saveStorage( 'net.app.global-ts', '*', true );
-                        break;
-
-                    default:
-                        /* Do Nothing */
-                }
-
-            } else {
-                saveStorage('tl_' + i, 'N');
-            }
+            if ( window.timelines[i] ) { saveStorage('tl_' + i, 'Y'); } else { saveStorage('tl_' + i, 'N'); }
+            saveStorage( 'net.app.core.pm-ts', '*', true );
+            saveStorage( 'net.app.global-ts', '*', true );
             showTimelines();
         }
     }
 }
 function showTimelines() {
     var buffer = '<div id="0[TL]" class="post-item" style="border: 0; min-height: 75px;" data-content="2000-01-01T00:00:00Z"></div>';
+    if ( checkElementExists('userlist') ) {
+        var elem = document.getElementById('userlist');
+        elem.parentNode.removeChild(elem);
+    }
     for (i in window.timelines) {
         if ( window.timelines.hasOwnProperty(i) ) {
             if ( window.timelines[i] ) {
@@ -1425,7 +1423,8 @@ function setWindowConstraints() {
     for (i in window.timelines) {
         if ( window.timelines.hasOwnProperty(i) ) { if ( window.timelines[i] ) { vCols++; } }
     }
-    
+    if ( checkElementExists('userlist') ) { vCols = 1; }
+
     while ( cWidth < 280 ) {
         vCols--;
         if ( vCols > 6 ) { vCols = 6; }
@@ -1486,10 +1485,15 @@ function setColumnsWidth( cWidth, cCount ) {
             if ( window.timelines[i] ) { 
                 if ( idx === vCols ) { css_style = 'border-right: 0; ' + css_style; }
                 if ( document.getElementById( i ).getAttribute('style') !== css_style ) {
-                    document.getElementById( i ).setAttribute('style',css_style);
+                    document.getElementById( i ).setAttribute('style', css_style);
                 }
                 idx++;
             }
+        }
+    }
+    if ( checkElementExists('userlist') ) {
+        if ( document.getElementById('userlist').getAttribute('style') !== css_style ) {
+            document.getElementById('userlist').setAttribute('style', css_style);
         }
     }
 }
@@ -3247,17 +3251,18 @@ function showUserList( type, account_id ) {
             crossDomain: true,
             data: params,
             type: 'GET',
-            success: function( data ) { parseUserList( data ); },
+            success: function( data ) { parseUserList( data, account_id, type ); },
             error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
             dataType: "json"
         });
     }
 }
-function parseUserList( resp ) {
+function parseUserList( resp, account_id, type ) {
     var data = resp.data;
     if ( data ) {
         var _html = '',
             _id = 'usr-0';
+        var my_id = parseInt(readStorage('user_id'));
         for ( var i = 0; i < data.length; i++ ) {
             _html = '<img src="' + data[i].avatar_image.url + '" alt="' + data[i].username + '" onclick="doShowUser(' + data[i].id + ');" />' +
                     '<strong onclick="doShowUser(' + data[i].id + ');">' +
@@ -3278,8 +3283,107 @@ function parseUserList( resp ) {
             document.getElementById('user_posts').insertBefore( buildGenericNode( 'usr-' + data[i].id, data[i].id, 'user-item', _html ),
                                                                                   document.getElementById(_id) );
         }
+        if ( account_id === my_id && type === 'following' ) {
+            _html = '<center><button class="btn btn-green" onclick="showFullUserList();">Show Me Everyone</button></center>';
+            document.getElementById('user_posts').insertBefore( buildGenericNode( 'usr-btn', 'ubtn', 'user-item', _html ),
+                                                                                  document.getElementById(_id) );
+            _id = 'usr-btn';
+        }
     }
     setSplashMessage('');
+}
+function showFullUserList() {
+    var buffer = '<div id="0[TL]" class="post-item" style="border: 0; min-height: 75px;" data-content="2000-01-01T00:00:00Z"></div>';
+    for (i in window.timelines) {
+        if ( window.timelines.hasOwnProperty(i) ) {
+            if ( window.timelines[i] ) { showHideTL(i); }
+        }
+    }
+    $('#tl-space').append( '<div id="userlist" class="post-list tl-userlist" style="overflow-x: hidden;">' +
+                           buffer.replaceAll('[TL]', '-ul', '') +
+                           '</div>' );
+    setWindowConstraints();
+
+    var access_token = readStorage('access_token');
+    var my_id = parseInt(readStorage('user_id'));
+
+    if ( access_token !== false ) {
+        document.getElementById('userlist').innerHTML = '<div id="usr-0" class="user-item">&nbsp;</div>';
+        setSplashMessage('Getting Full Account List');
+        var params = {
+            access_token: access_token,
+            account_id: my_id
+        }; 
+        $.ajax({
+            url: window.niceURL + '/user/followers',
+            crossDomain: true,
+            data: params,
+            type: 'GET',
+            success: function( data ) { parseFullUserList( data ); },
+            error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
+            dataType: "json"
+        });
+    }
+}
+function parseFullUserList( rslt ) {
+    var data = rslt.data;
+    if ( data ) {
+        var _html = '',
+            _id = '0-ul';
+        var my_id = parseInt(readStorage('user_id'));
+        var avatarClass = 'avatar-round',
+            post_time = '',
+            last_time = '';
+        for ( var i = 0; i < data.length; i++ ) {
+            post_time = getTimestamp( data[i].recent_message.created_at );
+            last_time = getTimestamp( data[i].last_post_unix * 1000 );
+            _html = '<div class="post-avatar">' +
+                        '<img class="' + avatarClass + '"' +
+                            ' onClick="doShowUser(' + data[i].id + ');"' +
+                            ' src="' + data[i].avatar_image.url + '">' +
+                    '</div>' +
+                    '<div class="post-content">' +
+                        '<h5 class="post-name"><span>' + data[i].username + '</span></h5>' +
+                        '<div class="buttons">' +
+                            ( (data[i].follows_you === true) ? '<em>Follows You</em>' : '') +
+                            '<button class="btn ' + ( (data[i].you_follow === true) ? 'btn-red' : 'btn-green') + '"' +
+                                   ' onclick="doFollow(' + data[i].id + ',' + data[i].you_follow + ');">' +
+                                ( (data[i].you_follow === true) ? 'Unfollow' : 'Follow') +
+                            '</button>' +
+                        '</div>' +
+                        '<div class="user-detail">' +
+                            '<p>&nbsp;&nbsp;Timezone: ' + data[i].timezone + '</p>' +
+                            '<p>&nbsp;&nbsp;NiceRank: ' + data[i].nicerank + '</p>' +
+                            '<p>This Month: ' + addCommas(data[i].recent_posts) + ' Posts</p>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="numbers">' +
+                        '<div class="detail" style="border-right: 1px solid #ccc;">' +
+                            '<strong>Posts</strong><p>' + addCommas(data[i].counts.posts) + '</p>' +
+                        '</div>' +
+                        '<div class="detail" style="border-right: 1px solid #ccc;">' +
+                            '<strong>Following</strong><p>' + addCommas(data[i].counts.following) + '</p>' +
+                        '</div>' +
+                        '<div class="detail" style="border-right: 1px solid #ccc;">' +
+                            '<strong>Followers</strong><p>' + addCommas(data[i].counts.followers) + '</p>' +
+                        '</div>' +
+                        '<div class="detail"><strong>Stars</strong><p>' + addCommas(data[i].counts.stars) + '</p></div>' +
+                    '</div>' +
+                    '<div class="pulse-content">' +
+                        parseText( data[i].recent_message ) +
+                        '<p class="post-time"><em>via ' + data[i].recent_message.source.name + '</em></p>' +
+                        '<p class="post-time"><em>Posted ' + post_time + '</em></p>' +
+                    '</div>';
+
+
+            document.getElementById('userlist').insertBefore( buildGenericNode( data[i].id + '-ul', data[i].id, 'post-item', _html ),
+                                                                                document.getElementById(_id) );
+        }
+    }
+    setSplashMessage('');
+}
+function editProfile() {
+    alert( "[Debug] Whoops! This is still in the works. Check back soon!" );
 }
 function buildGenericNode( elID, elName, elClass, html ) {
     var elem = document.createElement("div");
