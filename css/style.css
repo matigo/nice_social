@@ -399,7 +399,7 @@ nav:not(.mm-menu) { display: none; }
 @media all and (min-device-width:768px) {
     .reply .actions ul li i { min-width: 50px; }
     .reply .actions ul li ul {
-        top: -5px;
+        top: 30px;
         left: -15px;
     }
 }
