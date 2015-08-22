@@ -70,8 +70,9 @@ function fillPrefsWindow( opt ) {
         case 'tools':
             var uname = readStorage('username');
             var items = { 'archive': { 'label': "Archive", 'icon': "fa-cloud-download" },
-                          'files': { 'label': "Files", 'icon': "fa-th-list" },
-                          'follows': { 'label': "Following", 'icon': "fa-users" }
+                          'files':   { 'label': "Files", 'icon': "fa-th-list" },
+                          'follows': { 'label': "Following", 'icon': "fa-users" },
+                          'proxy':   { 'label': "Nice Proxy", 'icon': "fa-rocket" }
                         };
             html += '<strong class="lbltxt">What Would You Like to See?</strong>';
             for ( item in items ) {
@@ -94,12 +95,50 @@ function fillPrefsWindow( opt ) {
             html += '<strong class="lbltxt">Sadly, this has not been coded. Check back soon, though!</strong>' +
                     '<br><br>' +
                     '<button style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
-                           ' onClick="fillPrefsWindow(\'main\');"><i class="fa fa-reply"></i> Back</button>';
+                           ' onClick="fillPrefsWindow(\'tools\');"><i class="fa fa-reply"></i> Back</button>';
             break;
 
         case 'follows':
             showFullUserList();
             doShowPrefs();
+            break;
+
+        case 'proxy':
+            var spacer = '';
+            var items = { 0: { 'label': "Nice.Social Proxy Service",
+                               'notes': "Save Your Bandwidth, CPU, and Memory",
+                               'icon' : "fa-rocket",
+                               'items': { 'nice_proxy': { 'label': "Enable", 'type': "yn", 'js': "" }
+                                         }
+                              }
+                         };
+            for ( idx in items ) {
+                html += spacer +
+                        '<strong class="lbltxt" style="width: 95%; padding: 0 2.5%;">' +
+                            '<i class="fa ' + items[idx].icon + '"></i> ' + items[idx].label +
+                        '</strong>';
+                if ( items[idx].notes !== '' ) {
+                    html += '<em class="lbltxt" style="display: block; width: 95%; padding: 0 2.5%;">' + items[idx].notes + '</em>';
+                }
+                for ( i in items[idx].items ) {
+                    html += '<label class="lbltxt">' + items[idx].items[i].label + '</label>' +
+                            getButtonValue( 'btn-opt-' + i,
+                                            i,
+                                            items[idx].items[i].type,
+                                            'toggleOption(\'' + i + '\', \'' + items[idx].items[i].type + '\');' +
+                                            ( ( items[idx].items[i].js == "" ) ? '' : ' ' + items[idx].items[i].js)
+                                           );
+                }
+                spacer = '<br><br>';
+            }
+            html += '<br><br>' +
+                    '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">YOU MUST READ THIS!</strong>' +
+                    '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">Using the Nice.Social Proxy service means that any data you receive from App.Net will first go through the Nice.Social API. What this will do is allow the Nice server to do the heavy CPU work of determining if a post should be displayed or not, as well as ensure that all of the necessary account details (such as avatars and names) exist before the data reaches your browser. Any time you create a new post, that information will go directly to App.Net as there is nothing the Nice.Social API has to do to the data.</p>' +
+                    '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">Your App.Net credentials are never stored on the Nice.Social API servers. I don&apos;t want to access your data, nor do I have any right to. This service is only to reduce the amount of bandwidth, CPU, and memory that Nice uses on your device, while also providing more complete information. Account names in the Private Messages column would be a good example of this.</p>' +
+                    '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">If you do not want your App.Net access token going through my Nice.Social API servers, do not enable this feature.</p>' +
+                    '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">Have any questions, comments, concerns, feedback? Get in touch with me at @matigo.</p>' +
+                    '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
+                           ' onClick="fillPrefsWindow(\'tools\');"><i class="fa fa-reply"></i> Back</button>';
             break;
 
         case 'color':

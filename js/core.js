@@ -405,10 +405,11 @@ function prepApp() {
                   21: { 'key': 'post_length', 'value': 256, 'useStore': true },
                   22: { 'key': 'chan_length', 'value': 2048, 'useStore': true },
                   23: { 'key': 'long_length', 'value': 8000, 'useStore': true },
-                  24: { 'key': 'nicerank', 'value': 'Y', 'useStore': false },
-                  25: { 'key': 'min_rank', 'value': 2.1, 'useStore': true },
-                  26: { 'key': 'limit', 'value': 250, 'useStore': true },
-                  27: { 'key': 'since', 'value': '0', 'useStore': true },
+                  24: { 'key': 'nice_proxy', 'value': 'N', 'useStore': false },
+                  25: { 'key': 'nicerank', 'value': 'Y', 'useStore': false },
+                  26: { 'key': 'min_rank', 'value': 2.1, 'useStore': true },
+                  27: { 'key': 'limit', 'value': 250, 'useStore': true },
+                  28: { 'key': 'since', 'value': '0', 'useStore': true },
 
                   30: { 'key': 'absolute_times', 'value': 'N', 'useStore': false },
                   31: { 'key': 'keep_timezone', 'value': 'N', 'useStore': false },
@@ -796,6 +797,7 @@ function getTimeline() {
     var access_token = readStorage('access_token');
 
     if ( access_token !== false ) {
+        var api_url = ( readStorage('nice_proxy') === 'Y' ) ? window.niceURL + '/proxy' : window.apiURL;
         var params = {
             include_directed_posts: 1,
             include_annotations: 1,
@@ -806,7 +808,7 @@ function getTimeline() {
             count: 200
         };
         $.ajax({
-            url: window.apiURL + '/posts/stream',
+            url: api_url + '/posts/stream',
             crossDomain: true,
             data: params,
             type: 'GET',
@@ -824,6 +826,7 @@ function getMentions() {
 
     if ( access_token !== false ) {
         setSplashMessage('Getting Your Mentions');
+        var api_url = ( readStorage('nice_proxy') === 'Y' ) ? window.niceURL + '/proxy' : window.apiURL;
         var params = {
             include_annotations: 1,
             include_deleted: 0,
@@ -833,7 +836,7 @@ function getMentions() {
             count: 50
         }; 
         $.ajax({
-            url: window.apiURL + '/users/me/mentions',
+            url: api_url + '/users/me/mentions',
             crossDomain: true,
             data: params,
             type: 'GET',
@@ -859,6 +862,7 @@ function getGlobalRecents( since_id ) {
     saveStorage('recents', (recents + 1) , true);
     if ( recents >= 5 ) { return false; }
 
+    var api_url = ( readStorage('nice_proxy') === 'Y' ) ? window.niceURL + '/proxy' : window.apiURL;
     var access_token = readStorage('access_token');
     var params = {
         include_annotations: 1,
@@ -873,7 +877,7 @@ function getGlobalRecents( since_id ) {
     showHideActivity(true);
 
     $.ajax({
-        url: window.apiURL + '/posts/stream/global',
+        url: api_url + '/posts/stream/global',
         crossDomain: true,
         data: params,
         success: function( data ) {
@@ -895,6 +899,7 @@ function getGlobalItems() {
     if ( canRefreshGlobal() === false ) { return false; }
     if ( readStorage('adn_action', true) === 'Y' ) { return false; }
 
+    var api_url = ( readStorage('nice_proxy') === 'Y' ) ? window.niceURL + '/proxy' : window.apiURL;
     var access_token = readStorage('access_token');
     var params = {
         include_annotations: 1,
@@ -909,7 +914,7 @@ function getGlobalItems() {
     showHideActivity(true);
 
     $.ajax({
-        url: window.apiURL + '/posts/stream/global',
+        url: api_url + '/posts/stream/global',
         crossDomain: true,
         data: params,
         success: function( data ) {
@@ -939,41 +944,56 @@ function parseItems( data ) {
     if ( data ) {
         saveStorage('adn_action', 'N', true);
 
-        var is_mention = false,
-            followed = false;
-        var account_rank = 0,
-            show_time = readStorage('show_live_timestamps'),
-            use_nice = readStorage('nicerank');
-        var min_rank = (use_nice === 'N') ? 0 : parseInt( readStorage('min_rank', true) );
-        var my_id = readStorage('user_id');
-        var muted_hashes = readMutedHashtags();
-        var write_post = true;
-
         /* Prep the CoreData Element If Needs Be */
         if ( window.coredata.hasOwnProperty( 'net.app.global' ) === false ) {
             window.coredata[ 'net.app.global-ts' ] = 0;
             window.coredata[ 'net.app.global' ] = {};
         }
-        for ( var i = 0; i < data.length; i++ ) {
-            followed = data[i].user.you_follow || (data[i].user.id === my_id) || false;
-            account_rank = parseInt( readStorage( data[i].user.id + '_rank', true) );
-            if ( isNaN(account_rank) ) { account_rank = 0.1; }
-            is_human = (use_nice === 'N') ? 'Y' : readStorage( data[i].user.id + '_human', true);
-            if ( readStorage('feeds_hide') === 'N' && data[i].user.type === 'feed' ) {
-                account_rank = 2.1;
-                is_human = 'Y';
+
+        if ( readStorage('nice_proxy') === 'Y' ) {
+            for ( var i = 0; i < data.length; i++ ) {
+                window.coredata[ 'net.app.global' ][ data[i].id ] = data[i];
+                if ( data[i].hasOwnProperty('repost_of') ) {
+                    if ( window.coredata['net.app.global'].hasOwnProperty(data[i].repost_of.id) === false ) {
+                        window.coredata[ 'net.app.global' ][ data[i].repost_of.id ] = data[i].repost_of;
+                    }
+                }
+                window.coredata[ 'net.app.global-ts' ] = Math.floor(Date.now() / 1000);
+                parseAccountNames( data[i].user );
             }
 
-            if ( (account_rank >= min_rank && is_human == 'Y') || (data[i].user.id === my_id) || followed ) {
-                if ( write_post === false && ((data[i].user.id === my_id) || followed) ) { write_post = true; }
-                if ( write_post ) {
-                    window.coredata[ 'net.app.global' ][ data[i].id ] = data[i];
-                    if ( data[i].hasOwnProperty('repost_of') ) {
-                        if ( window.coredata['net.app.global'].hasOwnProperty(data[i].repost_of.id) === false ) {
-                            window.coredata[ 'net.app.global' ][ data[i].repost_of.id ] = data[i].repost_of;
+        } else {
+            var is_mention = false,
+                followed = false;
+            var account_rank = 0,
+                show_time = readStorage('show_live_timestamps'),
+                use_nice = readStorage('nicerank');
+            var min_rank = (use_nice === 'N') ? 0 : parseInt( readStorage('min_rank', true) );
+            var my_id = readStorage('user_id');
+            var write_post = true;
+    
+            for ( var i = 0; i < data.length; i++ ) {
+                followed = data[i].user.you_follow || (data[i].user.id === my_id) || false;
+                account_rank = parseInt( readStorage( data[i].user.id + '_rank', true) );
+                if ( isNaN(account_rank) ) { account_rank = 0.1; }
+                is_human = (use_nice === 'N') ? 'Y' : readStorage( data[i].user.id + '_human', true);
+                if ( readStorage('feeds_hide') === 'N' && data[i].user.type === 'feed' ) {
+                    account_rank = 2.1;
+                    is_human = 'Y';
+                }
+    
+                if ( (account_rank >= min_rank && is_human == 'Y') || (data[i].user.id === my_id) || followed ) {
+                    if ( write_post === false && ((data[i].user.id === my_id) || followed) ) { write_post = true; }
+                    if ( write_post ) {
+                        window.coredata[ 'net.app.global' ][ data[i].id ] = data[i];
+                        if ( data[i].hasOwnProperty('repost_of') ) {
+                            if ( window.coredata['net.app.global'].hasOwnProperty(data[i].repost_of.id) === false ) {
+                                window.coredata[ 'net.app.global' ][ data[i].repost_of.id ] = data[i].repost_of;
+                            }
                         }
+                        window.coredata[ 'net.app.global-ts' ] = Math.floor(Date.now() / 1000);
+                        parseAccountNames( data[i].user );
                     }
-                    window.coredata[ 'net.app.global-ts' ] = Math.floor(Date.now() / 1000);
                 }
             }
         }
@@ -1264,6 +1284,16 @@ function redrawList() {
 
         if ( _home === 'Y' && _ment === 'Y' ) { setSplashMessage(''); }
         window.activate = true;
+    }
+
+    /* Draw the SoundCloud Items (If Required) */
+    if ( window.coredata.hasOwnProperty('com.soundcloud') ) {
+        var els = getElementsByName('soundcloud');
+        for ( _url in window.coredata['com.soundcloud'] ) {
+            for ( i in els ) {
+                if ( els[i].innerHTML === '[' + _url + ']' ) { els[i].innerHTML = window.coredata['com.soundcloud'][_url].html; }
+            }
+        }
     }
 
     /* Draw the Interactions (If Required) */
@@ -2479,11 +2509,6 @@ function parseSoundCloudEmbed( data, link_url ) {
         /* Prep the CoreData Element If Needs Be */
         if ( window.coredata.hasOwnProperty('com.soundcloud') === false ) { window.coredata['com.soundcloud'] = {}; }
         window.coredata['com.soundcloud'][link_url] = data;
-
-        var els = getElementsByName('soundcloud');
-        for ( i in els ) {
-            if ( els[i].innerHTML === '[' + link_url + ']' ) { els[i].innerHTML = data.html; }
-        }
     }
 }
 function doShowUserByName( user_name ) {
@@ -2527,6 +2552,7 @@ function getHashDetails( name ) {
 
     if ( access_token !== false ) {
         showWaitState('hash_posts', 'Accessing App.Net');
+        var api_url = ( readStorage('nice_proxy') === 'Y' ) ? window.niceURL + '/proxy' : window.apiURL;
         var params = {
             access_token: access_token,
             include_annotations: 1,
@@ -2535,7 +2561,7 @@ function getHashDetails( name ) {
             count: 200            
         };        
         $.ajax({
-            url: window.apiURL + '/posts/search',
+            url: api_url + '/posts/search',
             crossDomain: true,
             data: params,
             success: function( data ) { parseHashDetails( data.data, name ); },
@@ -2552,6 +2578,7 @@ function parseHashDetails( data, name ) {
             html = '';
         var is_mention = false,
             followed = false;
+        var nicerank = 0.1;
         var post_mentions = [],
             post_reposted = false,
             post_starred = false,
@@ -2566,43 +2593,47 @@ function parseHashDetails( data, name ) {
         document.getElementById('mute_hash').innerHTML = '<button onclick="doMuteHash(\'' + name + '\');">Mute #' + name + '</button>';
         for ( var i = 0; i < data.length; i++ ) {
             showWaitState('hash_posts', 'Reading Posts (' + (i + 1) + '/' + data.length + ')');
-            respond = buildRespondBar( data[i] );
+            nicerank = ( readStorage('nice_proxy') === 'Y' ) ? data[i].nicerank : parseInt( readStorage( data[i].user.id + '_rank', true) );
+            
+            if ( nicerank >= 1.75 ) {
+                respond = buildRespondBar( data[i] );
+    
+                followed = data[i].user.you_follow || (data[i].user.id === my_id) || false;
+                post_by = data[i].user.username;
+                post_reposted = data[i].you_reposted || false;
+                post_starred = data[i].you_starred || false;
+                post_mentions = [];
+                is_mention = isMention( data[i] );
 
-            followed = data[i].user.you_follow || (data[i].user.id === my_id) || false;
-            post_by = data[i].user.username;
-            post_reposted = data[i].you_reposted || false;
-            post_starred = data[i].you_starred || false;
-            post_mentions = [];
-            is_mention = isMention( data[i] );
-
-            if ( data[i].entities.hasOwnProperty('mentions') ) {
-                if ( data[i].entities.mentions.length > 0 ) {
-                    for ( var idx = 0; idx < data[i].entities.mentions.length; idx++ ) {
-                        post_mentions.push( data[i].entities.mentions[idx].name );
+                if ( data[i].entities.hasOwnProperty('mentions') ) {
+                    if ( data[i].entities.mentions.length > 0 ) {
+                        for ( var idx = 0; idx < data[i].entities.mentions.length; idx++ ) {
+                            post_mentions.push( data[i].entities.mentions[idx].name );
+                        }
                     }
                 }
+
+                post_time = humanized_time_span(data[i].created_at);
+                post_source = ' via ' + data[i].source.name || 'unknown';
+                post_client = data[i].source.name || 'unknown';
+
+                html += '<div id="conv-' + data[i].id + '" class="post-item">' +
+                            '<div id="' + data[i].id + '-po" class="post-avatar">' +
+                                '<img class="avatar-round"' +
+                                    ' onClick="doShowUser(' + data[i].user.id + ');"' +
+                                    ' src="' + data[i].user.avatar_image.url + '">' +
+                            '</div>' +
+                            '<div id="' + data[i].id + '-dtl" class="post-content">' +
+                                '<h5 class="post-name"><span>' + data[i].user.username + '</span></h5>' +
+                                parseText( data[i] ) +
+                                '<p class="post-time">' +
+                                    '<em onClick="showHideActions(' + data[i].id + ', \'-x\');">' + post_time + post_source + '</em>' +
+                                '</p>' +
+                            '</div>' +
+                            respond.replaceAll('[TL]', '-x') +
+                            parseEmbedded( data[i] ) +
+                        '</div>';
             }
-
-            post_time = humanized_time_span(data[i].created_at);
-            post_source = ' via ' + data[i].source.name || 'unknown';
-            post_client = data[i].source.name || 'unknown';
-
-            html += '<div id="conv-' + data[i].id + '" class="post-item">' +
-                        '<div id="' + data[i].id + '-po" class="post-avatar">' +
-                            '<img class="avatar-round"' +
-                                ' onClick="doShowUser(' + data[i].user.id + ');"' +
-                                ' src="' + data[i].user.avatar_image.url + '">' +
-                        '</div>' +
-                        '<div id="' + data[i].id + '-dtl" class="post-content">' +
-                            '<h5 class="post-name"><span>' + data[i].user.username + '</span></h5>' +
-                            parseText( data[i] ) +
-                            '<p class="post-time">' +
-                                '<em onClick="showHideActions(' + data[i].id + ', \'-x\');">' + post_time + post_source + '</em>' +
-                            '</p>' +
-                        '</div>' +
-                        respond.replaceAll('[TL]', '-x') +
-                        parseEmbedded( data[i] ) +
-                    '</div>';
         }
         document.getElementById( 'hash_posts' ).innerHTML = html;
         toggleClassIfExists('hashbox','hide','show');        

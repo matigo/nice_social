@@ -138,6 +138,7 @@ function parseChannelPost( data ) {
 function getPMUnread() {
     var access_token = readStorage('access_token');
     if ( access_token !== false ) {
+        var api_url = ( readStorage('nice_proxy') === 'Y' ) ? window.niceURL + '/proxy' : window.apiURL;
         var params = {
             access_token: access_token,
             include_message_annotations: 1,
@@ -151,7 +152,7 @@ function getPMUnread() {
             count: 100
         };
         $.ajax({
-            url: window.apiURL + '/channels',
+            url: api_url + '/channels',
             crossDomain: true,
             data: params,
             success: function( data ) { parsePMResults( data ); },
@@ -164,6 +165,7 @@ function getPMSummary( before_id ) {
     var access_token = readStorage('access_token');
     before_id = ( before_id === undefined || before_id === NaN ) ? 0 : before_id;
     if ( access_token !== false ) {
+        var api_url = ( readStorage('nice_proxy') === 'Y' ) ? window.niceURL + '/proxy' : window.apiURL;
         var params = {
             access_token: access_token,
             include_message_annotations: 1,
@@ -178,7 +180,7 @@ function getPMSummary( before_id ) {
         };
         if ( before_id > 0 ) { params.before_id = before_id; }
         $.ajax({
-            url: window.apiURL + '/channels',
+            url: api_url + '/channels',
             crossDomain: true,
             data: params,
             success: function( data ) { parsePMResults( data ); },
@@ -193,7 +195,7 @@ function parsePMResults( ds ) {
             parsePMData(ds.data);
             if ( ds.meta.more === true ) { getPMSummary(ds.meta.min_id); }
         } else {
-            alert("Uh Oh. We've Got a [" + ds.meta.code + "] from App.Net");
+            alert("Uh Oh. We've Got a [" + ds.meta.code + "] from App.Net when Accessing Channels");
         }
     }
 }
@@ -213,14 +215,27 @@ function parsePMData( data ) {
                 pObj['recent_message']['is_deleted'] = true;
                 pObj['recent_message']['created_at'] = '';
             }
-            if ( pObj.hasOwnProperty('writers') ) {
-                for ( _id in pObj['writers']['user_ids'] ) {
-                    if ( user_list.indexOf(pObj['writers']['user_ids'][_id]) < 0 ) { user_list.push(pObj['writers']['user_ids'][_id]); }
+
+            if ( readStorage('nice_proxy') === 'Y' ) {
+                for ( _id in pObj['accounts'] ) {
+                    if ( window.users.hasOwnProperty(_id) === false ) {
+                        window.users[ _id ] = { avatar_url: '',
+                                                      name: pObj['accounts'][_id].username,
+                                                  username: pObj['accounts'][_id].username,
+                                                     score: 5
+                                                };
+                    }
                 }
-            }
-            if ( user_list.length > 100 ) {
-                getAccountNames( user_list );
-                user_list = [];
+            } else {
+                if ( pObj.hasOwnProperty('writers') ) {
+                    for ( _id in pObj['writers']['user_ids'] ) {
+                        if ( user_list.indexOf(pObj['writers']['user_ids'][_id]) < 0 ) { user_list.push(pObj['writers']['user_ids'][_id]); }
+                    }
+                }
+                if ( user_list.length > 100 ) {
+                    getAccountNames( user_list );
+                    user_list = [];
+                }
             }
             window.coredata[ data[i].type ][ data[i].id ] = pObj;
             window.coredata[ data[i].type + '-ts' ] = Math.floor(Date.now() / 1000);
@@ -258,30 +273,41 @@ function buildPMItem( post_type, post_id ) {
     if ( writers <= 1 ) { return false; }
 
     /* Construct the User List */
-    var writer_list = [];
-    for ( var i = 0; i < data.writers.user_ids.length; i++ ) {
-        if ( writer_list.indexOf(data.writers.user_ids[i]) === -1 ) { writer_list.push(data.writers.user_ids[i]); }
-    }
-    if ( data.hasOwnProperty('owner') ) {
-        if ( writer_list.indexOf(data.owner.id) === -1 ) { writer_list.push(data.owner.id); }
-    }
-    if ( data.hasOwnProperty('recent_message') ) {
-        if ( data.recent_message.is_deleted !== true ) {
-            if ( writer_list.indexOf(data.recent_message.user.id) === -1 ) { writer_list.push(data.recent_message.user.id); }
-        }
-    }
-
-    for ( var i = 0; i < writer_list.length; i++ ) {
-        if ( user_list !== '' ) { user_list += ( i === (writer_list.length - 1) ) ? ' &amp; ' : ', '; }
-        if ( writer_list[i] === my_id ) {
-            user_list += 'You';
-        } else {
-            if ( window.users.hasOwnProperty(writer_list[i]) ) {
-                user_name = window.users[writer_list[i]].username;
-            } else {
-                user_name = writer_list[i];
+    if ( readStorage('nice_proxy') === 'Y' ) {
+        for ( user_id in data.accounts ) {
+            if ( user_id !== my_id ) {
+                if ( user_list !== '' ) { user_list += ', '; }
+                user_list += data.accounts[user_id].username;
             }
-            user_list += user_name;
+        }
+        if ( user_list !== '' ) { user_list += ' &amp; you'; }
+
+    } else {
+        var writer_list = [];
+        for ( var i = 0; i < data.writers.user_ids.length; i++ ) {
+            if ( writer_list.indexOf(data.writers.user_ids[i]) === -1 ) { writer_list.push(data.writers.user_ids[i]); }
+        }
+        if ( data.hasOwnProperty('owner') ) {
+            if ( writer_list.indexOf(data.owner.id) === -1 ) { writer_list.push(data.owner.id); }
+        }
+        if ( data.hasOwnProperty('recent_message') ) {
+            if ( data.recent_message.is_deleted !== true ) {
+                if ( writer_list.indexOf(data.recent_message.user.id) === -1 ) { writer_list.push(data.recent_message.user.id); }
+            }
+        }
+
+        for ( var i = 0; i < writer_list.length; i++ ) {
+            if ( user_list !== '' ) { user_list += ( i === (writer_list.length - 1) ) ? ' &amp; ' : ', '; }
+            if ( writer_list[i] === my_id ) {
+                user_list += 'You';
+            } else {
+                if ( window.users.hasOwnProperty(writer_list[i]) ) {
+                    user_name = window.users[writer_list[i]].username;
+                } else {
+                    user_name = writer_list[i];
+                }
+                user_list += user_name;
+            }
         }
     }
 
