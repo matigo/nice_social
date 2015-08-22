@@ -302,6 +302,14 @@ function doReply( post_id ) {
     if ( _id > 0 ) { saveStorage('in_reply_to', _id); }
     doPostOrAuth();
 }
+function doQuote( post_id ) {
+    var _id = parseInt(post_id);
+    if ( _id > 0 ) {
+        saveStorage('in_reply_to', _id);
+        saveStorage('is_quote', 'Y', true);
+    }
+    doPostOrAuth();
+}
 function testADNAccessToken() {
     var params = { access_token: readStorage('access_token') };
     setSplashMessage('Testing App.Net Token');
@@ -1788,9 +1796,6 @@ function buildRespondBar( post, is_convo ) {
     html += '</div>';
     return html;
 }
-function doQuote( post_id ) {
-    alert("Whoops! This is coming in the next version. Sorry.");
-}
 function isMention( post ) {
     var my_id = readStorage('user_id');
     var rVal = false;
@@ -2224,9 +2229,13 @@ function showHideResponse() {
         document.getElementById('rpy-text').value = reply_text;
         document.getElementById('rpy-text').focus();
         if ( reply_text !== '' ) {
-            var caret_pos = reply_text.indexOf("\n");
-            if ( caret_pos < 1 ) { caret_pos = reply_text.length; }
-            setCaretToPos(document.getElementById("rpy-text"), caret_pos);
+            if ( readStorage('is_quote', true) === 'Y' ) {
+                setCaretToPos(document.getElementById("rpy-text"), 0);
+            } else {
+                var caret_pos = reply_text.indexOf("\n");
+                if ( caret_pos < 1 ) { caret_pos = reply_text.length; }
+                setCaretToPos(document.getElementById("rpy-text"), caret_pos);
+            }
         }
         calcReplyCharacters();
 
@@ -2237,34 +2246,40 @@ function showHideResponse() {
         removeClassIfExists('rpy-box', 'pm');
         toggleClass('response','show','hide');        
         saveStorage('in_reply_to', '0');
+        saveStorage('is_quote', 'N', true);
     }
 }
 function getReplyText() {
-    var _id = readStorage('in_reply_to');
+    var _id = readStorage('in_reply_to'),
+        _iq = readStorage('is_quote', true);
     var txt = '',
         suffix = '';
 
     if ( _id > 0 ) {
-        var my_id = readStorage('user_id');
-        var mentions = false;
-        var data = window.coredata['net.app.global'][_id];
-        if ( data.hasOwnProperty('repost_of') ) {
-            if ( data.user.id != my_id ) { suffix = '@' + data.user.username + ' '; }
-            data = data.repost_of;
-        }
-        if ( data.entities.hasOwnProperty('mentions') ) { mentions = data.entities.mentions; }
-        if ( data.user.id != my_id ) { txt = '@' + data.user.username + ' '; }
-        if ( mentions !== false ) {
-            for ( var i = 0; i < mentions.length; i++ ) {
-                if ( mentions[i].id !== my_id ) {
-                    if ( (txt + ' ' + suffix).indexOf('@' + mentions[i].name) < 0 ) {
-                        if ( suffix != '' ) { suffix += ' '; }
-                        suffix += '@' + mentions[i].name;
+        if ( _iq !== 'Y' ) {
+            var my_id = readStorage('user_id');
+            var mentions = false;
+            var data = window.coredata['net.app.global'][_id];
+            if ( data.hasOwnProperty('repost_of') ) {
+                if ( data.user.id != my_id ) { suffix = '@' + data.user.username + ' '; }
+                data = data.repost_of;
+            }
+            if ( data.entities.hasOwnProperty('mentions') ) { mentions = data.entities.mentions; }
+            if ( data.user.id != my_id ) { txt = '@' + data.user.username + ' '; }
+            if ( mentions !== false ) {
+                for ( var i = 0; i < mentions.length; i++ ) {
+                    if ( mentions[i].id !== my_id ) {
+                        if ( (txt + ' ' + suffix).indexOf('@' + mentions[i].name) < 0 ) {
+                            if ( suffix != '' ) { suffix += ' '; }
+                            suffix += '@' + mentions[i].name;
+                        }
                     }
                 }
             }
+            if ( suffix !== '' ) { txt += "\n\n// " + suffix; }
+        } else {
+            txt = ' >> @' + window.coredata['net.app.global'][_id].user.username + ': ' + window.coredata['net.app.global'][_id].text;
         }
-        if ( suffix !== '' ) { txt += "\n\n// " + suffix; }
     }
 
     return txt;
@@ -2679,14 +2694,15 @@ function doGreyConv( first_id, reply_id ) {
     $("#chat_posts").scrollTo('#conv-' + first_id, 2000);
 }
 function doHandyTextSwitch() {
-    var el = document.getElementById('rpy-text');
-    var caret_pos = getCaretPos(el);
-    var orig_text = el.value;
-    var new_text = orig_text.replaceAll('...', '…', '');
-
-    if ( orig_text !== new_text ) {
-        el.value = new_text;
-        setCaretToPos(document.getElementById('rpy-text'), (caret_pos - 2));
+    if ( readStorage('is_quote', true) === 'N' ) {
+        var el = document.getElementById('rpy-text');
+        var caret_pos = getCaretPos(el);
+        var orig_text = el.value;
+        var new_text = orig_text.replaceAll('...', '…', '');
+        if ( orig_text !== new_text ) {
+            el.value = new_text;
+            setCaretToPos(document.getElementById('rpy-text'), (caret_pos - 2));
+        }
     }
     calcReplyCharacters();
 }
