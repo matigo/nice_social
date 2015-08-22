@@ -155,11 +155,12 @@ function fillPrefsWindow( opt ) {
                           1: { 'label': "Post Preferences",
                                'notes': "Customise How Posts are Drawn",
                                'icon' : "fa-columns",
-                               'items': { 'hide_audio':   { 'label': "Hide Audio Files", 'type': "yn", 'js': "togglePostElement(\'hide_audio\');" },
-                                          'hide_avatars':   { 'label': "Hide Avatars", 'type': "yn", 'js': "togglePostElement(\'hide_avatars\');" },
-                                          'hide_images':  { 'label': "Hide Images", 'type': "yn", 'js': "togglePostElement(\'hide_images\');" },
-                                          'hide_geodata': { 'label': "Hide GeoMaps", 'type': "yn", 'js': "togglePostElement(\'hide_geodata\');" },
-                                          'hide_longpost': { 'label': "Tiny Long Posts", 'type': "yn", 'js': "" }
+                               'items': { 'hide_audio':    { 'label': "Hide Audio Files", 'type': "yn", 'js': "togglePostElement(\'hide_audio\');" },
+                                          'hide_avatars':  { 'label': "Hide Avatars", 'type': "yn", 'js': "togglePostElement(\'hide_avatars\');" },
+                                          'hide_images':   { 'label': "Hide Images", 'type': "yn", 'js': "togglePostElement(\'hide_images\');" },
+                                          'hide_geodata':  { 'label': "Hide GeoMaps", 'type': "yn", 'js': "togglePostElement(\'hide_geodata\');" },
+                                          'hide_longpost': { 'label': "Tiny Long Posts", 'type': "yn", 'js': "" },
+                                          'hide_muted':    { 'label': "Hide Muted Posts", 'type': "yn", 'js': "togglePostElement(\'hide_muted\');" }
                                          }
                               },
                           2: { 'label': "Account Profile",
@@ -748,6 +749,10 @@ function togglePostElement( item ) {
         
         case 'hide_geodata':
             cls = '.post-geo';
+            break;
+
+        case 'hide_muted':
+            cls = '.post-muted';
             break;
     }
     jss.set('.post-list .post-item ' + cls, { 'display': (( value === 'N' ) ? 'block' : 'none') });

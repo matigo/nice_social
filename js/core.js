@@ -390,7 +390,8 @@ function prepApp() {
                   11: { 'key': 'hide_geodata', 'value': 'N', 'useStore': false },
                   12: { 'key': 'hide_avatars', 'value': 'N', 'useStore': false },
                   13: { 'key': 'hide_longpost', 'value': 'N', 'useStore': false },
-                  14: { 'key': 'show_24h_timestamps', 'value': 'N', 'useStore': false },
+                  14: { 'key': 'hide_muted', 'value': 'N', 'useStore': false },
+                  15: { 'key': 'show_24h_timestamps', 'value': 'N', 'useStore': false },
 
                   20: { 'key': 'refresh_last', 'value': seconds, 'useStore': true },
                   21: { 'key': 'post_length', 'value': 256, 'useStore': true },
@@ -1177,9 +1178,8 @@ function showHideTL( tl ) {
         if ( window.timelines.hasOwnProperty(i) ) {
             if ( tl === i ) { window.timelines[i] = !window.timelines[i]; }
             if ( window.timelines[i] ) { saveStorage('tl_' + i, 'Y'); } else { saveStorage('tl_' + i, 'N'); }
-            saveStorage( 'net.app.core.pm-ts', '*', true );
-            saveStorage( 'net.app.global-ts', '*', true );
-            saveStorage( '_refresher', '-1', true);
+            saveStorage('net.app.core.pm-ts', '1000', true);
+            saveStorage('net.app.global-ts', '1000', true);
             showTimelines();
         }
     }
@@ -1229,18 +1229,19 @@ function showTimelines() {
             }
         }
     }
-    saveStorage('_refresher', '-1', true);
+    saveStorage('_refresher', '100', true);
     setWindowConstraints();
 }
 function showMutedPost( post_id, tl ) {
+    var postText = getPostText(post_id, true);
     var _html = '<div id="' + post_id + tl + '" name="' + post_id + '" class="post-item">' +
-                    window.coredata['net.app.global'][post_id].html.replaceAll('[TL]', tl, '') +
+                    postText.replaceAll('[TL]', tl, '') +
                 '</div>';
     $('#' + post_id + tl ).replaceWith( _html );
 }
 function redrawList() {
     var counter = parseInt( readStorage('_refresher', true) );
-    if ( counter >= 0 && counter < 10 ) {
+    if ( counter > 0 && counter <= 5 ) {
         saveStorage( '_refresher', (counter + 1), true);
         return false;
     } else { 
@@ -1380,19 +1381,20 @@ function redrawList() {
                 }
             }
         }
-        saveStorage( 'net.app.global-ts', window.coredata[ 'net.app.global-ts' ], true );
+        saveStorage('net.app.global-ts', window.coredata['net.app.global-ts'], true);
     }
     setWindowConstraints();
     updateTimestamps();
 }
-function getPostText( post_id ) {
+function getPostText( post_id, override ) {
+    if ( override === undefined ) { override = false; }
     var muted = isMutedItem(post_id);
     var _html = '';
 
-    if ( muted === false ) {
+    if ( muted === false || override ) {
         _html = buildHTMLSection( window.coredata['net.app.global'][post_id] );
     } else {
-        _html = '<span onClick="showMutedPost(' + post_id + ', \'[TL]\');">' +
+        _html = '<span onClick="showMutedPost(' + post_id + ', \'[TL]\');" class="post-muted">' +
                     '@' + window.coredata['net.app.global'][post_id].user.username + ' - ' + muted +
                 '</span>';
     }
@@ -3049,14 +3051,17 @@ function isMutedItem( post_id ) {
         if ( clients[idx] === name ) { 'Muted Client (' + name + ')'; }
     }
 
-    /*    
-    var hashes = readMutedHashtags();
-    var name = name.trim();
-    if ( name === undefined || name === '' ) { return false; }
-
-    for ( var idx = 0; idx <= hashes.length; idx++ ) { if ( hashes[idx] === name ) { return true; } }
-    */
-
+    if ( window.coredata['net.app.global'][post_id].entities.hashtags.length > 0 ) {
+        var hashes = readMutedHashtags();
+        if ( hashes.length > 0 ) {
+            var tags = window.coredata['net.app.global'][post_id].entities.hashtags;
+            for ( n in tags ) {
+                for ( idx in hashes ) {
+                    if ( hashes[idx] === tags[n].name ) { return 'Muted Hashtag (#' + tags[n].name + ')'; }
+                }
+            }
+        }
+    }
     return false;
 }
 function muteAccount( ismuted, account_id ) {
