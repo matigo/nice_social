@@ -1179,6 +1179,7 @@ function showHideTL( tl ) {
             if ( window.timelines[i] ) { saveStorage('tl_' + i, 'Y'); } else { saveStorage('tl_' + i, 'N'); }
             saveStorage( 'net.app.core.pm-ts', '*', true );
             saveStorage( 'net.app.global-ts', '*', true );
+            saveStorage( '_refresher', '-1', true);
             showTimelines();
         }
     }
@@ -1243,7 +1244,7 @@ function redrawList() {
         saveStorage( '_refresher', (counter + 1), true);
         return false;
     } else { 
-        saveStorage( '_refresher', '0', true);
+        saveStorage( '_refresher', '1', true);
     }
 
     var global_showall = ( readStorage('global_show') === 'e' ) ? true : false;
@@ -1333,25 +1334,18 @@ function redrawList() {
 
         for ( post_id in window.coredata['net.app.global'] ) {
             if ( window.coredata['net.app.global'][post_id] !== false ) {
-                var muted = isMutedItem(post_id);
-                if ( muted === false ) {
-                    postText = buildHTMLSection( window.coredata['net.app.global'][post_id] );
-                } else {
-                    postText = '<span onClick="showMutedPost(' + post_id + ', \'[TL]\');">' +
-                                   '@' + window.coredata['net.app.global'][post_id].user.username + ' - ' + muted +
-                               '</span>';
-                }
-
                 is_mention = isMention( window.coredata['net.app.global'][post_id] );
                 is_follow = (window.coredata['net.app.global'][post_id].user.you_follow 
                             || (window.coredata['net.app.global'][post_id].user.id === my_id) 
                             || false);
+                postText = '';
 
                 if ( window.timelines.home ) {
                     if ( checkElementExists(post_id + '-h') === false ) {
                         if ( is_mention || is_follow ) {
                             last_id = getPreviousElement(post_id, 'home', '-h');
                             if ( last_id !== false ) {
+                                if ( postText === '' ) { postText = getPostText(post_id); }
                                 document.getElementById('home').insertBefore( buildNode(post_id, '-h', '0', postText.replaceAll('[TL]', '-h', '')),
                                                                               document.getElementById(last_id) );
                             }
@@ -1364,6 +1358,7 @@ function redrawList() {
                         if ( is_mention ) {
                             last_id = getPreviousElement(post_id, 'mentions', '-m');
                             if ( last_id !== false ) {
+                                if ( postText === '' ) { postText = getPostText(post_id); }
                                 document.getElementById('mentions').insertBefore( buildNode(post_id, '-m', '0', postText.replaceAll('[TL]', '-m', '')),
                                                                                   document.getElementById(last_id) );
                             }
@@ -1376,6 +1371,7 @@ function redrawList() {
                         if ( global_showall || is_follow === false ) {
                             last_id = getPreviousElement(post_id, 'global', '-g');
                             if ( last_id !== false ) {
+                                if ( postText === '' ) { postText = getPostText(post_id); }
                                 document.getElementById('global').insertBefore( buildNode(post_id, '-g', '0', postText.replaceAll('[TL]', '-g', '')),
                                                                                 document.getElementById(last_id) );
                             }
@@ -1386,9 +1382,21 @@ function redrawList() {
         }
         saveStorage( 'net.app.global-ts', window.coredata[ 'net.app.global-ts' ], true );
     }
-
     setWindowConstraints();
     updateTimestamps();
+}
+function getPostText( post_id ) {
+    var muted = isMutedItem(post_id);
+    var _html = '';
+
+    if ( muted === false ) {
+        _html = buildHTMLSection( window.coredata['net.app.global'][post_id] );
+    } else {
+        _html = '<span onClick="showMutedPost(' + post_id + ', \'[TL]\');">' +
+                    '@' + window.coredata['net.app.global'][post_id].user.username + ' - ' + muted +
+                '</span>';
+    }
+    return _html;
 }
 function getPreviousElement( post_id, timeline, tl_ref ) {
     var elems = document.getElementById(timeline);
@@ -2391,18 +2399,38 @@ function parseEmbedded( post ) {
                 case 'net.vidcast-app.track-request':
                     if ( readStorage('hide_images') === 'N' ) {
                         var _innerHTML = ( post.annotations[i].value.title || false ) ? post.annotations[i].value.title : '';
-                        var _vidid = post.annotations[i].value.link.replace('http://youtu.be/', '').replace('https://www.youtube.com/watch?v=', '').replace('https://m.youtube.com/watch?v=', '');
-                        _vidid = _vidid.substring(0, _vidid.indexOf('&') != -1 ? _vidid.indexOf('&') : _vidid.length);
-    
-                        if ( post.annotations[i].value.track || false ) {
-                            if ( _innerHTML != '' ) { _innerHTML += ' - '; }
-                            _innerHTML += post.annotations[i].value.track;
+                        var _vidid = post.annotations[i].value.link;
+                        var _type = 'youtube';
+                        if ( _vidid.indexOf('soundcloud.com') >= 0 ) { _type = 'soundcloud'; }
+                        if ( _vidid.indexOf('vimeo.com') >= 0 ) { _type = 'vimeo'; }
+                        switch ( _type ) {
+                            case 'soundcloud':
+                                getSoundCloudEmbed( _vidid );
+                                html += '<div name="soundcloud" class="soundcloud">[' + _vidid + ']</div>';
+                                break;
+
+                            case 'youtube':
+                                var _blanks = ['http://youtu.be/', 'https://youtu.be/',
+                                               'https://www.youtube.com/watch?v=', 'https://m.youtube.com/watch?v='];
+                                for ( itm in _blanks ) {
+                                    _vidid = _vidid.replace(_blanks[itm], '');
+                                    _vidid = _vidid.substring(0, _vidid.indexOf('&') != -1 ? _vidid.indexOf('&') : _vidid.length);
+                                }
+        
+                                if ( post.annotations[i].value.track || false ) {
+                                    if ( _innerHTML != '' ) { _innerHTML += ' - '; }
+                                    _innerHTML += post.annotations[i].value.track;
+                                }
+                                html += '<div id="' + post.id + '-vid-' + i + '" class="post-video">' +
+                                            '<a href="' + post.annotations[i].value.link + '" title="' + _innerHTML + '" target="_blank">' +
+                                                '<img src="//img.youtube.com/vi/' + _vidid + '/0.jpg" />' +
+                                            '</a>' +
+                                        '</div>';
+                                break;
+
+                            default:
+                                /* Do Nothing */
                         }
-                        html += '<div id="' + post.id + '-vid-' + i + '" class="post-video">' +
-                                    '<a href="' + post.annotations[i].value.link + '" title="' + _innerHTML + '" target="_blank">' +
-                                        '<img src="https://img.youtube.com/vi/' + _vidid + '/0.jpg" />' +
-                                    '</a>' +
-                                '</div>';
                     }
                     break;
 
@@ -2412,6 +2440,34 @@ function parseEmbedded( post ) {
         }
     }
     return html;
+}
+function getSoundCloudEmbed( link_url ) {
+    if ( link_url !== undefined && link_url !== '' ) {
+        var params = {
+            format: 'json',
+            url: link_url         
+        };
+        $.ajax({
+            url: 'http://soundcloud.com/oembed',
+            crossDomain: true,
+            data: params,
+            success: function( data ) { parseSoundCloudEmbed( data, link_url ); },
+            error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
+            dataType: "json"
+        });
+    }
+}
+function parseSoundCloudEmbed( data, link_url ) {
+    if ( data ) {
+        /* Prep the CoreData Element If Needs Be */
+        if ( window.coredata.hasOwnProperty('com.soundcloud') === false ) { window.coredata['com.soundcloud'] = {}; }
+        window.coredata['com.soundcloud'][link_url] = data;
+
+        var els = getElementsByName('soundcloud');
+        for ( i in els ) {
+            if ( els[i].innerHTML === '[' + link_url + ']' ) { els[i].innerHTML = data.html; }
+        }
+    }
 }
 function doShowUserByName( user_name ) {
     if ( user_name === '' || user_name === undefined ) {
@@ -2983,14 +3039,6 @@ function muteClient( name ) {
     if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
     return true;
 }
-function isMutedClient( name ) {
-    var clients = readMutedClients();
-    if ( name === undefined || name === '' ) { return false; }
-    var name = name.trim();
-
-    for ( var idx = 0; idx <= clients.length; idx++ ) { if ( clients[idx] === name ) { return true; } }
-    return false;    
-}
 function isMutedItem( post_id ) {
     var clients = readMutedClients();
     if ( window.coredata['net.app.global'][post_id].source.name === undefined || window.coredata['net.app.global'][post_id].source.name === '' ) {
@@ -3000,6 +3048,15 @@ function isMutedItem( post_id ) {
     for ( var idx = 0; idx <= clients.length; idx++ ) { 
         if ( clients[idx] === name ) { 'Muted Client (' + name + ')'; }
     }
+
+    /*    
+    var hashes = readMutedHashtags();
+    var name = name.trim();
+    if ( name === undefined || name === '' ) { return false; }
+
+    for ( var idx = 0; idx <= hashes.length; idx++ ) { if ( hashes[idx] === name ) { return true; } }
+    */
+
     return false;
 }
 function muteAccount( ismuted, account_id ) {
@@ -3293,7 +3350,7 @@ function parseUserList( resp, account_id, type ) {
     setSplashMessage('');
 }
 function showFullUserList() {
-    var buffer = '<div id="0[TL]" class="post-item" style="border: 0; min-height: 75px;" data-content="2000-01-01T00:00:00Z"></div>';
+    var buffer = '<div id="0[TL]" class="post-item" style="border: 0; min-height: 75px;"></div>';
     for (i in window.timelines) {
         if ( window.timelines.hasOwnProperty(i) ) {
             if ( window.timelines[i] ) { showHideTL(i); }
@@ -3308,7 +3365,6 @@ function showFullUserList() {
     var my_id = parseInt(readStorage('user_id'));
 
     if ( access_token !== false ) {
-        document.getElementById('userlist').innerHTML = '<div id="usr-0" class="user-item">&nbsp;</div>';
         setSplashMessage('Getting Full Account List');
         var params = {
             access_token: access_token,
@@ -3346,7 +3402,7 @@ function parseFullUserList( rslt ) {
                         '<h5 class="post-name"><span>' + data[i].username + '</span></h5>' +
                         '<div class="buttons">' +
                             ( (data[i].follows_you === true) ? '<em>Follows You</em>' : '') +
-                            '<button class="btn ' + ( (data[i].you_follow === true) ? 'btn-red' : 'btn-green') + '"' +
+                            '<button id="btn-follow-' + data[i].id + '" class="btn ' + ( (data[i].you_follow === true) ? 'btn-red' : 'btn-green') + '"' +
                                    ' onclick="doFollow(' + data[i].id + ',' + data[i].you_follow + ');">' +
                                 ( (data[i].you_follow === true) ? 'Unfollow' : 'Follow') +
                             '</button>' +
