@@ -3242,6 +3242,7 @@ function setCSSPreferences() {
     jss.set('.chatbox div#mute_hash.title_btn', { 'background-color': '#' + readStorage('header_background') });
     jss.set('.chatbox div#mute_hash.title_btn', { 'color': '#' + readStorage('header_color') });
     jss.set('.chatbox .lbltxt', { 'color': '#' + readStorage('post-content_color') });
+    jss.set('.chatbox div#pref-list.chat version', { 'color': '#' + readStorage('post-content_color') });
     jss.set('.profile', { 'background-color': '#' + readStorage('body_background') });
     jss.set('.profile', { 'border-color': '#' + readStorage('header_background') });
     jss.set('.profile .info', { 'color': '#' + readStorage('post-content_color') });
@@ -3255,6 +3256,13 @@ function setCSSPreferences() {
     jss.set('.post-list .post-item .post-avatar img.avatar-round.recent-acct', { 'border-color': '#' + readStorage('one-week_color') });
     jss.set('.post-list .post-item .post-avatar img.avatar-round.new-acct', { 'border-color': '#' + readStorage('one-day_color') });
 
+    jss.set('.post-list.tl-interact .pulse-item .pulse-content', { 'color': '#' + readStorage('post-content_color') });
+    jss.set('.post-list.tl-interact .pulse-item .pulse-content item', { 'background-color': '#' + readStorage('post-highlight_color') });
+    jss.set('.post-list.tl-interact .pulse-item .pulse-content item span', { 'color': '#' + readStorage('post-content_color') });
+    jss.set('div#userlist.post-list.tl-userlist .post-item .pulse-content', { 'background-color': '#' + readStorage('post-highlight_color') });
+    jss.set('div#userlist.post-list.tl-userlist .post-item .pulse-content', { 'color': '#' + readStorage('post-content_color') });
+    jss.set('div#userlist.post-list.tl-userlist .post-item .numbers', { 'color': '#' + readStorage('post-content_color') });
+    
     jss.set('.post-list .post-item .post-avatar, .chat-list .post-item .post-avatar', {
         'display': (( readStorage('hide_avatars') === 'Y' ) ? 'none' : 'inline-block')
     });
