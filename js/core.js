@@ -3302,9 +3302,26 @@ function setPostsPerColumn( posts ) {
     }
     trimPosts();
 }
-function setFontFamily( family ) {
+var availableFontFamilies = {
+    'Helvetica': 'Helvetica',
+    'Arial': 'Arial',
+    'Comic Sans MS': 'Comic Sans MS',
+    'Courier New': 'Courier New',
+    'Geneva': 'Geneva',
+    'Georgia': 'Georgia',
+    'Monospace': 'Monospace',
+    'Palatino Linotype': 'Palatino Linotype',
+    'Sans Serif': 'sans-serif',
+    'Serif': 'serif',
+    'Tahoma': 'Tahoma',
+    'Times New Roman': 'Times New Roman',
+    'Verdana': 'Verdana',
+    'Apple System Font': '-apple-system, Helvetica Neue, sans-serif'
+};
+function setFontFamily( familyName ) {
+    var family = availableFontFamilies[familyName];
     document.body.style.fontFamily = family;
-    saveStorage('font_family', family);
+    saveStorage('font_family', familyName);
 }
 function setFontSize( size_px ) {
     var options = [10, 12, 14, 16, 18, 20];

@@ -243,16 +243,15 @@ function fillPrefsWindow( opt ) {
                           '18': { 'label': "Bigger", 'icon': "fa-font" },
                           '20': { 'label': "HUGE!", 'icon': "fa-font" }
                         };
-            var families = ['Helvetica', 'Arial', 'Comic Sans MS', 'Courier New', 'Geneva', 'Georgia', 'Monospace',
-                            'Palatino Linotype', 'Sans Serif', 'Serif', 'Tahoma', 'Times New Roman', 'Verdana'];
+
             var size_px = readStorage('font_size');
             var ff = readStorage('font_family');
             html = '<strong class="lbltxt" style="width: 95%; padding: 0 2.5%;">Choose Your Text Preferences.</strong>' +
                    '<label class="lbltxt" for="preset">Font Family:</label>' +
                    '<select id="preset" onChange="setFontFamily(this.value);">';
-            for ( idx in families ) {
-                var selText = ( families[idx] === ff ) ? ' selected' : '';
-                html += '<option value="' + families[idx] + '" style="font-family: ' + families[idx] + ';"' + selText + '>' + families[idx] + '</option>';
+            for ( familyName in availableFontFamilies ) {
+                var selText = ( familyName === ff ) ? ' selected' : '';
+                html += '<option value="' + familyName + '" style="font-family: ' + availableFontFamilies[familyName] + ';"' + selText + '>' + familyName + '</option>';
             }
             html += '</select>';
             for ( item in items ) {
