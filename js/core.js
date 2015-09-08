@@ -360,6 +360,7 @@ function parseMyToken( data ) {
             window.timelines.home = true;
             saveStorage('tl_home', 'Y', true);
         }
+        setSplashMessage('Collecting Timeline Data');
         showTimelines();
     }
 }
@@ -511,8 +512,6 @@ function sendPost() {
 function writePost( text, in_reply_to ) {
     if ( checkIfRepeat(text) === false ) { return false; }
     var access_token = readStorage('access_token');
-    saveStorage('last_posttext', text, true);
-    saveStorage('in_reply_to', '0');
 
     if ( access_token !== false ) {
         $.ajaxSetup({
@@ -529,8 +528,12 @@ function writePost( text, in_reply_to ) {
             type: 'POST',
             success: function( data ) {
                 if ( parseMeta(data.meta) ) {
+                    saveStorage('last_posttext', text, true);
+                    saveStorage('in_reply_to', '0');
+
                     showHideResponse();
-                    getTimeline();
+                    window.coredata[ 'net.app.global' ][ data.data.id ] = data.data;
+                    window.coredata[ 'net.app.global-ts' ] = Math.floor(Date.now() / 1000);
                     if ( parseInt(in_reply_to) > 0 ) { showHideActions( in_reply_to, '*' ); }
                     window.store['location'] = false;
                 }
@@ -850,10 +853,12 @@ function canRefreshGlobal() {
     var rrate = parseInt(readStorage('refresh_rate')),
         rlast = parseInt(readStorage('refresh_last', true));
     var seconds = new Date().getTime() / 1000;
-    var rVal = false;
     if ( rlast === undefined || isNaN(rlast) ) { rlast = 0; }
-    if ( (seconds-rlast) >= rrate ) { saveStorage('refresh_last', seconds, true); rVal = true; }
-    return rVal;
+    if ( (seconds-rlast) >= rrate ) {
+        saveStorage('refresh_last', seconds, true);
+        return true;
+    }
+    return false;
 }
 function getGlobalRecents( since_id ) {
     if ( since_id === undefined || isNaN(since_id) ) { since_id = 0; }
@@ -861,6 +866,9 @@ function getGlobalRecents( since_id ) {
     if ( recents === undefined || isNaN(recents) ) { recents = 0; }
     saveStorage('recents', (recents + 1) , true);
     if ( recents >= 5 ) { return false; }
+
+    var seconds = new Date().getTime() / 1000;
+    saveStorage('refresh_last', seconds, true);
 
     var api_url = ( readStorage('nice_proxy') === 'Y' ) ? window.niceURL + '/proxy' : window.apiURL;
     var access_token = readStorage('access_token');
@@ -1011,6 +1019,9 @@ function buildHTMLSection( post ) {
         repost_by = '';
     var data = post;
     var _html = '';
+    
+    // Is this Machine-Only?
+    if ( data.machine_only === true ) { return ''; }
 
     // Is This a Repost?
     if ( post.hasOwnProperty('repost_of') ) {
@@ -1018,6 +1029,9 @@ function buildHTMLSection( post ) {
         repost_by = ' <i style="float: right;">(<i class="fa fa-retweet"></i> ' + post.user.username + ')</i>';
         is_repost = true;
     }
+    
+    // Do We Have No Text Object?
+    if ( data.text === undefined ) { return ''; }
 
     /* Get the First Character of the Post */
     var words = data.text.split(" ");
@@ -1069,11 +1083,11 @@ function isValidClient( post ) {
     if ( account_age <= 7 ) { if ( mute_client.indexOf(post_client) >= 0 ) { rVal = false; } }
     return rVal;
 }
-function buildNode( post_id, tl_ref, data, html ) {
+function buildNode( post_id, tl_ref, data, type, html ) {
     var elem = document.createElement("div");
     elem.setAttribute('id', post_id + tl_ref);
     elem.setAttribute('name', post_id);
-    elem.setAttribute('class', 'post-item');
+    elem.setAttribute('class', type + '-item');
     elem.setAttribute('data-content', data);
     elem.innerHTML = html;
 
@@ -1206,17 +1220,17 @@ function showHideTL( tl ) {
         if ( window.timelines.hasOwnProperty(i) ) {
             if ( tl === i ) { window.timelines[i] = !window.timelines[i]; }
             if ( window.timelines[i] ) { saveStorage('tl_' + i, 'Y'); } else { saveStorage('tl_' + i, 'N'); }
-            saveStorage('net.app.core.pm-ts', '1000', true);
-            saveStorage('net.app.global-ts', '1000', true);
             showTimelines();
         }
     }
 }
 function showTimelines() {
     var buffer = '<div id="0[TL]" class="post-item" style="border: 0; min-height: 75px;" data-content="2000-01-01T00:00:00Z"></div>';
+    var redraw = false;
     if ( checkElementExists('userlist') ) {
         var elem = document.getElementById('userlist');
         elem.parentNode.removeChild(elem);
+        redraw = true;
     }
     for (i in window.timelines) {
         if ( window.timelines.hasOwnProperty(i) ) {
@@ -1247,7 +1261,7 @@ function showTimelines() {
 
                         document.getElementById('tl-space').insertBefore( elem, document.getElementById(next_tl) );
                     }
-
+                    redraw = true;
                 }
             } else {
                 if ( checkElementExists( i ) ) {
@@ -1257,15 +1271,22 @@ function showTimelines() {
             }
         }
     }
-    saveStorage('_refresher', '100', true);
+    if ( redraw === true ) {
+        saveStorage('net.app.interactions-ts', '1000', true);
+        saveStorage('net.app.core.pm-ts', '1000', true);
+        saveStorage('net.app.global-ts', '1000', true);
+        saveStorage('_refresher', '100', true);
+    }
     setWindowConstraints();
 }
 function showMutedPost( post_id, tl ) {
     var postText = getPostText(post_id, true);
-    var _html = '<div id="' + post_id + tl + '" name="' + post_id + '" class="post-item">' +
-                    postText.replaceAll('[TL]', tl, '') +
-                '</div>';
-    $('#' + post_id + tl ).replaceWith( _html );
+    if ( postText !== '' ) {
+        var _html = '<div id="' + post_id + tl + '" name="' + post_id + '" class="post-item">' +
+                        postText.replaceAll('[TL]', tl, '') +
+                    '</div>';
+        $('#' + post_id + tl ).replaceWith( _html );
+    }
 }
 function redrawList() {
     var counter = parseInt( readStorage('_refresher', true) );
@@ -1302,10 +1323,18 @@ function redrawList() {
             var last_ts = readStorage('net.app.interactions-ts', true);
             if ( last_ts !== window.coredata[ 'net.app.interactions-ts' ] ) {
                 for ( _id in window.coredata['net.app.interactions'] ) {
-                    if ( checkElementExists( _id + '-i') === false ) { $( "#interact" ).prepend( buildInteractionItem( _id ) ); }
+                    if ( checkElementExists( _id + '-i') === false ) {
+                        var event_at = window.coredata['net.app.interactions'][ _id ].event_date;
+                        var last_id = getPreviousElementByTime( event_at, 'interact', '-i' );
+                        var html = buildInteractionItem( _id );
+                        document.getElementById('interact').insertBefore( buildNode( _id, '-i', event_at, 'pulse', html),
+                                                                          document.getElementById(last_id) );
+                        /* $( "#interact" ).prepend( buildInteractionItem( _id ) ); */
+                        
+                    }
                 }
+                saveStorage( 'net.app.interactions-ts', window.coredata[ 'net.app.interactions-ts' ], true );
             }
-            saveStorage( 'net.app.interactions-ts', window.coredata[ 'net.app.interactions-ts' ], true );
         }
     }
 
@@ -1337,7 +1366,7 @@ function redrawList() {
                                 var html = buildPMItem('net.app.core.pm', post_id);
                                 var last_id = getPreviousElementByTime(pm_list[idx], 'pms', '-pms' );
                                 if ( last_id !== false ) {
-                                    document.getElementById('pms').insertBefore( buildNode(post_id, '-pms', pm_list[idx], html),
+                                    document.getElementById('pms').insertBefore( buildNode(post_id, '-pms', pm_list[idx], 'post', html),
                                                                                  document.getElementById(last_id) );
                                 }
                             }
@@ -1347,7 +1376,7 @@ function redrawList() {
                             var html = buildPMItem('net.app.core.pm', post_id);
                             var last_id = getPreviousElementByTime(pm_list[idx], 'pms', '-pms' );
                             if ( last_id !== false ) {
-                                document.getElementById('pms').insertBefore( buildNode(post_id, '-pms', pm_list[idx], html),
+                                document.getElementById('pms').insertBefore( buildNode(post_id, '-pms', pm_list[idx], 'post', html),
                                                                              document.getElementById(last_id) );
                             }
                         }
@@ -1364,6 +1393,7 @@ function redrawList() {
     /* Draw the Standard Timelines */
     var postText = '';
     var last_id = '';
+    var action_at = '0';
     var last_ts = readStorage('net.app.global-ts', true);
 
     if ( last_ts != window.coredata[ 'net.app.global-ts' ] ) {
@@ -1373,6 +1403,7 @@ function redrawList() {
 
         for ( post_id in window.coredata['net.app.global'] ) {
             if ( window.coredata['net.app.global'][post_id] !== false ) {
+                action_at = window.coredata['net.app.global'][post_id].created_at;
                 is_mention = isMention( window.coredata['net.app.global'][post_id] );
                 is_follow = (window.coredata['net.app.global'][post_id].user.you_follow 
                             || (window.coredata['net.app.global'][post_id].user.id === my_id) 
@@ -1385,8 +1416,13 @@ function redrawList() {
                             last_id = getPreviousElement(post_id, 'home', '-h');
                             if ( last_id !== false ) {
                                 if ( postText === '' ) { postText = getPostText(post_id); }
-                                document.getElementById('home').insertBefore( buildNode(post_id, '-h', '0', postText.replaceAll('[TL]', '-h', '')),
-                                                                              document.getElementById(last_id) );
+                                if ( postText !== '' ) {
+                                    document.getElementById('home').insertBefore( buildNode(post_id, '-h',
+                                                                                            action_at, 'post', 
+                                                                                            postText.replaceAll('[TL]', '-h', '')),
+                                                                                  document.getElementById(last_id) );
+
+                                }
                             }
                         }
                     }
@@ -1398,8 +1434,12 @@ function redrawList() {
                             last_id = getPreviousElement(post_id, 'mentions', '-m');
                             if ( last_id !== false ) {
                                 if ( postText === '' ) { postText = getPostText(post_id); }
-                                document.getElementById('mentions').insertBefore( buildNode(post_id, '-m', '0', postText.replaceAll('[TL]', '-m', '')),
-                                                                                  document.getElementById(last_id) );
+                                if ( postText !== '' ) {
+                                    document.getElementById('mentions').insertBefore( buildNode(post_id, '-m',
+                                                                                                action_at, 'post',
+                                                                                                postText.replaceAll('[TL]', '-m', '')),
+                                                                                      document.getElementById(last_id) );
+                                }
                             }
                         }
                     }
@@ -1411,8 +1451,12 @@ function redrawList() {
                             last_id = getPreviousElement(post_id, 'global', '-g');
                             if ( last_id !== false ) {
                                 if ( postText === '' ) { postText = getPostText(post_id); }
-                                document.getElementById('global').insertBefore( buildNode(post_id, '-g', '0', postText.replaceAll('[TL]', '-g', '')),
-                                                                                document.getElementById(last_id) );
+                                if ( postText !== '' ) {
+                                    document.getElementById('global').insertBefore( buildNode(post_id, '-g',
+                                                                                              action_at, 'post',
+                                                                                              postText.replaceAll('[TL]', '-g', '')),
+                                                                                    document.getElementById(last_id) );
+                                }
                             }
                         }
                     }
@@ -1452,7 +1496,7 @@ function getPreviousElementByTime( time_str, timeline, tl_ref ) {
     var c_max = parseInt(readStorage('column_max'));
     var comTime = new Date( time_str );
     for ( var idx = 0; idx < elems.children.length; idx++ ) {
-        if ( idx >= (c_max - 5) ) { return false; }
+        if ( idx >= (c_max - 5) ) { return '0' + tl_ref; }
         var objTime = new Date( $('#' + elems.children[idx].id).data("content") );        
         if ( objTime < comTime ) { return elems.children[idx].id; }
     }
@@ -1893,6 +1937,10 @@ function updateTimestamps() {
     }
 }
 function collectRankSummary() {
+    if ( readStorage('nice_proxy') === 'Y' ) {
+        fillTLs();
+        return false;
+    }
     setSplashMessage('Collecting NiceRank Scores');
     var params = { nicerank: 0.1 };
     showHideActivity(true);
@@ -1910,18 +1958,19 @@ function collectRankSummary() {
                     saveStorage( ds[i].user_id + '_rank', ds[i].rank, true );
                     saveStorage( ds[i].user_id + '_human', ds[i].is_human, true );
                 }
-
-                getTimeline();
-                getMentions();
-                getGlobalItems();
-                showHideActivity(false);
-                setSplashMessage('');
-                getInteractions();
+                fillTLs();
             }
         },
         error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
         dataType: "json"
     });
+}
+function fillTLs() {
+    getMentions();
+    getTimeline();
+    getInteractions();
+    showHideActivity(false);
+    setSplashMessage('');
 }
 function doDelete( post_id ) {
     var access_token = readStorage('access_token');
@@ -2906,11 +2955,9 @@ function parseFileUpload( response, file, anno_type ) {
                 xhr.upload.onprogress = function(e) {
                     var done = e.loaded, total = e.total;
                     var progress = (Math.floor(done/total*1000)/10);
-                    if ( progress > 0 && progress <= 99.9 ) {
-                        setSplashMessage('Uploading ... ' + progress + '% Complete');
-                    } else {
-                        setSplashMessage('');
-                    }
+                    if ( progress > 0 && progress <= 99.99999 ) { setSplashMessage('Uploading ... ' + progress + '% Complete'); }
+                    if ( progress === 100 ) { setSplashMessage('Getting the Image Ready ...'); }
+                    if ( progress <= 0 || progress > 100 ) { setSplashMessage(''); }
                 };
             }
             xhr.onreadystatechange = function(e) {

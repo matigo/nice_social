@@ -831,10 +831,29 @@ nav:not(.mm-menu) { display: none; }
     margin: 3px 0 0 5px;
 }
 
+/** ******************************************* *
+ *      User Classes                            *
+ ** ******************************************* */
+.userlist {
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    border-right: 1px solid #ccc;
+    display: inline-block;
+    float: left;
+    overflow: auto;
+    height: 100%;
+    width: 100%;
+
+    -webkit-overflow-scrolling: touch;
+    -webkit-transform: translate3d(0, 0, 0);
+}
+@media all and (min-device-width:768px) {  .userlist { max-width: 480px; } }
 
 /** ******************************************* *
  *      Post Classes                            *
  ** ******************************************* */
+ #chat_posts .chat,
 .post-list {
     background-position: center center;
     background-repeat: no-repeat;

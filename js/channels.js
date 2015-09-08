@@ -1,3 +1,14 @@
+function canRefreshChannels() {
+    var rrate = parseInt(readStorage('refresh_rate')),
+        rlast = parseInt(readStorage('chan_refresh_last', true));
+    var seconds = new Date().getTime() / 1000;
+    if ( rlast === undefined || isNaN(rlast) ) { rlast = 0; }
+    if ( (seconds-rlast) >= rrate ) {
+        saveStorage('chan_refresh_last', seconds, true);
+        return true;
+    }
+    return false;
+}
 function doConvReply() {
     addClassIfNotExists('rpy-box', 'pm');
     populateAccountNames();
@@ -136,6 +147,7 @@ function parseChannelPost( data ) {
     }
 }
 function getPMUnread() {
+    if ( canRefreshChannels() === false ) { return false; }
     var access_token = readStorage('access_token');
     if ( access_token !== false ) {
         var api_url = ( readStorage('nice_proxy') === 'Y' ) ? window.niceURL + '/proxy' : window.apiURL;
@@ -164,6 +176,7 @@ function getPMUnread() {
 function getPMSummary( before_id ) {
     var access_token = readStorage('access_token');
     before_id = ( before_id === undefined || before_id === NaN ) ? 0 : before_id;
+    if ( before_id === 0 ) { if ( canRefreshChannels() === false ) { return false; } }
     if ( access_token !== false ) {
         var api_url = ( readStorage('nice_proxy') === 'Y' ) ? window.niceURL + '/proxy' : window.apiURL;
         var params = {
