@@ -149,6 +149,8 @@ nav:not(.mm-menu) { display: none; }
     overflow-y: auto;
     position: fixed;
     z-index: 980;
+    -webkit-overflow-scrolling: touch;
+    -webkit-transform: translate3d(0, 0, 0);
 
     max-height: 90%;
     max-width: 400px;
@@ -200,10 +202,6 @@ nav:not(.mm-menu) { display: none; }
     font-weight: bold;
     margin-top: 30px;
     min-width: 100px;
-}
-.chatbox div#chat_posts.chat.show {
-    -webkit-overflow-scrolling: touch;
-    -webkit-transform: translate3d(0, 0, 0);
 }
 
 .msgbox {
@@ -841,7 +839,7 @@ nav:not(.mm-menu) { display: none; }
     border-right: 1px solid #ccc;
     display: inline-block;
     float: left;
-    overflow: auto;
+    overflow-x: hidden;
     height: 100%;
     width: 100%;
 
