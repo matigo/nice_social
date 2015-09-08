@@ -978,8 +978,7 @@ function parseItems( data ) {
                 use_nice = readStorage('nicerank');
             var min_rank = (use_nice === 'N') ? 0 : parseInt( readStorage('min_rank', true) );
             var my_id = readStorage('user_id');
-            var write_post = true;
-    
+
             for ( var i = 0; i < data.length; i++ ) {
                 followed = data[i].user.you_follow || (data[i].user.id === my_id) || false;
                 account_rank = parseInt( readStorage( data[i].user.id + '_rank', true) );
@@ -989,19 +988,16 @@ function parseItems( data ) {
                     account_rank = 2.1;
                     is_human = 'Y';
                 }
-    
+
                 if ( (account_rank >= min_rank && is_human == 'Y') || (data[i].user.id === my_id) || followed ) {
-                    if ( write_post === false && ((data[i].user.id === my_id) || followed) ) { write_post = true; }
-                    if ( write_post ) {
-                        window.coredata[ 'net.app.global' ][ data[i].id ] = data[i];
-                        if ( data[i].hasOwnProperty('repost_of') ) {
-                            if ( window.coredata['net.app.global'].hasOwnProperty(data[i].repost_of.id) === false ) {
-                                window.coredata[ 'net.app.global' ][ data[i].repost_of.id ] = data[i].repost_of;
-                            }
+                    window.coredata[ 'net.app.global' ][ data[i].id ] = data[i];
+                    if ( data[i].hasOwnProperty('repost_of') ) {
+                        if ( window.coredata['net.app.global'].hasOwnProperty(data[i].repost_of.id) === false ) {
+                            window.coredata[ 'net.app.global' ][ data[i].repost_of.id ] = data[i].repost_of;
                         }
-                        window.coredata[ 'net.app.global-ts' ] = Math.floor(Date.now() / 1000);
-                        parseAccountNames( data[i].user );
                     }
+                    window.coredata[ 'net.app.global-ts' ] = Math.floor(Date.now() / 1000);
+                    parseAccountNames( data[i].user );
                 }
             }
         }
@@ -2401,6 +2397,7 @@ function loadDraft() {
         document.getElementById('rpy-draft').innerHTML = '&nbsp;';
         document.getElementById('rpy-text').value = draft_text;
         saveStorage('in_reply_to', reply_to);
+        calcReplyCharacters();
 
         deleteStorage('draft_reply_to');
         deleteStorage('draft');
