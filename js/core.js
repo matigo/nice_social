@@ -1714,6 +1714,7 @@ function getChannelMessages( chan_id ) {
     var access_token = readStorage('access_token');
 
     if ( access_token !== false ) {
+        toggleClassIfExists('conversation','hide','show');
         showWaitState('chat_posts', 'Accessing App.Net');
         var params = {
             include_annotations: 1,

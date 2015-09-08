@@ -60,6 +60,7 @@ The list below is not very long. Let's make it impressive! Help Nice.Social by c
 * [@lasar - Lasar Liepins](https://alpha.app.net/lasar)
 * [@mttmccb - Matt McCabe](https://alpha.app.net/mttmccb)
 * [@hutattedonmyarm - Max](https://alpha.app.net/hutattedonmyarm)
+* [@keita - Keita Kobayashi](https://alpha.app.net/keita)
 
 **Special Thanks To:**
 
