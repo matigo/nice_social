@@ -403,14 +403,15 @@ function prepApp() {
                   15: { 'key': 'show_24h_timestamps', 'value': 'N', 'useStore': false },
 
                   20: { 'key': 'refresh_last', 'value': seconds, 'useStore': true },
-                  21: { 'key': 'post_length', 'value': 256, 'useStore': true },
-                  22: { 'key': 'chan_length', 'value': 2048, 'useStore': true },
-                  23: { 'key': 'long_length', 'value': 8000, 'useStore': true },
-                  24: { 'key': 'nice_proxy', 'value': 'N', 'useStore': false },
-                  25: { 'key': 'nicerank', 'value': 'Y', 'useStore': false },
-                  26: { 'key': 'min_rank', 'value': 2.1, 'useStore': true },
-                  27: { 'key': 'limit', 'value': 250, 'useStore': true },
-                  28: { 'key': 'since', 'value': '0', 'useStore': true },
+                  21: { 'key': 'is_uploading', 'value': 'N', 'useStore': true },
+                  22: { 'key': 'post_length', 'value': 256, 'useStore': true },
+                  23: { 'key': 'chan_length', 'value': 2048, 'useStore': true },
+                  24: { 'key': 'long_length', 'value': 8000, 'useStore': true },
+                  25: { 'key': 'nice_proxy', 'value': 'N', 'useStore': false },
+                  26: { 'key': 'nicerank', 'value': 'Y', 'useStore': false },
+                  27: { 'key': 'min_rank', 'value': 2.1, 'useStore': true },
+                  28: { 'key': 'limit', 'value': 250, 'useStore': true },
+                  29: { 'key': 'since', 'value': '0', 'useStore': true },
 
                   30: { 'key': 'absolute_times', 'value': 'N', 'useStore': false },
                   31: { 'key': 'keep_timezone', 'value': 'N', 'useStore': false },
@@ -2706,8 +2707,9 @@ function calcReplyCharacters() {
     if ( max_length === NaN || max_length === undefined ) { max_length = max_default; }
     var rpy_length = (max_length - txt_length);
     document.getElementById('rpy-length').innerHTML = addCommas(rpy_length);
+    var is_upload = readStorage('is_uploading', true);
 
-    if ( rpy_length >= 0 && rpy_length <= max_length ) {
+    if ( rpy_length >= 0 && rpy_length <= max_length && is_upload === 'N' ) {
         removeClass('rpy-length','red');
         if ( rpy_length <= max_length ) { toggleClassIfExists('rpy-send','btn-grey','btn-green'); }
         if ( rpy_length == max_length ) { toggleClassIfExists('rpy-send','btn-green','btn-grey'); }
@@ -2941,6 +2943,7 @@ function parseFileUpload( response, file, anno_type ) {
         case 400:
         case 507:
             saveStorage('msgText', 'App.Net Returned a ' + meta.code + ' Error:<br>' + meta.error_message, true);
+            saveStorage('is_uploading', 'N', true);
             showMsg = true;
             break;
 
@@ -2956,6 +2959,8 @@ function parseFileUpload( response, file, anno_type ) {
                     if ( progress > 0 && progress <= 99.99999 ) { setSplashMessage('Uploading ... ' + progress + '% Complete'); }
                     if ( progress === 100 ) { setSplashMessage('Getting the Image Ready ...'); }
                     if ( progress <= 0 || progress > 100 ) { setSplashMessage(''); }
+                    saveStorage('is_uploading', 'Y', true);
+                    calcReplyCharacters();
                 };
             }
             xhr.onreadystatechange = function(e) {
@@ -2987,6 +2992,8 @@ function parseFileUpload( response, file, anno_type ) {
                         default:
                             /* Do Nothing */
                     }
+                    saveStorage('is_uploading', 'N', true);
+                    calcReplyCharacters();
                 }
             };
 
