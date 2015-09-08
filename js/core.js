@@ -248,7 +248,8 @@ function continueLoadProcess() {
     if ( prepApp() ) {
         window.setInterval(function(){
             getGlobalItems();
-            redrawList(); 
+            /* findTopPost(); */
+            redrawList();
         }, 1000);
         window.setInterval(function(){ collectRankSummary(); }, 60*60*1000);
         window.setInterval(function(){ updateTimestamps(); }, 15000);
@@ -912,7 +913,7 @@ function getGlobalItems() {
     var access_token = readStorage('access_token');
     var params = {
         include_annotations: 1,
-        include_deleted: 0,
+        include_deleted: 1,
         include_machine: 0,
         include_html: 1,
         since_id: readStorage( 'since', true),
@@ -962,6 +963,7 @@ function parseItems( data ) {
         if ( readStorage('nice_proxy') === 'Y' ) {
             for ( var i = 0; i < data.length; i++ ) {
                 window.coredata[ 'net.app.global' ][ data[i].id ] = data[i];
+                if ( data[i].is_deleted === true ) { setDelete( data[i].id ); }
                 if ( data[i].hasOwnProperty('repost_of') ) {
                     if ( window.coredata['net.app.global'].hasOwnProperty(data[i].repost_of.id) === false ) {
                         window.coredata[ 'net.app.global' ][ data[i].repost_of.id ] = data[i].repost_of;
@@ -990,6 +992,7 @@ function parseItems( data ) {
                     is_human = 'Y';
                 }
 
+                if ( data[i].is_deleted === true ) { setDelete( data[i].id ); }
                 if ( (account_rank >= min_rank && is_human == 'Y') || (data[i].user.id === my_id) || followed ) {
                     window.coredata[ 'net.app.global' ][ data[i].id ] = data[i];
                     if ( data[i].hasOwnProperty('repost_of') ) {
@@ -1314,7 +1317,15 @@ function redrawList() {
         }
     }
 
-    /* Draw the Interactions (If Required) */
+    /* Draw the Various Timelines (If Required) */
+    redrawInteractions();
+    redrawPosts();
+    redrawPMs();
+
+    setWindowConstraints();
+    updateTimestamps();
+}
+function redrawInteractions() {
     if ( window.timelines.interact === true ) {
         if ( window.coredata.hasOwnProperty('net.app.interactions') ) {
             var last_ts = readStorage('net.app.interactions-ts', true);
@@ -1326,7 +1337,6 @@ function redrawList() {
                         var html = buildInteractionItem( _id );
                         document.getElementById('interact').insertBefore( buildNode( _id, '-i', event_at, 'pulse', html),
                                                                           document.getElementById(last_id) );
-                        /* $( "#interact" ).prepend( buildInteractionItem( _id ) ); */
                         
                     }
                 }
@@ -1334,8 +1344,8 @@ function redrawList() {
             }
         }
     }
-
-    /* Draw the Private Messages (If Required) */
+}
+function redrawPMs() {
     if ( window.timelines.pms === true ) {
         var cnt = 0;
         if ( window.coredata.hasOwnProperty('net.app.core.pm') ) {
@@ -1379,19 +1389,19 @@ function redrawList() {
                         }
                         cnt++;
                     }
-
-                    /* TODO: If We Have Reached the Max Column Length, Exit the For Loop */
                 }
                 saveStorage( 'net.app.core.pm-ts', window.coredata[ 'net.app.core.pm-ts' ], true );
             }
         }
     }
-
-    /* Draw the Standard Timelines */
+}
+function redrawPosts() {
     var postText = '';
     var last_id = '';
     var action_at = '0';
     var last_ts = readStorage('net.app.global-ts', true);
+    var global_showall = ( readStorage('global_show') === 'e' ) ? true : false;
+    if ( readStorage('global_hide') === 'Y' ) { global_showall = false; }
 
     if ( last_ts != window.coredata[ 'net.app.global-ts' ] ) {
         var my_id = readStorage('user_id');
@@ -1462,8 +1472,6 @@ function redrawList() {
         }
         saveStorage('net.app.global-ts', window.coredata['net.app.global-ts'], true);
     }
-    setWindowConstraints();
-    updateTimestamps();
 }
 function getPostText( post_id, override ) {
     if ( override === undefined ) { override = false; }
@@ -1931,6 +1939,18 @@ function updateTimestamps() {
                     html = document.getElementById( itms[i].id ).innerHTML;
                     if ( html != tStr ) { document.getElementById( itms[i].id ).innerHTML = tStr; } else { break; }
                 }            
+        }
+        if ( window.timelines.interact === true ) {
+            if ( window.coredata.hasOwnProperty('net.app.interactions') ) {
+                for ( _id in window.coredata['net.app.interactions'] ) {
+                    if ( checkElementExists( _id + '-i') === false ) {
+                        var event_at = getTimestamp( window.coredata['net.app.interactions'][ _id ].event_date ),
+                            html = document.getElementById( _id + "-time" ).innerHTML;
+
+                        if ( html != event_at ) { document.getElementById( _id + "-time" ).innerHTML = event_at; } else { break; }
+                    }
+                }
+            }
         }
     }
 }
@@ -2770,8 +2790,10 @@ function doGreyConv( first_id, reply_id ) {
         removeClass(element.id, 'post-grey');
     });
     addClass('conv-' + first_id,'post-grey');
-    addClass('conv-' + reply_id,'post-grey');
-    $("#chat_posts").scrollTo('#conv-' + first_id, 2000);
+    if ( reply_id > 0 ) {
+        addClass('conv-' + reply_id,'post-grey');
+        document.getElementById('conv-' + reply_id).scrollIntoView();
+    }
 }
 function doHandyTextSwitch() {
     if ( readStorage('is_quote', true) === 'N' ) {
@@ -3569,6 +3591,28 @@ function parseFullUserList( rslt ) {
 }
 function editProfile() {
     alert( "[Debug] Whoops! This is still in the works. Check back soon!" );
+}
+function findTopPost() {
+    var elem_id = '0-h',
+        elem_top = 100000000;
+
+    for ( post_id in window.coredata['net.app.global'] ) {
+        if ( window.coredata['net.app.global'][post_id] !== false ) {
+            if ( checkElementExists(post_id + '-h') === true ) {
+                var el = document.getElementById(post_id + '-h');
+                var rect = el.getBoundingClientRect();
+                if ( rect.top < elem_top && rect.top >= 0 ) {
+                    elem_top = rect.top;
+                    elem_id = el.id;
+                }
+                if ( rect.top < 0 ) {
+                    var h = document.getElementById('home').getBoundingClientRect();
+                    if ( h.top !== elem_top ) { el.scrollIntoView(); }
+                    break;
+                }
+            }
+        }
+    }
 }
 function buildGenericNode( elID, elName, elClass, html ) {
     var elem = document.createElement("div");

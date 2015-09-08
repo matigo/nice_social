@@ -58,7 +58,7 @@ function buildInteractionItem( pagination_id ) {
         icon = '',
         text = '',
         what = '',
-        when = getTimestamp( data.event_date );
+        when = '<span id="' + pagination_id + '-time">' + getTimestamp( data.event_date ) + '</span>';
 
     switch ( data.action ) {
         case 'follow':
