@@ -253,7 +253,7 @@ function continueLoadProcess() {
         }, 1000);
         window.setInterval(function(){ collectRankSummary(); }, 60*60*1000);
         window.setInterval(function(){ updateTimestamps(); }, 15000);
-        
+
         /* Add the Moment.js Resources if Required */
         loadMomentIfRequired();
 
@@ -383,7 +383,6 @@ function getADNAccessToken() {
 }
 function prepApp() {
     setSplashMessage('Getting Nice Ready ...');
-    document.getElementById("site-name").innerHTML = window.sitename;
     document.title = window.sitename.replace(/<(?:.|\n)*?>/gm, '');
     var seconds = new Date().getTime() / 1000;
     var items = {  0: { 'key': 'show_live_timestamps', 'value': 'Y', 'useStore': false },
@@ -419,6 +418,8 @@ function prepApp() {
                   32: { 'key': 'display_nrscore', 'value': 'N', 'useStore': false },
                   33: { 'key': 'display_details', 'value': 'N', 'useStore': false },
                   34: { 'key': 'display_usage', 'value': 'N', 'useStore': false },
+                  35: { 'key': 'blended_mentions', 'value': 'N', 'useStore': false },
+                  36: { 'key': 'named_columns', 'value': 'N', 'useStore': false },
 
                   40: { 'key': 'shortkey_cmdk', 'value': 'Y', 'useStore': false },
                   41: { 'key': 'shortkey_down', 'value': 'Y', 'useStore': false },
@@ -438,14 +439,16 @@ function prepApp() {
                   59: { 'key': 'one-day_color', 'value': 'ff0', 'useStore': false },
                   60: { 'key': 'avatar_color', 'value': 'ccc', 'useStore': false },
 
-                  70: { 'key': 'font_family', 'value': 'Helvetica', 'useStore': false },
-                  71: { 'key': 'font_size', 'value': 14, 'useStore': false },
+                  70: { 'key': 'lang_cd', 'value': 'en', 'useStore': false },
+                  71: { 'key': 'font_family', 'value': 'Helvetica', 'useStore': false },
+                  72: { 'key': 'font_size', 'value': 14, 'useStore': false },
 
                   90: { 'key': 'net.app.global-ts', 'value': 0, 'useStore': true }
                  };
     for ( idx in items ) {
         if ( readStorage( items[idx].key, items[idx].useStore ) === false ) { saveStorage( items[idx].key, items[idx].value, items[idx].useStore ); }
     }
+    readLangFile( readStorage('lang_cd') );
     setCSSPreferences();
 
     if ( !readStorage('tl_home') ) {
@@ -470,6 +473,7 @@ function prepApp() {
     setGlobalShow( readStorage('global_show') );
     setFontFamily( readStorage('font_family') );
     setFontSize( readStorage('font_size') );
+    setHeaderNav();
 
     var token = getADNAccessToken();
     if ( token !== false ) { testADNAccessToken(); } else { window.activate = true; }
@@ -664,10 +668,33 @@ function getUserProfile( user_id ) {
     showWaitState('usr-info', 'Accessing App.Net');
 
     $.ajax({
-        url: window.apiURL + '/users/' + user_id + '/posts',
+        url: window.apiURL + '/users/' + user_id,
         crossDomain: true,
         data: params,
         success: function( data ) { parseUserProfile( data.data ); },
+        error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
+        dataType: "json"
+    });
+}
+function getUserPosts( user_id ) {
+    if ( parseInt(user_id) <= 0 ) { return false; }
+    var access_token = readStorage('access_token');
+    var params = {
+        include_deleted: 0,
+        include_machine: 0,
+        include_muted: 1,
+        include_html: 1,
+        count: 50
+    };
+    if ( access_token !== false ) { params.access_token = access_token; }
+    toggleClassIfExists('dialog','hide','show');
+    showWaitState('usr-info', 'Accessing App.Net');
+
+    $.ajax({
+        url: window.apiURL + '/users/' + user_id + '/posts',
+        crossDomain: true,
+        data: params,
+        success: function( data ) { parseUserPosts( data.data ); },
         error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
         dataType: "json"
     });
@@ -710,7 +737,7 @@ function parseUserUsage( data ) {
 }
 function getUserProfileActions( data ) {
     var _html = '';
-    if ( data.user.id === readStorage('user_id') ) {
+    if ( data.id === readStorage('user_id') ) {
         _html = '<ul>' +
                     '<li id="profile-drop" class="hide" onclick="toggleProfileDrop();">' +
                         '<i class="fa fa-cog"></i>' +
@@ -724,13 +751,13 @@ function getUserProfileActions( data ) {
                     '<li id="profile-drop" class="hide" onclick="toggleProfileDrop();">' +
                         '<i class="fa fa-cog"></i>' +
                         '<ul>' +
-                            '<li onClick="blockAccount(' + data.user.you_blocked + ', ' + data.user.id + ');">' + 
-                                ((data.user.you_blocked) ? 'Unblock' : 'Block') + 
+                            '<li onClick="blockAccount(' + data.you_blocked + ', ' + data.id + ');">' + 
+                                ((data.you_blocked) ? 'Unblock' : 'Block') + 
                             '</li>' +
-                            '<li onClick="muteAccount(' + data.user.you_muted + ', ' + data.user.id + ');">' + 
-                                ((data.user.you_muted) ? 'Listen Again' : 'Mute') +
+                            '<li onClick="muteAccount(' + data.you_muted + ', ' + data.id + ');">' + 
+                                ((data.you_muted) ? 'Listen Again' : 'Mute') +
                             '</li>' +
-                            '<li onClick="reportAccount(' + data.user.id + ');">Report Spammer</li>' +
+                            '<li onClick="reportAccount(' + data.id + ');">Report Spammer</li>' +
                         '</ul>' +
                     '</li>' +
                 '</ul>';
@@ -755,28 +782,27 @@ function getUserProfileNumbers( data ) {
 function parseUserProfile( data ) {
     if ( data ) {
         var html = '',
-            action_html = '',
-            post_source = '';
+            action_html = '';
         var my_id = readStorage('user_id');
         var h4color = readStorage('post-content_color');
 
         // Set the Header Information
-        document.getElementById( 'usr-banner' ).style.backgroundImage = 'url("' + data[0].user.cover_image.url + '")';
-        document.getElementById( 'usr-avatar' ).innerHTML = '<img class="avatar-square" src="' + data[0].user.avatar_image.url + '">';
-        document.getElementById( 'usr-names' ).innerHTML =  '<h3>' + data[0].user.username + '</h3>' +
-                                                            '<h4 style="color:#' + h4color + '">' + data[0].user.name + '</h4>' +
-                                                            '<h5>' + getUserProfileActions( data[0] ) + '</h5>';
+        document.getElementById( 'usr-banner' ).style.backgroundImage = 'url("' + data.cover_image.url + '")';
+        document.getElementById( 'usr-avatar' ).innerHTML = '<img class="avatar-square" src="' + data.avatar_image.url + '">';
+        document.getElementById( 'usr-names' ).innerHTML =  '<h3>' + data.username + '</h3>' +
+                                                            '<h4 style="color:#' + h4color + '">' + data.name + '</h4>' +
+                                                            '<h5>' + getUserProfileActions( data ) + '</h5>';
 
-        document.getElementById( 'usr-info' ).innerHTML = parseText( data[0].user.description );
-        document.getElementById( 'usr-numbers' ).innerHTML = getUserProfileNumbers( data[0].user );
+        document.getElementById( 'usr-info' ).innerHTML = parseText( data.description );
+        document.getElementById( 'usr-numbers' ).innerHTML = getUserProfileNumbers( data );
 
-        if ( data[0].user.follows_you ) { action_html += '<em>Follows You</em>'; }
-        if ( data[0].user.you_follow ) {
-            action_html += '<button onclick="doFollow(' + data[0].user.id + ', true)" class="btn-red">Unfollow</button>';
+        if ( data.follows_you ) { action_html += '<em>Follows You</em>'; }
+        if ( data.you_follow ) {
+            action_html += '<button onclick="doFollow(' + data.id + ', true)" class="btn-red">Unfollow</button>';
         } else {
-            if ( data[0].user.id !== my_id ) {
-                if ( data[0].user.you_can_follow ) {
-                    action_html += '<button onclick="doFollow(' + data[0].user.id + ', false)" class="btn-green">Follow</button>';
+            if ( data.id !== my_id ) {
+                if ( data.you_can_follow ) {
+                    action_html += '<button onclick="doFollow(' + data.id + ', false)" class="btn-green">Follow</button>';
                 } else {
                     action_html = '&nbsp;';
                 }
@@ -786,7 +812,20 @@ function parseUserProfile( data ) {
             }
         }
         document.getElementById( 'usr-actions' ).innerHTML = action_html;
-        if ( readStorage('display_usage') === 'Y' || readStorage('display_nrscore') === 'Y' ) { getUserUsage( data[0].user.id ); }
+        if ( readStorage('display_usage') === 'Y' || readStorage('display_nrscore') === 'Y' ) { getUserUsage( data.id ); }
+
+        // Write the Post History
+        if ( data.counts.posts > 0 ) {
+            getUserPosts( data.id );
+        } else {
+            document.getElementById( 'user_posts' ).innerHTML = '<div class="post-item">There Are No Posts to Show</div>';
+        }
+        toggleClassIfExists('dialog','hide','show');
+    }
+}
+function parseUserPosts( data ) {
+    if ( data ) {
+        var html = '';
 
         // Write the Post History
         for ( var i = 0; i < data.length; i++ ) {
@@ -1337,7 +1376,6 @@ function redrawInteractions() {
                         var html = buildInteractionItem( _id );
                         document.getElementById('interact').insertBefore( buildNode( _id, '-i', event_at, 'pulse', html),
                                                                           document.getElementById(last_id) );
-                        
                     }
                 }
                 saveStorage( 'net.app.interactions-ts', window.coredata[ 'net.app.interactions-ts' ], true );
@@ -1438,13 +1476,13 @@ function redrawPosts() {
                 if ( window.timelines.mentions ) {
                     if ( checkElementExists(post_id + '-m') === false ) {
                         if ( is_mention ) {
-                            last_id = getPreviousElement(post_id, 'mentions', '-m');
+                            last_id = getPreviousElementByTime( action_at, 'mentions', '-m' );
                             if ( last_id !== false ) {
                                 if ( postText === '' ) { postText = getPostText(post_id); }
                                 if ( postText !== '' ) {
-                                    document.getElementById('mentions').insertBefore( buildNode(post_id, '-m',
-                                                                                                action_at, 'post',
-                                                                                                postText.replaceAll('[TL]', '-m', '')),
+                                    document.getElementById('mentions').insertBefore( buildNode( post_id, '-m',
+                                                                                                 action_at, 'post',
+                                                                                                 postText.replaceAll('[TL]', '-m', '')),
                                                                                       document.getElementById(last_id) );
                                 }
                             }
@@ -1466,6 +1504,20 @@ function redrawPosts() {
                                 }
                             }
                         }
+                    }
+                }
+            }
+        }
+        var im_blend = readStorage('blended_mentions');
+        if ( im_blend === 'Y' ) {
+            if ( window.coredata.hasOwnProperty('net.app.interactions') ) {
+                for ( _id in window.coredata['net.app.interactions'] ) {
+                    if ( checkElementExists( _id + '-m') === false ) {
+                        var event_at = window.coredata['net.app.interactions'][ _id ].event_date;
+                        var last_id = getPreviousElementByTime( event_at, 'mentions', '-m' );
+                        var html = buildInteractionItem( _id );
+                        document.getElementById('mentions').insertBefore( buildNode( _id, '-m', event_at, 'pulse', html),
+                                                                          document.getElementById(last_id) );
                     }
                 }
             }
@@ -1516,6 +1568,8 @@ function setWindowConstraints() {
     var sWidth = window.innerWidth || document.body.clientWidth;
     var cWidth = 0,
         vCols = 1;
+        
+    if ( document.getElementById('tl-space').innerHTML === '' ) { return false; }
 
     for (i in window.timelines) {
         if ( window.timelines.hasOwnProperty(i) ) { if ( window.timelines[i] ) { vCols++; } }
@@ -1571,6 +1625,9 @@ function scrollbarWidth( cWidth ) {
 }
 function setColumnsWidth( cWidth, cCount ) {
     var css_style = 'overflow-x: hidden; width:' + cWidth + 'px;';
+    var named_columns = readStorage('named_columns');
+    var nav = document.getElementById('tl-names'),
+        nav_html = '';
     var vCols = 0,
         idx = 1;
     for (i in window.timelines) {
@@ -1579,7 +1636,8 @@ function setColumnsWidth( cWidth, cCount ) {
     css_style += (cCount === 1) ? ' max-width: 480px;' : ' max-width: ' + parseFloat(100 / cCount).toFixed(3) + '%;';
     for (i in window.timelines) {
         if ( window.timelines.hasOwnProperty(i) ) {
-            if ( window.timelines[i] ) { 
+            if ( window.timelines[i] ) {
+                nav_html += '<nav style="' + css_style + '">' + getLangString(i) + '</nav>';
                 if ( idx === vCols ) { css_style = 'border-right: 0; ' + css_style; }
                 if ( document.getElementById( i ).getAttribute('style') !== css_style ) {
                     document.getElementById( i ).setAttribute('style', css_style);
@@ -1588,11 +1646,15 @@ function setColumnsWidth( cWidth, cCount ) {
             }
         }
     }
+    if ( nav.innerHTML !== nav_html && named_columns === 'Y' ) { nav.innerHTML = nav_html; }
     if ( checkElementExists('userlist') ) {
         if ( document.getElementById('userlist').getAttribute('style') !== css_style ) {
             document.getElementById('userlist').setAttribute('style', css_style);
         }
     }
+}
+function toProperCase( str ) {
+    return str.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
 }
 function constructDialog( dialog_id ) {
     var _html = '';
@@ -3033,15 +3095,15 @@ function parseFileUpload( response, file, anno_type ) {
 function humanized_time_span(date, ref_date, date_formats, time_units) {
     date_formats = date_formats || {
         past: [
-            { ceiling: 60, text: "Less than a minute ago" },
-            { ceiling: 3600, text: "$minutes minutes ago" },
-            { ceiling: 86400, text: "$hours hours ago" },
-            { ceiling: 2629744, text: "$days days ago" },
-            { ceiling: 31556926, text: "$months months ago" },
-            { ceiling: null, text: "$years years ago" }
+            { ceiling: 60, text: getLangString('ago_seconds') },
+            { ceiling: 3600, text: getLangString('ago_minutes') },
+            { ceiling: 86400, text: getLangString('ago_hours') },
+            { ceiling: 2629744, text: getLangString('ago_days') },
+            { ceiling: 31556926, text: getLangString('ago_years') },
+            { ceiling: null, text: getLangString('ago_years') }
         ],
         future: [
-            { ceiling: 60, text: "Less than a minute ago" },
+            { ceiling: 60, text: getLangString('ago_seconds') },
             { ceiling: 3600, text: "in $minutes minutes" },
             { ceiling: 86400, text: "in $hours hours" },
             { ceiling: 2629744, text: "in $days days" },
@@ -3099,10 +3161,8 @@ function humanized_time_span(date, ref_date, date_formats, time_units) {
     function depluralize_time_ago_text(time_ago_text, breakdown) {
         for(var i in breakdown) {
             if (breakdown[i] == 1) {
-                var regexp = new RegExp("\\b"+i+"\\b");
-                time_ago_text = time_ago_text.replace(regexp, function() {
-                    return arguments[0].replace(/s\b/g, '');
-                });
+                var repl_str = getLangString('depl_' + i);
+                if ( repl_str !== '' ) { time_ago_text = time_ago_text.replaceAll(repl_str[0], repl_str[1]); }
             }
         }
         return time_ago_text;
@@ -3415,6 +3475,17 @@ function setFontSize( size_px ) {
         document.getElementById('btn-pt-' + size_px).style.backgroundColor = bgColor;
         document.getElementById('btn-pt-' + size_px).style.color = frColor;
     }
+}
+function setHeaderNav() {
+    var named_columns = readStorage('named_columns');
+    if ( named_columns === 'N' ) { document.getElementById('tl-names').innerHTML = ''; } else { setWindowConstraints(); }
+    document.getElementById('site-name').innerHTML = ( named_columns === 'N' ) ? window.sitename : '';
+    
+    jss.set('.post-list.tl-pms', { 'background-image': ((named_columns === 'N') ? 'url("../img/pms.png")' : 'none') });
+    jss.set('.post-list.tl-home', { 'background-image': ((named_columns === 'N') ? 'url("../img/home.png")' : 'none') });
+    jss.set('.post-list.tl-global', { 'background-image': ((named_columns === 'N') ? 'url("../img/global.png")' : 'none') });
+    jss.set('.post-list.tl-interact', { 'background-image': ((named_columns === 'N') ? 'url("../img/interact.png")' : 'none') });
+    jss.set('.post-list.tl-mentions', { 'background-image': ((named_columns === 'N') ? 'url("../img/mentions.png")' : 'none') });
 }
 function setGlobalShow( type ) {
     var options = ['e', 'n'];

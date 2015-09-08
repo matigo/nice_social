@@ -34,7 +34,7 @@ function fillPrefsWindow( opt ) {
                 version_no = ( i === (version_str.length - 1) && version_str[i] === '0' ) ? '' : version_str[i] + version_no;
                 cnt++;
             }
-            version_no = '0.9.10';
+            version_no = '0.9.11';
             html += '<version>Version: ' + version_no + '</version>';
             break;
 
@@ -194,7 +194,7 @@ function fillPrefsWindow( opt ) {
                               },
                           1: { 'label': "Post Preferences",
                                'notes': "Customise How Posts are Drawn",
-                               'icon' : "fa-columns",
+                               'icon' : "fa-comments-o",
                                'items': { 'hide_audio':    { 'label': "Hide Audio Files", 'type': "yn", 'js': "togglePostElement(\'hide_audio\');" },
                                           'hide_avatars':  { 'label': "Hide Avatars", 'type': "yn", 'js': "togglePostElement(\'hide_avatars\');" },
                                           'hide_images':   { 'label': "Hide Images", 'type': "yn", 'js': "togglePostElement(\'hide_images\');" },
@@ -203,7 +203,14 @@ function fillPrefsWindow( opt ) {
                                           'hide_muted':    { 'label': "Hide Muted Posts", 'type': "yn", 'js': "togglePostElement(\'hide_muted\');" }
                                          }
                               },
-                          2: { 'label': "Account Profile",
+                          2: { 'label': "Column Options",
+                               'notes': "Customise Your Columns",
+                               'icon' : "fa-columns",
+                               'items': { 'blended_mentions': { 'label': "Show Interactions with Mentions", 'type': "yn", 'js':"" },
+                                          'named_columns': { 'label': "Show Column Names", 'type': "yn", 'js':"setHeaderNav();" }
+                                         }
+                              },
+                          3: { 'label': "Account Profile",
                                'notes': "Display and Hide Profile Information",
                                'icon' : "fa-street-view",
                                'items': { 'display_nrscore': { 'label': "Show NR Score", 'type': "yn", 'js':"" },
@@ -325,18 +332,12 @@ function fillPrefsWindow( opt ) {
         case 'language':
             var items = { 'en': { 'label': "English", 'icon': "fa-comments-o" },
                           'de': { 'label': "Deutsch", 'icon': "fa-comments-o" },
-                          'es': { 'label': "Español", 'icon': "fa-comments-o" },
-                          'fr': { 'label': "Français", 'icon': "fa-comments-o" },
-                          'it': { 'label': "Italiano", 'icon': "fa-comments-o" },
-                          'pr': { 'label': "Português", 'icon': "fa-comments-o" },
-                          'ru': { 'label': "русский", 'icon': "fa-comments-o" },
-                          'sv': { 'label': "svenska", 'icon': "fa-comments-o" },
-                          'ja': { 'label': "日本語", 'icon': "fa-comments-o" },
-                          'ko': { 'label': "한국어", 'icon': "fa-comments-o" }
+                          'ja': { 'label': "日本語", 'icon': "fa-comments-o" }
                         };
+            var lang_cd = readStorage('lang_cd');
             html += '<strong style="width: 95%; text-align: justify; padding: 0 2.5%;">Choose a Display Language:</strong>';
             for ( item in items ) {
-                if ( item === 'en' ) {
+                if ( item === lang_cd ) {
                     var bg = '#' + readStorage('header_color'),
                         fr = '#' + readStorage('header_background');
                 } else {
@@ -349,7 +350,10 @@ function fillPrefsWindow( opt ) {
                             '<span>' + items[item].label + '</span>' +
                         '</button>';
             }
-            html += '<button style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
+            html += '<br><br>' +
+                    '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">PLEASE NOTE:</strong>' +
+                    '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">Translations aren&apos;t close to done, or even correct in some instances. If you find a typo, let @matigo know. Thanks!</p>' +
+                    '<button style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
                            ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
             break;
         
@@ -491,7 +495,7 @@ function fillPrefsWindow( opt ) {
                           'global': { 'label': "Filtering", 'icon': "fa-globe" },
                           'keyboard': { 'label': "Keyboard Shortcuts", 'icon': "fa-keyboard-o" },
                           'mutes': { 'label': "Muted Items", 'icon': "fa-microphone-slash" },
-                      /*    'language': { 'label': "Languages", 'icon': "fa-comments-o" }, */
+                          'language': { 'label': "Languages", 'icon': "fa-language" },
                           'refresh': { 'label': "Refresh Rate", 'icon': "fa-refresh" },
                           'widths': { 'label': "Column Widths", 'icon': "fa-arrows-h" }
                         };
@@ -768,6 +772,10 @@ function toggleOption( item, txt ) {
         document.getElementById('btn-opt-' + item).innerHTML = (( value ) ? '<i class="fa fa-circle"></i> ' + txtOpts[txt]['enabled']
                                                                           : '<i class="fa fa-circle-o"></i> ' + txtOpts[txt]['disabled']);
     }
+}
+function toggleLanguage( lang_cd ) {
+    saveStorage( 'lang_cd', lang_cd );
+    window.location = window.location.protocol + '//' + window.location.hostname;
 }
 function togglePostElement( item ) {
     var value = readStorage( item );

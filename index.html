@@ -21,17 +21,18 @@
         <script type="text/javascript" src="js/jquery.min.js"></script>
         <script type="text/javascript" src="js/jss.min.js"></script>
         <script type="text/javascript">
-            var version = 341,
+            var version = 342,
                 srclist = {};
             var items = { 0: { el: 'link', rel: 'stylesheet', type: 'text/css', url: 'css/style.css' },
                           1: { el: 'link', rel: 'stylesheet', type: 'text/css', url: 'css/font-awesome.css' },
 
                          12: { el: 'script', rel: false, type: 'text/javascript', url: 'js/dom.js' },
-                         13: { el: 'script', rel: false, type: 'text/javascript', url: 'js/channels.js' },
-                         14: { el: 'script', rel: false, type: 'text/javascript', url: 'js/interacts.js' },
-                         15: { el: 'script', rel: false, type: 'text/javascript', url: 'js/storage.js' },
-                         16: { el: 'script', rel: false, type: 'text/javascript', url: 'js/prefs.js' },
-                         17: { el: 'script', rel: false, type: 'text/javascript', url: 'js/core.js' }
+                         13: { el: 'script', rel: false, type: 'text/javascript', url: 'js/lang.js' },
+                         14: { el: 'script', rel: false, type: 'text/javascript', url: 'js/channels.js' },
+                         15: { el: 'script', rel: false, type: 'text/javascript', url: 'js/interacts.js' },
+                         16: { el: 'script', rel: false, type: 'text/javascript', url: 'js/storage.js' },
+                         17: { el: 'script', rel: false, type: 'text/javascript', url: 'js/prefs.js' },
+                         18: { el: 'script', rel: false, type: 'text/javascript', url: 'js/core.js' }
             }
 
             for ( idx in items ) {
@@ -54,6 +55,7 @@
     <body>
         <div id="page">
             <div id="header_bar" class="header fixed">
+                <div id="tl-names" class="hugger"></div>
                 <a id="mnu-avatar" onclick="doShowPrefs('main');"></a>
                 <span id="hd-activity" class="hide"><i class="fa fa-refresh fa-spin"></i></span>
                 <span id="hd-spacer" class="show">&nbsp;</span>

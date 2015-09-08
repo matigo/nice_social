@@ -83,6 +83,22 @@ nav:not(.mm-menu) { display: none; }
 @media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
     .header button { line-height: 25px; }
 }
+.header .hugger {
+    background: transparent;
+    color: #fff;
+    display: block;
+    height: 40px;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+}
+.header .hugger nav {
+    display: inline-block;
+    padding: 0;
+    text-align: center;
+    width: 33%;
+}
 .content {
     height: 100%;
     padding: 50px 0 0;
@@ -873,7 +889,7 @@ nav:not(.mm-menu) { display: none; }
 .post-list.tl-global { background-image: url("../img/global.png"); }
 .post-list.tl-interact { background-image: url("../img/interact.png"); }
 .post-list.tl-mentions { background-image: url("../img/mentions.png"); }
-.post-list.tl-pms { background-image: url("../img/lock.png"); }
+.post-list.tl-pms { background-image: url("../img/pms.png"); }
 .post-list.tl-userlist { background-image: url("../img/users.png"); }
 #user_posts .post-item,
 .post-list .pulse-item,

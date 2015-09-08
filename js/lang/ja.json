@@ -1,0 +1,29 @@
+{
+    "home": "ホーム",
+    "mentions": "メンション",
+    "global": "グロバル",
+    "pms": "プライベート",
+    "interact": "インタラクション",
+
+    "ago_seconds": "秒前",
+    "ago_minutes": "$minutes分前",
+    "ago_hours": "$hours時間前",
+    "ago_days": "$days日前",
+    "ago_months": "$monthsヶ月前",
+    "ago_years": "$years年前",
+
+    "Helvetica": "Helvetica",
+    "Arial": "Arial",
+    "Comic Sans MS": "Comic Sans MS",
+    "Courier New": "Courier New",
+    "Geneva": "Geneva",
+    "Georgia": "Georgia",
+    "Monospace": "Monospace",
+    "Palatino Linotype": "Palatino Linotype",
+    "Sans Serif": "sans-serif",
+    "Serif": "serif",
+    "Tahoma": "Tahoma",
+    "Times New Roman": "Times New Roman",
+    "Verdana": "Verdana",
+    "Apple System Font": "-apple-system, Helvetica Neue, sans-serif"
+}
