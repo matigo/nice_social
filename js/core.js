@@ -1133,6 +1133,7 @@ function buildNode( post_id, tl_ref, data, type, html ) {
     return elem;
 }
 function parseText( post ) {
+    if ( post === undefined || post === false ) { return '&nbsp;'; }
     var html = ( post.hasOwnProperty('html') ) ? post.html.replaceAll('<a href=', '<a target="_blank" href=', '') + ' ' : '',
         name = '',
         cStr = ' class="post-mention" style="font-weight: bold; cursor: pointer;"';
@@ -3099,7 +3100,7 @@ function humanized_time_span(date, ref_date, date_formats, time_units) {
             { ceiling: 3600, text: getLangString('ago_minutes') },
             { ceiling: 86400, text: getLangString('ago_hours') },
             { ceiling: 2629744, text: getLangString('ago_days') },
-            { ceiling: 31556926, text: getLangString('ago_years') },
+            { ceiling: 31556926, text: getLangString('ago_months') },
             { ceiling: null, text: getLangString('ago_years') }
         ],
         future: [
