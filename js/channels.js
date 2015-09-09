@@ -134,6 +134,7 @@ function writeChannelPost( text, channel_id, destinations, in_reply_to ) {
 function parseChannelPost( data ) {
     if ( parseMeta(data.meta) ) {
         ds = data.data;
+        ds.is_deleted = false;
         window.coredata['net.app.core.pm'][ ds.channel_id ].recent_message = ds;
         window.coredata['net.app.core.pm'][ ds.channel_id ].recent_message_id = ds.id;
         window.coredata['net.app.core.pm'][ ds.channel_id ].counts.messages++;
