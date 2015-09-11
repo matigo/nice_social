@@ -401,6 +401,7 @@ function prepApp() {
                   13: { 'key': 'hide_longpost', 'value': 'N', 'useStore': false },
                   14: { 'key': 'hide_muted', 'value': 'N', 'useStore': false },
                   15: { 'key': 'show_24h_timestamps', 'value': 'N', 'useStore': false },
+                  16: { 'key': 'romanise_time', 'value': 'N', 'useStore': false },
 
                   20: { 'key': 'refresh_last', 'value': seconds, 'useStore': true },
                   21: { 'key': 'is_uploading', 'value': 'N', 'useStore': true },
@@ -3160,11 +3161,13 @@ function humanized_time_span(date, ref_date, date_formats, time_units) {
     }
 
     function depluralize_time_ago_text(time_ago_text, breakdown) {
+        var do_roman = readStorage('romanise_time');
         for(var i in breakdown) {
             if (breakdown[i] == 1) {
                 var repl_str = getLangString('depl_' + i);
                 if ( repl_str !== '' ) { time_ago_text = time_ago_text.replaceAll(repl_str[0], repl_str[1]); }
             }
+            if ( do_roman === 'Y' ) { time_ago_text = time_ago_text.replace(breakdown[i], romanize(breakdown[i])); }
         }
         return time_ago_text;
     }
@@ -3694,4 +3697,17 @@ function buildGenericNode( elID, elName, elClass, html ) {
     elem.innerHTML = html;
 
     return elem;
+}
+function romanize (num) {
+    if (!+num) { return ''; }
+    var digits = String(+num).split(""),
+        key = ["","C","CC","CCC","CD","D","DC","DCC","DCCC","CM",
+               "","X","XX","XXX","XL","L","LX","LXX","LXXX","XC",
+               "","I","II","III","IV","V","VI","VII","VIII","IX"],
+        roman = "",
+        i = 3;
+    while (i--) {
+        roman = (key[+digits.pop() + (i * 10)] || "") + roman;
+    }
+    return Array(+digits.join("") + 1).join("M") + roman;
 }

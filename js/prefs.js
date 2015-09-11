@@ -189,7 +189,8 @@ function fillPrefsWindow( opt ) {
                                'items': { 'absolute_times': { 'label': "Timestamps", 'type': "ar", 'js': "setTimestamps();" },
                                           /* 'keep_timezone': { 'label': "Keep Timezone", 'type': "yn", 'js':"" }, */
                                           'show_24h_timestamps': { 'label': "24h Timestamps", 'type': "yn", 'js': "setTimestamps();" },
-                                          'show_live_timestamps': { 'label': "Live Timestamps", 'type': "yn", 'js': "setTimestamps();" }
+                                          'show_live_timestamps': { 'label': "Live Timestamps", 'type': "yn", 'js': "setTimestamps();" },
+                                          'romanise_time': { 'label': "Roman Timestamps", 'type': "yn", 'js': "setTimestamps();" }
                                          }
                               },
                           1: { 'label': "Post Preferences",
