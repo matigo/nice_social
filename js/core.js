@@ -82,6 +82,7 @@ jQuery(function($) {
         if ( readStorage('shortkey_f3') == 'Y' ) {
             if ( e.keyCode === KEY_F3 ) { doShowPrefs('main'); cancelKeyPress = true; }
         }
+        if ( e.keyCode >= 49 && e.keyCode <= 53 ) { showHideTL( window.tl_order[e.keyCode - 48] ); }
         if (cancelKeyPress) { return false; }
     });
     document.addEventListener('focusout', function(e) {window.scrollTo(0, 0)});

@@ -34,7 +34,7 @@ function fillPrefsWindow( opt ) {
                 version_no = ( i === (version_str.length - 1) && version_str[i] === '0' ) ? '' : version_str[i] + version_no;
                 cnt++;
             }
-            version_no = '0.9.12';
+            version_no = '0.9.13';
             html += '<version>Version: ' + version_no + '</version>';
             break;
 
