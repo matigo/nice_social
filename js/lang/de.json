@@ -1,9 +1,9 @@
 {
-    "home": "Timeline",
-    "mentions": "Erwähnungen",
-    "global": "Global",
-    "pms": "DN",
-    "interact": "Interaktionen",
+    "home": "<i class=\"fa fa-home\"></i> Timeline",
+    "mentions": "<i class=\"fa fa-comments-o\"></i> Erwähnungen",
+    "global": "<i class=\"fa fa-globe\"></i> Global",
+    "pms": "<i class=\"fa fa-lock\"></i> DN",
+    "interact": "<i class=\"fa fa-heartbeat\"></i> Interaktionen",
 
     "ago_seconds": "Vor weniger als einer Minute",
     "ago_minutes": "Vor $minutes Minuten",

@@ -1,9 +1,9 @@
 {
-    "home": "Home",
-    "mentions": "Mentions",
-    "global": "Global",
-    "pms": "PMs",
-    "interact": "Interactions",
+    "home": "<i class=\"fa fa-home\"></i> Home",
+    "mentions": "<i class=\"fa fa-comments-o\"></i> Mentions",
+    "global": "<i class=\"fa fa-globe\"></i> Global",
+    "pms": "<i class=\"fa fa-lock\"></i> PMs",
+    "interact": "<i class=\"fa fa-heartbeat\"></i> Interactions",
 
     "ago_seconds": "Less than a minute ago",
     "ago_minutes": "$minutes minutes ago",

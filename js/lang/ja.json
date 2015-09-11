@@ -1,9 +1,9 @@
 {
-    "home": "ホーム",
-    "mentions": "メンション",
-    "global": "グロバル",
-    "pms": "プライベート",
-    "interact": "インタラクション",
+    "home": "<i class=\"fa fa-home\"></i> ホーム",
+    "mentions": "<i class=\"fa fa-comments-o\"></i> メンション",
+    "global": "<i class=\"fa fa-globe\"></i> グロバル",
+    "pms": "<i class=\"fa fa-lock\"></i> プライベート",
+    "interact": "<i class=\"fa fa-heartbeat\"></i> インタラクション",
 
     "ago_seconds": "秒前",
     "ago_minutes": "$minutes分前",
