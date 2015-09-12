@@ -65,10 +65,10 @@ jQuery(function($) {
     });
     $(document).keyup(function(e) {
         if( $('#response').hasClass('hide') ) {
-            if ( readStorage('shortkey_n') == 'Y' ) { if ( event.keyCode === KEY_N ) { showHideResponse(); } }
-            if ( event.keyCode >= 49 && event.keyCode <= 53 ) { showHideTL( window.tl_order[event.keyCode - 48] ); }
+            if ( readStorage('shortkey_n') == 'Y' ) { if ( e.keyCode === KEY_N ) { showHideResponse(); } }
+            if ( e.keyCode >= 49 && e.keyCode <= 53 ) { showHideTL( window.tl_order[e.keyCode - 48] ); }
         }
-        if ( event.keyCode === KEY_F2 ) { $('#autocomp').removeClass('show').addClass('hide'); }
+        if ( e.keyCode === KEY_F2 ) { $('#autocomp').removeClass('show').addClass('hide'); }
     });
     $(document).keydown(function(e) {
         var cancelKeyPress = false;
@@ -221,30 +221,6 @@ function getFileObjectByType( file ) {
     }
     return fileObj;
 }
-function readConfigFile( filename ) {
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET",  filename, true);
-    xhr.setRequestHeader("Content-type", "application/json");
-    xhr.onreadystatechange = function() {
-        if( xhr.readyState == 4 && xhr.status == 200 ) {
-            switch ( xhr.status ) {
-                case 200:
-                    var data = JSON.parse( xhr.responseText );
-                    if ( data ) {
-                        for ( var item in data ) { window[item] = data[item]; }
-                        continueLoadProcess();
-                        setWindowConstraints();
-                        return true;
-                    }
-
-                default:
-                    if ( filename !== 'config.sample.json' ) { return readConfigFile( 'config.sample.json' ); }
-                    return false;
-            }
-        }
-    }
-    xhr.send();
-}
 function continueLoadProcess() {
     if ( prepApp() ) {
         window.setInterval(function(){
@@ -315,16 +291,7 @@ function doQuote( post_id ) {
 function testADNAccessToken() {
     var params = { access_token: readStorage('access_token') };
     setSplashMessage('Testing App.Net Token');
-
-    $.ajax({
-        url: window.apiURL + '/users/me',
-        crossDomain: true,
-        data: params,
-        type: 'GET',
-        success: function( data ) { parseMyToken( data.data ); },
-        error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
-        dataType: "json"
-    });
+    doJSONQuery( '/users/me', false, 'GET', params, parseMyToken, '' );
 }
 function parseMyToken( data ) {
     if ( data ) {
@@ -668,15 +635,7 @@ function getUserProfile( user_id ) {
     if ( access_token !== false ) { params.access_token = access_token; }
     toggleClassIfExists('dialog','hide','show');
     showWaitState('usr-info', 'Accessing App.Net');
-
-    $.ajax({
-        url: window.apiURL + '/users/' + user_id,
-        crossDomain: true,
-        data: params,
-        success: function( data ) { parseUserProfile( data.data ); },
-        error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
-        dataType: "json"
-    });
+    doJSONQuery( '/users/' + user_id, false, 'GET', params, parseUserProfile, '' );
 }
 function getUserPosts( user_id ) {
     if ( parseInt(user_id) <= 0 ) { return false; }
@@ -691,28 +650,12 @@ function getUserPosts( user_id ) {
     if ( access_token !== false ) { params.access_token = access_token; }
     toggleClassIfExists('dialog','hide','show');
     showWaitState('usr-info', 'Accessing App.Net');
-
-    $.ajax({
-        url: window.apiURL + '/users/' + user_id + '/posts',
-        crossDomain: true,
-        data: params,
-        success: function( data ) { parseUserPosts( data.data ); },
-        error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
-        dataType: "json"
-    });
+    doJSONQuery( '/users/' + user_id + '/posts', false, 'GET', params, parseUserPosts, '' );
 }
 function getUserUsage( user_id ) {
     if ( parseInt(user_id) <= 0 ) { return false; }
     var params = { account_id: user_id };
-
-    $.ajax({
-        url: window.niceURL + '/user/list_activity',
-        crossDomain: true,
-        data: params,
-        success: function( data ) { parseUserUsage( data.data ); },
-        error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
-        dataType: "json"
-    });
+    doJSONQuery( '/user/list_activity', true, 'GET', params, parseUserUsage, '' );
 }
 function parseUserUsage( data ) {
     if ( data ) {
@@ -841,9 +784,7 @@ function parseUserPosts( data ) {
 }
 function getTimeline() {
     var access_token = readStorage('access_token');
-
     if ( access_token !== false ) {
-        var api_url = ( readStorage('nice_proxy') === 'Y' ) ? window.niceURL + '/proxy' : window.apiURL;
         var params = {
             include_directed_posts: 1,
             include_annotations: 1,
@@ -853,18 +794,7 @@ function getTimeline() {
             include_html: 1,
             count: 200
         };
-        $.ajax({
-            url: api_url + '/posts/stream',
-            crossDomain: true,
-            data: params,
-            type: 'GET',
-            success: function( data ) {
-                parseItems( data.data );
-                if ( readStorage( 'home_done', true ) === 'N' ) { saveStorage('home_done', 'Y', true); }
-            },
-            error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
-            dataType: "json"
-        });
+        doJSONQuery( '/posts/stream', false, 'GET', params, parseItems, '' );
     }
 }
 function getMentions() {
@@ -872,7 +802,6 @@ function getMentions() {
 
     if ( access_token !== false ) {
         setSplashMessage('Getting Your Mentions');
-        var api_url = ( readStorage('nice_proxy') === 'Y' ) ? window.niceURL + '/proxy' : window.apiURL;
         var params = {
             include_annotations: 1,
             include_deleted: 0,
@@ -881,15 +810,7 @@ function getMentions() {
             include_html: 1,
             count: 50
         }; 
-        $.ajax({
-            url: api_url + '/users/me/mentions',
-            crossDomain: true,
-            data: params,
-            type: 'GET',
-            success: function( data ) { parseItems( data.data ); saveStorage('ment_done', 'Y', true); },
-            error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
-            dataType: "json"
-        });
+        doJSONQuery( '/users/me/mentions', false, 'GET', params, parseItems, '' );
     }
 }
 function canRefreshGlobal() {
@@ -925,7 +846,6 @@ function getGlobalRecents( since_id ) {
 
     if ( access_token !== false ) { params.access_token = access_token; }
     if ( since_id > 0 ) { params.before_id = since_id; }
-    showHideActivity(true);
 
     $.ajax({
         url: api_url + '/posts/stream/global',
@@ -950,7 +870,6 @@ function getGlobalItems() {
     if ( canRefreshGlobal() === false ) { return false; }
     if ( readStorage('adn_action', true) === 'Y' ) { return false; }
 
-    var api_url = ( readStorage('nice_proxy') === 'Y' ) ? window.niceURL + '/proxy' : window.apiURL;
     var access_token = readStorage('access_token');
     var params = {
         include_annotations: 1,
@@ -962,20 +881,9 @@ function getGlobalItems() {
     };
     if ( access_token !== false ) { params.access_token = access_token; }
     saveStorage('adn_action', 'Y', true);
-    showHideActivity(true);
-
-    $.ajax({
-        url: api_url + '/posts/stream/global',
-        crossDomain: true,
-        data: params,
-        success: function( data ) {
-            parseItems( data.data );
-            getInteractions();
-            getPMUnread();
-        },
-        error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
-        dataType: "json"
-    });
+    doJSONQuery( '/posts/stream/global', false, 'GET', params, parseItems, '' );
+    getInteractions();
+    getPMUnread();
 }
 function parseMeta( meta ) {
     var rVal = false;
@@ -1047,7 +955,6 @@ function parseItems( data ) {
             }
         }
         saveStorage('_refresher', -1, true)
-        showHideActivity(false);
         trimPosts();
     }
 }
@@ -1393,7 +1300,7 @@ function redrawPMs() {
             var last_ts = readStorage('net.app.core.pm-ts', true);
             var pm_list = sortPMList();
 
-            if ( last_ts !== window.coredata[ 'net.app.core.pm-ts' ] ) {
+            if ( last_ts !== window.coredata['net.app.core.pm-ts'] ) {
                 for ( var idx = 0; idx < pm_list.length; idx++ ) {
                     var post_id = '';
                     for ( _id in window.coredata['net.app.core.pm'] ) {
@@ -1431,7 +1338,7 @@ function redrawPMs() {
                         cnt++;
                     }
                 }
-                saveStorage( 'net.app.core.pm-ts', window.coredata[ 'net.app.core.pm-ts' ], true );
+                saveStorage('net.app.core.pm-ts', window.coredata['net.app.core.pm-ts'], true);
             }
         }
     }
@@ -1788,21 +1695,14 @@ function getChannelMessages( chan_id ) {
         showWaitState('chat_posts', 'Accessing App.Net');
         var params = {
             include_annotations: 1,
-            include_deleted: 0,
+            include_deleted: 1,
             include_machine: 0,
             access_token: access_token,
             include_html: 1,
             include_read: 1,
             count: 200           
         };
-        $.ajax({
-            url: window.apiURL + '/channels/' + chan_id + '/messages',
-            data: params,
-            type: 'GET',
-            success: function( data ) { parseChannel( data.data ); },
-            error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
-            dataType: "json"
-        });
+        doJSONQuery( '/channels/' + chan_id + '/messages', false, 'GET', params, parseChannel, '' );
     }
 }
 function parseChannel( data ) {
@@ -1897,19 +1797,6 @@ function doCompleteName( fragment, name ) {
     toggleClassIfExists('autocomp','show','hide');
     calcReplyCharacters();
 }
-function setNotification( title, message, sound ) {
-    if ( window.hasOwnProperty('fluid') === true ) {
-        window.fluid.showGrowlNotification({
-            title: title,
-            description: message,
-            priority: 1,
-            sticky: false,
-            identifier: 'nice_notify',
-            icon: '/img/icon-hires.png'
-        });
-        if ( sound !== undefined ) { window.fluid.playSound(sound); }
-    }
-}
 function buildRespondBar( post, is_convo ) {
     var my_id = readStorage('user_id');
     var css_r = ( post.you_reposted ) ? 'highlight' : 'plain';
@@ -1965,20 +1852,7 @@ function getAccountNames( ids ) {
             access_token: access_token,
             ids: id_list 
         };
-        $.ajaxSetup({
-            beforeSend: function (xhr, settings) {
-                xhr.setRequestHeader("Authorization", "Bearer " + access_token);
-                return true;
-            }
-        });
-        $.ajax({
-            url: window.apiURL + '/users',
-            crossDomain: true,
-            data: params,
-            success: function( data ) { parseAccountNames( data.data ); },
-            error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
-            dataType: "json"
-        });
+        doJSONQuery( '/users', false, 'GET', params, parseAccountNames, '' );
     }
 }
 
@@ -2026,58 +1900,33 @@ function collectRankSummary() {
     }
     setSplashMessage('Collecting NiceRank Scores');
     var params = { nicerank: 0.1 };
-    showHideActivity(true);
-
-    $.ajax({
-        url: window.niceURL + '/user/nicesummary',
-        crossDomain: true,
-        data: params,
-        type: 'GET',
-        success: function( data ) {
-            if ( data.data ) {
-                var ds = data.data;
-                for ( var i = 0; i < ds.length; i++ ) {
-                    setSplashMessage('Reading Scores (' + (i + 1) + '/' + ds.length + ')');
-                    saveStorage( ds[i].user_id + '_rank', ds[i].rank, true );
-                    saveStorage( ds[i].user_id + '_human', ds[i].is_human, true );
-                }
-                fillTLs();
-            }
-        },
-        error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
-        dataType: "json"
-    });
+    doJSONQuery( '/user/nicesummary', true, 'GET', params, parseRankSummary, parseRankSummary );
+}
+function parseRankSummary( data ) {
+    if ( data ) {
+        for ( var i = 0; i < data.length; i++ ) {
+            setSplashMessage('Reading Scores (' + (i + 1) + '/' + data.length + ')');
+            saveStorage( data[i].user_id + '_rank', data[i].rank, true );
+            saveStorage( data[i].user_id + '_human', data[i].is_human, true );
+        }
+        fillTLs();
+    }
 }
 function fillTLs() {
     getMentions();
     getTimeline();
     getInteractions();
-    showHideActivity(false);
     setSplashMessage('');
 }
 function doDelete( post_id ) {
     var access_token = readStorage('access_token');
-
     if ( access_token !== false ) {
         var params = { access_token: access_token };
-        $.ajaxSetup({
-            beforeSend: function (xhr, settings) {
-                xhr.setRequestHeader("Authorization", "Bearer " + access_token);
-                return true;
-            }
-        });
-        $.ajax({
-            url: window.apiURL + '/posts/' + post_id,
-            crossDomain: true,
-            data: params,
-            type: 'DELETE',
-            success: function( data ) { if ( parseMeta(data.meta) ) { setDelete(post_id); } },
-            error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
-            dataType: "json"
-        });
+        doJSONQuery( '/posts/' + post_id, false, 'DELETE', params, setDelete, '' );
     }
 }
-function setDelete( post_id ) {
+function setDelete( data ) {
+    var post_id = data.id;
     var itms = document.getElementsByName( post_id );
     for ( var i = 0; i < itms.length; i++ ) {
         var elem = document.getElementById( itms[i].id );
@@ -2091,26 +1940,13 @@ function doRepost( post_id ) {
 
     if ( access_token !== false ) {
         var params = { access_token: access_token };
-        $.ajaxSetup({
-            beforeSend: function (xhr, settings) {
-                xhr.setRequestHeader("Authorization", "Bearer " + access_token);
-                return true;
-            }
-        });
-        $.ajax({
-            url: window.apiURL + '/posts/' + post_id + '/repost',
-            crossDomain: true,
-            data: params,
-            type: action_type,
-            success: function( data ) { if ( parseMeta(data.meta) ) { setRepost(post_id); } },
-            error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
-            dataType: "json"
-        });
+        doJSONQuery( '/posts/' + post_id + '/repost', false, action_type, params, setRepost, '' );
     } else {
         getAuthorisation();
     }
 }
-function setRepost( post_id ) {
+function setRepost( data ) {
+    var post_id = data.id;
     if ( post_id > 0 ) {
         var itms = document.getElementsByName( post_id + "-repost" );
         window.coredata['net.app.global'][post_id].you_reposted = !window.coredata['net.app.global'][post_id].you_reposted;
@@ -2130,26 +1966,13 @@ function doStar( post_id ) {
 
     if ( access_token !== false ) {
         var params = { access_token: access_token };
-        $.ajaxSetup({
-            beforeSend: function (xhr, settings) {
-                xhr.setRequestHeader("Authorization", "Bearer " + access_token);
-                return true;
-            }
-        });
-        $.ajax({
-            url: window.apiURL + '/posts/' + post_id + '/star',
-            crossDomain: true,
-            data: params,
-            type: action_type,
-            success: function( data ) { if ( parseMeta(data.meta) ) { setStar(post_id); } },
-            error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
-            dataType: "json"
-        });
+        doJSONQuery( '/posts/' + post_id + '/star', false, action_type, params, setStar, '' );
     } else {
         getAuthorisation();
     }
 }
-function setStar( post_id ) {
+function setStar( data ) {
+    var post_id = data.id;
     if ( post_id > 0 ) {
         var itms = document.getElementsByName( post_id + "-star" );
         window.coredata['net.app.global'][post_id].you_starred = !window.coredata['net.app.global'][post_id].you_starred;
@@ -2176,21 +1999,7 @@ function doFollow( user_id, unfollow ) {
 
     if ( access_token !== false ) {
         var params = { access_token: access_token };
-        $.ajaxSetup({
-            beforeSend: function (xhr, settings) {
-                xhr.setRequestHeader("Authorization", "Bearer " + access_token);
-                return true;
-            }
-        });
-        $.ajax({
-            url: window.apiURL + '/users/' + user_id + '/follow',
-            crossDomain: true,
-            data: params,
-            type: action_type,
-            success: function( data ) { if ( parseMeta(data.meta) ) { setFollow(data.data); } },
-            error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
-            dataType: "json"
-        });
+        doJSONQuery( '/users/' + user_id + '/follow', false, action_type, params, setFollow, '' );
     } else {
         getAuthorisation();
     }
@@ -2237,6 +2046,7 @@ function getConversation( post_id ) {
 
     if ( access_token !== false ) {
         showWaitState('chat_posts', 'Accessing App.Net');
+        saveStorage('this_post_id', post_id, true);
         var params = {
             access_token: access_token,
             include_annotations: 1,
@@ -2245,19 +2055,13 @@ function getConversation( post_id ) {
             include_html: 1,
             count: 200
         };
-        $.ajax({
-            url: window.apiURL + '/posts/' + post_id + '/replies',
-            crossDomain: true,
-            data: params,
-            success: function( data ) { parseConversation( data.data, post_id ); },
-            error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
-            dataType: "json"
-        });
+        doJSONQuery( '/posts/' + post_id + '/replies', false, 'GET', params, parseConversation, '' );
     } else {
         getAuthorisation();
     }
 }
-function parseConversation( data, post_id ) {
+function parseConversation( data ) {
+    post_id = readStorage('this_post_id', true);
     if ( data ) {
         var respond = '',
             sname = '',
@@ -2584,11 +2388,6 @@ function parseEmbedded( post ) {
                         if ( _vidid.indexOf('soundcloud.com') >= 0 ) { _type = 'soundcloud'; }
                         if ( _vidid.indexOf('vimeo.com') >= 0 ) { _type = 'vimeo'; }
                         switch ( _type ) {
-                            case 'soundcloud':
-                                getSoundCloudEmbed( _vidid );
-                                html += '<div name="soundcloud" class="soundcloud">[' + _vidid + ']</div>';
-                                break;
-
                             case 'youtube':
                                 var _blanks = ['http://youtu.be/', 'https://youtu.be/',
                                                'https://www.youtube.com/watch?v=', 'https://m.youtube.com/watch?v='];
@@ -2620,29 +2419,6 @@ function parseEmbedded( post ) {
         }
     }
     return html;
-}
-function getSoundCloudEmbed( link_url ) {
-    if ( link_url !== undefined && link_url !== '' ) {
-        var params = {
-            format: 'json',
-            url: link_url         
-        };
-        $.ajax({
-            url: 'http://soundcloud.com/oembed',
-            crossDomain: true,
-            data: params,
-            success: function( data ) { parseSoundCloudEmbed( data, link_url ); },
-            error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
-            dataType: "json"
-        });
-    }
-}
-function parseSoundCloudEmbed( data, link_url ) {
-    if ( data ) {
-        /* Prep the CoreData Element If Needs Be */
-        if ( window.coredata.hasOwnProperty('com.soundcloud') === false ) { window.coredata['com.soundcloud'] = {}; }
-        window.coredata['com.soundcloud'][link_url] = data;
-    }
 }
 function doShowUserByName( user_name ) {
     if ( user_name === '' || user_name === undefined ) {
@@ -2682,6 +2458,7 @@ function doShowHash( name ) {
 function getHashDetails( name ) {
     if ( name === undefined || name === '' ) { return false; }
     var access_token = readStorage('access_token');
+    saveStorage('this_hash_name', name, true);
 
     if ( access_token !== false ) {
         showWaitState('hash_posts', 'Accessing App.Net');
@@ -2691,21 +2468,15 @@ function getHashDetails( name ) {
             include_annotations: 1,
             include_html: 1,
             hashtags: name,
-            count: 200            
-        };        
-        $.ajax({
-            url: api_url + '/posts/search',
-            crossDomain: true,
-            data: params,
-            success: function( data ) { parseHashDetails( data.data, name ); },
-            error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
-            dataType: "json"
-        });
+            count: 200
+        };
+        doJSONQuery( '/posts/search', false, 'GET', params, parseHashDetails, '' );
     } else {
         getAuthorisation();
     }
 }
-function parseHashDetails( data, name ) {
+function parseHashDetails( data ) {
+    name = readStorage('this_hash_name', true);
     if ( data ) {
         var respond = '',
             html = '';
@@ -3044,7 +2815,7 @@ function parseFileUpload( response, file, anno_type ) {
                     var done = e.loaded, total = e.total;
                     var progress = (Math.floor(done/total*1000)/10);
                     if ( progress > 0 && progress <= 99.99999 ) { setSplashMessage('Uploading ... ' + progress + '% Complete'); }
-                    if ( progress === 100 ) { setSplashMessage('Getting the Image Ready ...'); }
+                    if ( progress === 100 ) { setSplashMessage('Waiting for ADN to Validate ...'); }
                     if ( progress <= 0 || progress > 100 ) { setSplashMessage(''); }
                     saveStorage('is_uploading', 'Y', true);
                     calcReplyCharacters();
@@ -3256,31 +3027,7 @@ function muteAccount( ismuted, account_id ) {
 
     if ( access_token !== false ) {
         var params = { access_token: access_token };
-        $.ajaxSetup({
-            beforeSend: function (xhr, settings) {
-                xhr.setRequestHeader("Authorization", "Bearer " + access_token);
-                return true;
-            }
-        });
-        $.ajax({
-            url: window.apiURL + '/users/' + account_id + '/mute',
-            crossDomain: true,
-            data: params,
-            type: action_type,
-            success: function( data ) {
-                if ( parseMeta(data.meta) ) {
-                    var ds = data.data; 
-                    showHidePostsFromAccount(ds.id, ds.you_muted);
-                    saveStorage('msgTitle', 'Done and Done', true);
-                    saveStorage('msgText', ((ds.you_muted) ? "You won't see any more posts from " + ds.username + "."
-                                                           : "You'll start seeing posts from " + ds.username + " again."), true);
-                    if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
-                    showHideDialog();
-                }
-            },
-            error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
-            dataType: "json"
-        });
+        doJSONQuery( '/users/' + account_id + '/mute', false, action_type, params, parseBlockAction, '' );
     } else {
         getAuthorisation();
     }
@@ -3291,56 +3038,40 @@ function blockAccount( isblocked, account_id ) {
 
     if ( access_token !== false ) {
         var params = { access_token: access_token };
-        $.ajaxSetup({
-            beforeSend: function (xhr, settings) {
-                xhr.setRequestHeader("Authorization", "Bearer " + access_token);
-                return true;
-            }
-        });
-        $.ajax({
-            url: window.apiURL + '/users/' + account_id + '/block',
-            crossDomain: true,
-            data: params,
-            type: action_type,
-            success: function( data ) {
-                if ( parseMeta(data.meta) ) {
-                    var ds = data.data; 
-                    showHidePostsFromAccount(ds.id, ds.you_blocked);
-                    saveStorage('msgTitle', 'Done and Done', true);
-                    saveStorage('msgText', ((ds.you_blocked) ? "You won't see any more posts from " + ds.username + "."
-                                                             : "You've successfully unblocked " + ds.username + "."), true);
-                    if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
-                    showHideDialog();
-                }
-            },
-            error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
-            dataType: "json"
-        });
+        doJSONQuery( '/users/' + account_id + '/block', false, action_type, params, parseBlockAction, '' );
     } else {
         getAuthorisation();
     }
+}
+function parseMuteAction( data ) {
+    showHidePostsFromAccount(data.id, data.you_muted);
+    saveStorage('msgTitle', 'Done and Done', true);
+    saveStorage('msgText', ((data.you_muted) ? "You won't see any more posts from " + data.username + "."
+                                             : "You'll start seeing posts from " + data.username + " again."), true);
+    if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
+    showHideDialog();
+}
+function parseBlockAction( data ) {
+    showHidePostsFromAccount(data.id, data.you_blocked);
+    saveStorage('msgTitle', 'Done and Done', true);
+    saveStorage('msgText', ((data.you_blocked) ? "You won't see any more posts from " + data.username + "."
+                                               : "You've successfully unblocked " + data.username + "."), true);
+    if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
+    showHideDialog();
 }
 function reportAccount( account_id ) {
     var params = { 'account_id': account_id,
                    'report_by': readStorage('user_id')
                   };
-    $.ajax({
-        url: window.niceURL + '/user/report',
-        crossDomain: true,
-        data: params,
-        type: 'GET',
-        success: function( data ) { parseReport( data, account_id ); },
-        error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
-        dataType: "json"
-    });
+    doJSONQuery( '/user/report', true, 'GET', params, parseReport, '' );
 }
-function parseReport( data, account_id ) {
+function parseReport( data ) {
     if ( data.data ) {
         var ds = data.data;
         if ( ds.id > 0 ) {
-            showHidePostsFromAccount( account_id, false );
-            saveStorage( account_id + '_rank', 0.1, true );
-            saveStorage( account_id + '_human', 'N', true );
+            showHidePostsFromAccount( ds.id, false );
+            saveStorage( ds.id + '_rank', 0.1, true );
+            saveStorage( ds.id + '_human', 'N', true );
             saveStorage('msgTitle', 'Reported Account', true);
             saveStorage('msgText', 'Thank You For Making ADN A Little Bit Better!', true);
         } else {
@@ -3485,7 +3216,7 @@ function setHeaderNav() {
     var named_columns = readStorage('named_columns');
     if ( named_columns === 'N' ) { document.getElementById('tl-names').innerHTML = ''; } else { setWindowConstraints(); }
     document.getElementById('site-name').innerHTML = ( named_columns === 'N' ) ? window.sitename : '';
-    
+
     jss.set('.post-list.tl-pms', { 'background-image': ((named_columns === 'N') ? 'url("../img/pms.png")' : 'none') });
     jss.set('.post-list.tl-home', { 'background-image': ((named_columns === 'N') ? 'url("../img/home.png")' : 'none') });
     jss.set('.post-list.tl-global', { 'background-image': ((named_columns === 'N') ? 'url("../img/global.png")' : 'none') });
@@ -3518,6 +3249,8 @@ function setColumnWidthAdjustment() {
 }
 function showUserList( type, account_id ) {
     var access_token = readStorage('access_token');
+    saveStorage('this_account_type', type, true);
+    saveStorage('this_account_id', account_id, true);
 
     if ( access_token !== false ) {
         document.getElementById('user_posts').innerHTML = '<div id="usr-0" class="user-item">&nbsp;</div>';
@@ -3530,19 +3263,12 @@ function showUserList( type, account_id ) {
             include_html: 0,
             count: 200
         }; 
-        $.ajax({
-            url: window.apiURL + '/users/' + account_id + '/' + type,
-            crossDomain: true,
-            data: params,
-            type: 'GET',
-            success: function( data ) { parseUserList( data, account_id, type ); },
-            error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
-            dataType: "json"
-        });
+        doJSONQuery( '/users/' + account_id + '/' + type, false, 'GET', params, parseUserList, '' );
     }
 }
-function parseUserList( resp, account_id, type ) {
-    var data = resp.data;
+function parseUserList( data ) {
+    var type = readStorage('this_account_type', true),
+        account_id = readStorage('this_account_id', true);
     if ( data ) {
         var _html = '',
             _id = 'usr-0';
@@ -3590,22 +3316,13 @@ function showFullUserList() {
 
     var access_token = readStorage('access_token');
     var my_id = parseInt(readStorage('user_id'));
-
     if ( access_token !== false ) {
         setSplashMessage('Getting Full Account List');
         var params = {
             access_token: access_token,
             account_id: my_id
-        }; 
-        $.ajax({
-            url: window.niceURL + '/user/followers',
-            crossDomain: true,
-            data: params,
-            type: 'GET',
-            success: function( data ) { parseFullUserList( data ); },
-            error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
-            dataType: "json"
-        });
+        };
+        doJSONQuery( '/user/followers', false, 'GET', params, parseFullUserList, '' );
     }
 }
 function parseFullUserList( rslt ) {
