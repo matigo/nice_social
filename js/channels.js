@@ -151,7 +151,6 @@ function getPMUnread() {
     if ( canRefreshChannels() === false ) { return false; }
     var access_token = readStorage('access_token');
     if ( access_token !== false ) {
-        var api_url = ( readStorage('nice_proxy') === 'Y' ) ? window.niceURL + '/proxy' : window.apiURL;
         var params = {
             access_token: access_token,
             include_message_annotations: 1,
@@ -162,16 +161,9 @@ function getPMUnread() {
             include_marker: 1,
             include_read: 0,
             channel_types: 'net.app.core.pm',
-            count: 100
+            count: 200
         };
-        $.ajax({
-            url: api_url + '/channels',
-            crossDomain: true,
-            data: params,
-            success: function( data ) { parsePMResults( data ); },
-            error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
-            dataType: "json"
-        });
+        doJSONQuery( '/channels', false, 'GET', params, parsePMData, '' );
     }
 }
 function getPMSummary( before_id ) {
@@ -190,17 +182,9 @@ function getPMSummary( before_id ) {
             include_marker: 1,
             include_read: 1,
             channel_types: 'net.app.core.pm',
-            count: 100
+            count: 200
         };
-        if ( before_id > 0 ) { params.before_id = before_id; }
-        $.ajax({
-            url: api_url + '/channels',
-            crossDomain: true,
-            data: params,
-            success: function( data ) { parsePMResults( data ); },
-            error: function (xhr, ajaxOptions, thrownError){ console.log(xhr.status + ' | ' + thrownError); },
-            dataType: "json"
-        });
+        doJSONQuery( '/channels', false, 'GET', params, parsePMData, '' );
     }
 }
 function parsePMResults( ds ) {

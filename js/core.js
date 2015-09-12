@@ -3066,12 +3066,11 @@ function reportAccount( account_id ) {
     doJSONQuery( '/user/report', true, 'GET', params, parseReport, '' );
 }
 function parseReport( data ) {
-    if ( data.data ) {
-        var ds = data.data;
-        if ( ds.id > 0 ) {
-            showHidePostsFromAccount( ds.id, false );
-            saveStorage( ds.id + '_rank', 0.1, true );
-            saveStorage( ds.id + '_human', 'N', true );
+    if ( data ) {
+        if ( data.id > 0 ) {
+            showHidePostsFromAccount( data.id, false );
+            saveStorage( data.id + '_rank', 0.1, true );
+            saveStorage( data.id + '_human', 'N', true );
             saveStorage('msgTitle', 'Reported Account', true);
             saveStorage('msgText', 'Thank You For Making ADN A Little Bit Better!', true);
         } else {

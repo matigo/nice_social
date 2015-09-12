@@ -34,7 +34,7 @@ function writeNetworkLog( e, n, t, g, s, msg ) {
                                 message: msg
                                };
     window.network_log.length = idx + 1;
-    console.log( n, e, t, g, s, msg );
+    /* console.log( n, e, t, g, s, msg ); */
 }
 function doJSONQuery( endpoint, is_nice, type, parameters, onsuccess, onfail ) {
     var access_token = readStorage('access_token');
@@ -72,9 +72,16 @@ function doJSONQuery( endpoint, is_nice, type, parameters, onsuccess, onfail ) {
         showHideActivity(false);
     }
     xhr.timeout = 10000;
+    var suffix = '';
+    if ( type === 'GET' ) { suffix = jsonToQueryString(parameters); }
 
-    xhr.open(type, api_url + endpoint, true);
-    if ( access_token ) { xhr.setRequestHeader("Authorization", "Bearer " + access_token); }
-    xhr.setRequestHeader("Content-type", "application/json; charset=utf-8");
-    xhr.send(parameters);
+    xhr.open(type, api_url + endpoint + suffix, true);
+    if ( is_nice === false ) {
+        if ( access_token ) { xhr.setRequestHeader("Authorization", "Bearer " + access_token); }
+        xhr.setRequestHeader("Content-type", "application/json; charset=utf-8");
+    }
+    xhr.send(JSON.stringify(parameters));
+}
+function jsonToQueryString(json) {
+    return '?' +  Object.keys(json).map(function(key) { return encodeURIComponent(key) + '=' + encodeURIComponent(json[key]); }).join('&');
 }
