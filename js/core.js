@@ -1104,6 +1104,7 @@ function parseText( post ) {
                         var post_body = post.annotations[i].value.body.ireplaceAll('\n\n', '<br><br>');
                             post_body = post_body.ireplaceAll('\r\r', '<br>');
                             post_body = post_body.ireplaceAll('\n', '<br>');
+                            post_body = post_body.ireplaceAll('&#13;', '<br>');
                             post_body = post_body.replace(/\[([^\[]+)\]\(([^\)]+)\)/g, '<a target="_blank" href="$2">$1</a>');
                             post_body = post_body.replace(/(^|\s)@(\w+)/g, '<em onclick="doShowUserByName(\'$2\');">@$2</em>');
                             post_body = post_body.replace(/(^|\s)#(\w+)/g, '<em onclick="doShowHash(\'$2\');">#$2</em>');
@@ -1138,8 +1139,16 @@ function parseText( post ) {
     html = parseMarkdown( html );
     return html;
 }
+function fixReturns(text) {
+    var rVal = text.ireplaceAll('\n\n', '<br><br>');
+        rVal = rVal.ireplaceAll('\r\r', '<br>');
+        rVal = rVal.ireplaceAll('\n', '<br>');
+        rVal = rVal.ireplaceAll('&#13;', '<br>');
+    return rVal;
+}
 function parseMarkdown( html ) {
     var highlight = readStorage('post-highlight_color');
+        html = fixReturns(html);
     var lines = html.split('<br>'),
         _line = '';
     var _html = '',
@@ -1398,6 +1407,22 @@ function redrawPosts() {
                             }
                         }
                     }
+
+                    var im_blend = readStorage('blended_mentions');
+                    if ( im_blend === 'Y' ) {
+                        if ( window.coredata.hasOwnProperty('net.app.interactions') ) {
+                            for ( _id in window.coredata['net.app.interactions'] ) {
+                                if ( checkElementExists( _id + '-m') === false ) {
+                                    var event_at = window.coredata['net.app.interactions'][ _id ].event_date;
+                                    var last_id = getPreviousElementByTime( event_at, 'mentions', '-m' );
+                                    var html = buildInteractionItem( _id );
+                                    document.getElementById('mentions').insertBefore( buildNode( _id, '-m', event_at, 'pulse', html),
+                                                                                      document.getElementById(last_id) );
+                                }
+                            }
+                        }
+                    }
+                    saveStorage('net.app.global-ts', window.coredata['net.app.global-ts'], true);
                 }
 
                 if ( window.timelines.global ) {
@@ -1418,21 +1443,6 @@ function redrawPosts() {
                 }
             }
         }
-        var im_blend = readStorage('blended_mentions');
-        if ( im_blend === 'Y' ) {
-            if ( window.coredata.hasOwnProperty('net.app.interactions') ) {
-                for ( _id in window.coredata['net.app.interactions'] ) {
-                    if ( checkElementExists( _id + '-m') === false ) {
-                        var event_at = window.coredata['net.app.interactions'][ _id ].event_date;
-                        var last_id = getPreviousElementByTime( event_at, 'mentions', '-m' );
-                        var html = buildInteractionItem( _id );
-                        document.getElementById('mentions').insertBefore( buildNode( _id, '-m', event_at, 'pulse', html),
-                                                                          document.getElementById(last_id) );
-                    }
-                }
-            }
-        }
-        saveStorage('net.app.global-ts', window.coredata['net.app.global-ts'], true);
     }
 }
 function getPostText( post_id, override ) {
@@ -1460,6 +1470,7 @@ function getPreviousElement( post_id, timeline, tl_ref ) {
 }
 function getPreviousElementByTime( time_str, timeline, tl_ref ) {
     var elems = document.getElementById(timeline);
+    if ( elems === null || elems === undefined ) { return '0' + tl_ref; }
     var c_max = parseInt(readStorage('column_max'));
     var comTime = new Date( time_str );
     for ( var idx = 0; idx < elems.children.length; idx++ ) {
