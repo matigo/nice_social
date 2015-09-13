@@ -71,7 +71,7 @@ function doJSONQuery( endpoint, is_nice, type, parameters, onsuccess, onfail ) {
         if ( onfail !== '' ) { onfail(); }
         showHideActivity(false);
     }
-    xhr.timeout = 10000;
+    xhr.timeout = (endpoint.substr(1, 8) === 'channels') ? 30000 : 10000;
     var suffix = '';
     if ( type === 'GET' ) { suffix = jsonToQueryString(parameters); }
 
