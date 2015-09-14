@@ -230,6 +230,7 @@ function continueLoadProcess() {
         }, 1000);
         window.setInterval(function(){ collectRankSummary(); }, 60*60*1000);
         window.setInterval(function(){ updateTimestamps(); }, 15000);
+        window.setInterval(function(){ testInfiniteLoop(); }, 1000);
 
         /* Add the Moment.js Resources if Required */
         loadMomentIfRequired();
@@ -238,6 +239,20 @@ function continueLoadProcess() {
         showTimelines();
         collectRankSummary();
         getGlobalRecents();
+    }
+}
+function testInfiniteLoop() {
+    last_ts = readStorage('last_global_query', true);
+    if ( last_ts !== false ) {
+        var refresh_rate = parseInt(readStorage('refresh_rate'));
+        var curr_ts = new Date().getTime();
+        if ( (curr_ts - last_ts) > (refresh_rate * 1000) ) {
+            if ( (curr_ts - last_ts) >= (refresh_rate * 2000) ) {
+                var ts = new Date().getTime();
+                saveStorage('last_global_query', ts, true);
+                window.setInterval(function(){ getGlobalItems(); }, 1000);
+            }
+        }
     }
 }
 function loadMomentIfRequired( override ) {
@@ -730,6 +745,7 @@ function parseUserProfile( data ) {
             action_html = '';
         var my_id = readStorage('user_id');
         var h4color = readStorage('post-content_color');
+        parseAccountNames( data );
 
         // Set the Header Information
         document.getElementById( 'usr-banner' ).style.backgroundImage = 'url("' + data.cover_image.url + '")';
@@ -869,6 +885,8 @@ function getGlobalItems() {
     if ( window.activate === false ) { return false; }
     if ( canRefreshGlobal() === false ) { return false; }
     if ( readStorage('adn_action', true) === 'Y' ) { return false; }
+    var ts = new Date().getTime();
+    saveStorage('last_global_query', ts, true);
 
     var access_token = readStorage('access_token');
     var params = {
@@ -1697,57 +1715,6 @@ function doShowChan( chan_id ) {
         }
     }
 }
-function getChannelMessages( chan_id ) {
-    if ( parseInt(chan_id) <= 0 || isNaN(chan_id) ) { return false; }
-    var access_token = readStorage('access_token');
-
-    if ( access_token !== false ) {
-        toggleClassIfExists('conversation','hide','show');
-        showWaitState('chat_posts', 'Accessing App.Net');
-        var params = {
-            include_annotations: 1,
-            include_deleted: 1,
-            include_machine: 0,
-            access_token: access_token,
-            include_html: 1,
-            include_read: 1,
-            count: 200           
-        };
-        doJSONQuery( '/channels/' + chan_id + '/messages', false, 'GET', params, parseChannel, '' );
-    }
-}
-function parseChannel( data ) {
-    if ( data ) {
-        var my_id = readStorage('user_id');
-        var html = '',
-            side = '';
-        showWaitState('chat_posts', 'Reading Posts');
-
-        document.getElementById( 'chat_count' ).innerHTML = '(' + data.length + ' Posts)';
-        document.getElementById( 'rpy-sendto' ).placeholder = String(data[0].channel_id);
-        for ( var i = 0; i < data.length; i++ ) {
-            showWaitState('chat_posts', 'Reading Posts (' + (i + 1) + '/' + data.length + ')');
-
-            side = ( data[i].user.id === my_id ) ? 'right' : 'left';
-            html += '<div id="conv-' + data[i].id + '" class="post-item ' + side + '">' +
-                        '<div id="' + data[i].id + '-po" class="post-avatar">' +
-                            '<img class="avatar-round"' +
-                                ' onClick="showAccountInfo(' + data[i].user.id + ');"' +
-                                ' src="' + data[i].user.avatar_image.url + '">' +
-                        '</div>' +
-                        '<div id="' + data[i].id + '-dtl" class="post-content">' +
-                            '<h5 class="post-name"><span>' + data[i].user.username + '</span></h5>' +
-                            parseText( data[i] ) +
-                            '<p class="post-time">' +
-                                '<em onClick="showHideActions(' + data[i].id + ', \'-x\');">' + humanized_time_span(data[i].created_at) + '</em>' +
-                            '</p>' +
-                        '</div>' +
-                    '</div>';
-        }
-        document.getElementById( 'chat_posts' ).innerHTML = html;
-        toggleClassIfExists('conversation','hide','show');
-    }
-}
 function parseAccountNames( data ) {
     if ( data ) {
         for ( var i = 0; i < ((data.length === undefined) ? 1 : data.length); i++ ) {
@@ -1788,7 +1755,7 @@ function listNames( startWith ) {
     }
 
     if ( _html != '' ) {
-        document.getElementById( 'autocomp' ).innerHTML = '<div class="autobox">' + _html + '</div>';
+        document.getElementById('autocomp').innerHTML = '<div class="autobox">' + _html + '</div>';
         toggleClassIfExists('autocomp','hide','show');
     } else {
         toggleClassIfExists('autocomp','show','hide');
@@ -1869,35 +1836,42 @@ function getAccountNames( ids ) {
 
 function updateTimestamps() {
     if ( readStorage('absolute_times') === 'Y' ) { return false; }
+    var im_blend = readStorage('blended_mentions');
     if ( readStorage('show_live_timestamps') === 'Y' ) {
-        for ( post_id in window.coredata['net.app.global'] ) {
-                var itms = document.getElementsByName( post_id + "-time" );
-                var tStr = humanized_time_span( window.coredata['net.app.global'][post_id].created_at ),
-                    html = '';
+        if ( window.timelines.home || window.timelines.mentions || window.timelines.global ) {
+            for ( post_id in window.coredata['net.app.global'] ) {
+                    var itms = document.getElementsByName( post_id + "-time" );
+                    var tStr = humanized_time_span( window.coredata['net.app.global'][post_id].created_at ),
+                        html = '';
+        
+                    for ( var i = 0; i < itms.length; i++ ) {
+                        html = document.getElementById( itms[i].id ).innerHTML;
+                        if ( html != tStr ) { document.getElementById( itms[i].id ).innerHTML = tStr; } else { break; }
+                    }
+            }
+        }
+        if ( window.timelines.pms ) {
+            for ( post_id in window.coredata['net.app.core.pm'] ) {
+                    var itms = document.getElementsByName( post_id + "-time" );
+                    var tStr = humanized_time_span( window.coredata['net.app.core.pm'][post_id].recent_message.created_at ),
+                        html = '';
     
-                for ( var i = 0; i < itms.length; i++ ) {
-                    html = document.getElementById( itms[i].id ).innerHTML;
-                    if ( html != tStr ) { document.getElementById( itms[i].id ).innerHTML = tStr; } else { break; }
-                }
+                    for ( var i = 0; i < itms.length; i++ ) {
+                        html = document.getElementById( itms[i].id ).innerHTML;
+                        if ( html != tStr ) { document.getElementById( itms[i].id ).innerHTML = tStr; } else { break; }
+                    }            
+            }
         }
-        for ( post_id in window.coredata['net.app.core.pm'] ) {
-                var itms = document.getElementsByName( post_id + "-time" );
-                var tStr = humanized_time_span( window.coredata['net.app.core.pm'][post_id].recent_message.created_at ),
-                    html = '';
-
-                for ( var i = 0; i < itms.length; i++ ) {
-                    html = document.getElementById( itms[i].id ).innerHTML;
-                    if ( html != tStr ) { document.getElementById( itms[i].id ).innerHTML = tStr; } else { break; }
-                }            
-        }
-        if ( window.timelines.interact === true ) {
+        if ( window.timelines.interact || im_blend === 'Y' ) {
             if ( window.coredata.hasOwnProperty('net.app.interactions') ) {
                 for ( _id in window.coredata['net.app.interactions'] ) {
-                    if ( checkElementExists( _id + '-i') === false ) {
-                        var event_at = getTimestamp( window.coredata['net.app.interactions'][ _id ].event_date ),
-                            html = document.getElementById( _id + "-time" ).innerHTML;
+                    var itms = document.getElementsByName( _id + "-time" );
+                    var tStr = humanized_time_span( window.coredata['net.app.interactions'][ _id ].event_date ).toLowerCase(),
+                        html = '';
 
-                        if ( html != event_at ) { document.getElementById( _id + "-time" ).innerHTML = event_at; } else { break; }
+                    for ( var i = 0; i < itms.length; i++ ) {
+                        html = document.getElementById( itms[i].id ).innerHTML;
+                        if ( html != tStr ) { document.getElementById( itms[i].id ).innerHTML = tStr; } else { break; }
                     }
                 }
             }
@@ -1957,7 +1931,7 @@ function doRepost( post_id ) {
     }
 }
 function setRepost( data ) {
-    var post_id = data.id;
+    var post_id = (data.repost_of === undefined) ? data.id : data.repost_of.id;
     if ( post_id > 0 ) {
         var itms = document.getElementsByName( post_id + "-repost" );
         window.coredata['net.app.global'][post_id].you_reposted = !window.coredata['net.app.global'][post_id].you_reposted;

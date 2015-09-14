@@ -34,6 +34,57 @@ function populateAccountNames() {
     /* Populate the Textbox */
     document.getElementById( 'rpy-sendto' ).value = user_list;
 }
+function getChannelMessages( chan_id ) {
+    if ( parseInt(chan_id) <= 0 || isNaN(chan_id) ) { return false; }
+    var access_token = readStorage('access_token');
+
+    if ( access_token !== false ) {
+        toggleClassIfExists('conversation','hide','show');
+        showWaitState('chat_posts', 'Accessing App.Net');
+        var params = {
+            include_annotations: 1,
+            include_deleted: 1,
+            include_machine: 0,
+            access_token: access_token,
+            include_html: 1,
+            include_read: 1,
+            count: 200           
+        };
+        doJSONQuery( '/channels/' + chan_id + '/messages', false, 'GET', params, parseChannel, '' );
+    }
+}
+function parseChannel( data ) {
+    if ( data ) {
+        var my_id = readStorage('user_id');
+        var html = '',
+            side = '';
+        showWaitState('chat_posts', 'Reading Posts');
+
+        document.getElementById( 'chat_count' ).innerHTML = '(' + data.length + ' Posts)';
+        document.getElementById( 'rpy-sendto' ).placeholder = String(data[0].channel_id);
+        for ( var i = 0; i < data.length; i++ ) {
+            showWaitState('chat_posts', 'Reading Posts (' + (i + 1) + '/' + data.length + ')');
+
+            side = ( data[i].user.id === my_id ) ? 'right' : 'left';
+            html += '<div id="conv-' + data[i].id + '" class="post-item ' + side + '">' +
+                        '<div id="' + data[i].id + '-po" class="post-avatar">' +
+                            '<img class="avatar-round"' +
+                                ' onClick="doShowUser(' + data[i].user.id + ');"' +
+                                ' src="' + data[i].user.avatar_image.url + '">' +
+                        '</div>' +
+                        '<div id="' + data[i].id + '-dtl" class="post-content">' +
+                            '<h5 class="post-name"><span>' + data[i].user.username + '</span></h5>' +
+                            parseText( data[i] ) +
+                            '<p class="post-time">' +
+                                '<em onClick="showHideActions(' + data[i].id + ', \'-x\');">' + humanized_time_span(data[i].created_at) + '</em>' +
+                            '</p>' +
+                        '</div>' +
+                    '</div>';
+        }
+        document.getElementById( 'chat_posts' ).innerHTML = html;
+        toggleClassIfExists('conversation','hide','show');
+    }
+}
 function buildJSONChannelObject( text, destinations, in_reply_to ) {
     var access_token = readStorage('access_token');
     var oembed = false;
@@ -199,6 +250,7 @@ function parsePMResults( ds ) {
 }
 function parsePMData( data ) {
     if ( data ) {
+        var my_id = parseInt(readStorage('user_id'));
         var user_list = [];
         for ( var i = 0; i < data.length; i++ ) {
             if ( window.coredata.hasOwnProperty( data[i].type ) === false ) {
@@ -227,7 +279,10 @@ function parsePMData( data ) {
             } else {
                 if ( pObj.hasOwnProperty('writers') ) {
                     for ( _id in pObj['writers']['user_ids'] ) {
-                        if ( user_list.indexOf(pObj['writers']['user_ids'][_id]) < 0 ) { user_list.push(pObj['writers']['user_ids'][_id]); }
+                        var uid = parseInt(pObj['writers']['user_ids'][_id]);
+                        if ( window.users.hasOwnProperty(uid) === false && uid !== my_id ) {
+                            user_list.push(pObj['writers']['user_ids'][_id]);
+                        }
                     }
                 }
                 if ( user_list.length > 100 ) {
