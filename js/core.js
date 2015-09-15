@@ -1061,7 +1061,7 @@ function buildNode( post_id, tl_ref, data, type, html ) {
 }
 function parseText( post ) {
     if ( post === undefined || post === false ) { return '&nbsp;'; }
-    var html = ( post.hasOwnProperty('html') ) ? post.html.replaceAll('<a href=', '<a target="_blank" href=', '') + ' ' : '',
+    var html = ( post.hasOwnProperty('html') ) ? post.html.replaceAll('<a href=', '<a target="_blank" href=', '') + ' ' : '*{Message Deleted}*',
         name = '',
         cStr = ' class="post-mention" style="font-weight: bold; cursor: pointer;"';
     var highlight = readStorage('post-highlight_color');
@@ -1080,7 +1080,7 @@ function parseText( post ) {
 
         return function(s) { return s.replace(translate_re, translator); };
     })();
-    var words = post.text.split(" ");
+    var words = (post.text !== undefined) ? post.text.split(" ") : '';
 
     switch ( words[0] ) {
         case '/me':
@@ -1162,6 +1162,7 @@ function fixReturns(text) {
         rVal = rVal.ireplaceAll('\r\r', '<br>');
         rVal = rVal.ireplaceAll('\n', '<br>');
         rVal = rVal.ireplaceAll('&#13;', '<br>');
+        rVal = rVal.ireplaceAll('<br><br><br><br>', '<br><br>');
     return rVal;
 }
 function parseMarkdown( html ) {
