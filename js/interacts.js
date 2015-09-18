@@ -63,19 +63,19 @@ function buildInteractionItem( pagination_id ) {
     switch ( data.action ) {
         case 'follow':
             icon = 'fa-user-plus';
-            what = ' is now following you. Yay!';
+            what = ' ' + getLangString('follows_you');
             break;
 
         case 'repost':
             icon = 'fa-retweet';
             text = '<item>' + parseText( data.objects[0] ) + '</item>';
-            what = ' reposted <span onClick="doShowConv(' + data.objects[0].id + ');">your post ' + when + '.</span>';
+            what = ' <span onClick="doShowConv(' + data.objects[0].id + ');">' + getLangString('reposted_post') + ' ' + when + '.</span>';
             break;
 
         case 'star':
             icon = 'fa-star';
             text = '<item>' + parseText( data.objects[0] ) + '</item>';
-            what = ' starred <span onClick="doShowConv(' + data.objects[0].id + ');">your post ' + when + '.</span>';
+            what = ' <span onClick="doShowConv(' + data.objects[0].id + ');">' + getLangString('starred_post') + ' ' + when + '.</span>';
             break;
     }
 

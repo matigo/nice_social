@@ -38,11 +38,10 @@ function writeNetworkLog( e, n, t, g, s, msg ) {
 }
 function doJSONQuery( endpoint, is_nice, type, parameters, onsuccess, onfail ) {
     var access_token = readStorage('access_token');
-    if ( access_token === undefined || access_token === false || access_token === '' ) { return false; }
     var start = new Date().getTime();
     showHideActivity(true);
 
-    var api_url = ( readStorage('nice_proxy') === 'Y' ) ? window.niceURL + '/proxy' : ((is_nice) ? window.niceURL : window.apiURL);
+    var api_url = ((is_nice) ? window.niceURL : ((readStorage('nice_proxy') === 'Y') ? window.niceURL + '/proxy' : window.apiURL));
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
         if( xhr.readyState === 4 ) {

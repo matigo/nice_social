@@ -5,6 +5,15 @@
     "pms": "<i class=\"fa fa-lock\"></i> プライベート",
     "interact": "<i class=\"fa fa-heartbeat\"></i> インタラクション",
 
+    "starred_post": "starred your post",
+    "reposted_post": "reposted your post",
+    "follows_you": "is now following you. Yay!",
+
+    "message_gone": "Message Deleted",
+    "reading_posts": "Reading Posts",
+    "posts": "posts",
+    "you": "you",
+
     "ago_seconds": "秒前",
     "ago_minutes": "$minutes分前",
     "ago_hours": "$hours時間前",
@@ -25,5 +34,13 @@
     "Tahoma": "Tahoma",
     "Times New Roman": "Times New Roman",
     "Verdana": "Verdana",
-    "Apple System Font": "-apple-system, Helvetica Neue, sans-serif"
+    "Apple System Font": "-apple-system, Helvetica Neue, sans-serif",
+
+    "err_wcptitle": "Posting Error",
+    "err_wcpline1": "There Was a Problem Sending Your Post to ADN.<br>Please let @matigo know if this problem persists more than a few minutes.",
+    "err_wcpline2": "There Was a Problem Sending Your Post to ADN.",
+
+    "err_pmrtitle": "Parse Error",
+    "err_pmrline1": "Uh oh. Looks like App.Net returned a 400-series error. Please try again.",
+    "err_pmrline2": "There was a problem reading some information from App.net.<br>Please let @matigo know if this problem persists more than a few minutes."
 }

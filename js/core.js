@@ -3069,7 +3069,7 @@ function parseReport( data ) {
 }
 function showHidePostsFromAccount( account_id, hide ) {
     for ( idx in window.coredata['net.app.global'] ) {
-        if ( window.coredata['net.app.global'][idx].account_id === account_id.toString() ) {
+        if ( window.coredata['net.app.global'][idx].user.id === account_id ) {
             var elems = document.getElementsByName(idx);
             for (e in elems) {
                 var elementExists = document.getElementById(elems[e].id);

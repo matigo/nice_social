@@ -60,10 +60,10 @@ function parseChannel( data ) {
             side = '';
         showWaitState('chat_posts', 'Reading Posts');
 
-        document.getElementById( 'chat_count' ).innerHTML = '(' + data.length + ' Posts)';
+        document.getElementById( 'chat_count' ).innerHTML = '(' + data.length + ' ' + getLangString('posts') + ')';
         document.getElementById( 'rpy-sendto' ).placeholder = String(data[0].channel_id);
         for ( var i = 0; i < data.length; i++ ) {
-            showWaitState('chat_posts', 'Reading Posts (' + (i + 1) + '/' + data.length + ')');
+            showWaitState('chat_posts', getLangString('reading_posts') + ' (' + (i + 1) + '/' + data.length + ')');
 
             side = ( data[i].user.id === my_id ) ? 'right' : 'left';
             html += '<div id="conv-' + data[i].id + '" class="post-item ' + side + '">' +
@@ -170,12 +170,11 @@ function writeChannelPost( text, channel_id, destinations, in_reply_to ) {
             type: 'POST',
             success: function( data ) { parseChannelPost(data); },
             error: function (xhr, ajaxOptions, thrownError){
-                saveStorage('msgTitle', 'Post Error', true);
+                saveStorage('msgTitle', getLangString('err_wcptitle'), true);
                 if ( xhr.status > 0 ) {
-                    saveStorage('msgText', 'App.Net Returned a ' + xhr.status + ' Error (' + thrownError + ').<br>' +
-                                           'Please let @matigo know if this problem persists more than a few minutes.', true);
+                    saveStorage('msgText', getLangString('err_wcpline1'), true);
                 } else {
-                    saveStorage('msgText', 'There Was a Problem Sending Your Post to ADN.', true);
+                    saveStorage('msgText', getLangString('err_wcpline2'), true);
                 }
                 if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
             }
@@ -244,7 +243,13 @@ function parsePMResults( ds ) {
             parsePMData(ds.data);
             if ( ds.meta.more === true ) { getPMSummary(ds.meta.min_id); }
         } else {
-            alert("Uh Oh. We've Got a [" + ds.meta.code + "] from App.Net when Accessing Channels");
+            saveStorage('msgTitle', getLangString('err_pmrtitle'), true);
+            if ( ds.meta.code === 400 || ds.meta.code === 401 || ds.meta.code === 403 ) {
+                saveStorage('msgText', getLangString('err_pmrline1'), true);
+            } else {
+                saveStorage('msgText', getLangString('err_pmrline2'), true);
+            }
+            if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
         }
     }
 }
@@ -333,7 +338,7 @@ function buildPMItem( post_type, post_id ) {
                 user_list += data.accounts[user_id].username;
             }
         }
-        if ( user_list !== '' ) { user_list += ' &amp; you'; }
+        if ( user_list !== '' ) { user_list += ' &amp; ' + getLangString('you'); }
 
     } else {
         var writer_list = [];
@@ -350,10 +355,8 @@ function buildPMItem( post_type, post_id ) {
         }
 
         for ( var i = 0; i < writer_list.length; i++ ) {
-            if ( user_list !== '' ) { user_list += ( i === (writer_list.length - 1) ) ? ' &amp; ' : ', '; }
-            if ( writer_list[i] === my_id ) {
-                user_list += 'You';
-            } else {
+            if ( writer_list[i] !== my_id ) {
+                if ( user_list !== '' ) { user_list += ', '; }
                 if ( window.users.hasOwnProperty(writer_list[i]) ) {
                     user_name = window.users[writer_list[i]].username;
                 } else {
@@ -362,6 +365,7 @@ function buildPMItem( post_type, post_id ) {
                 user_list += user_name;
             }
         }
+        user_list = user_list.ireplaceAll(', , ', ', ') + ' &amp; ' + getLangString('you');
     }
 
     /* Determine the Post Type and Build Accordingly */
@@ -406,7 +410,7 @@ function parseRecentText( post ) {
         return function(s) { return s.replace(translate_re, translator); };
     })();
 
-    if ( post.recent_message.is_deleted === true ) { return '{Message Deleted}'; }
+    if ( post.recent_message.is_deleted === true ) { return '{' + getLangString('message_gone') + '}'; }
 
     var words = post.recent_message.text.split(" ");
     switch ( words[0] ) {
