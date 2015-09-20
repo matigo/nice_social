@@ -710,6 +710,14 @@ nav:not(.mm-menu) { display: none; }
     font-weight: bold;
     text-decoration: none;
 }
+.profile .info verified {
+    color: #5ba525;
+    display: block;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-decoration: none;
+    width: 100%;
+}
 .profile .actions {
     display: block;
     padding: 0 10px;

@@ -1,4 +1,5 @@
 window.network_log = {};
+window.links = {};
 function readConfigFile( filename ) {
     var xhr = new XMLHttpRequest();
     xhr.open("GET",  filename, true);
@@ -35,6 +36,20 @@ function writeNetworkLog( e, n, t, g, s, msg ) {
                                };
     window.network_log.length = idx + 1;
     /* console.log( n, e, t, g, s, msg ); */
+}
+function readNetworkLog(items) {
+    if ( window.network_log.length > 0 && items > 0 ) {
+        var data = {},
+            idx = 0;
+        var min_i = ( (window.network_log.length - 1) - items );
+        if ( min_i < 0 ) { min_i = 0; }
+        for ( var i = (window.network_log.length - 1); i >= min_i; i-- ) {
+            data[idx] = window.network_log[i];
+            idx++;
+        }
+        return data;
+    }
+    return false;
 }
 function doJSONQuery( endpoint, is_nice, type, parameters, onsuccess, onfail ) {
     var access_token = readStorage('access_token');
@@ -83,4 +98,34 @@ function doJSONQuery( endpoint, is_nice, type, parameters, onsuccess, onfail ) {
 }
 function jsonToQueryString(json) {
     return '?' +  Object.keys(json).map(function(key) { return encodeURIComponent(key) + '=' + encodeURIComponent(json[key]); }).join('&');
+}
+function unshorten( link ) {
+    if ( link === undefined || link === '' ) { return false; }
+    if ( checkLink(link) ) { return false; }
+    var params = { uri: link };
+    var requrl = 'https://unroll.kbys.me/unroll' + jsonToQueryString(params);;
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET",  requrl, true);
+    xhr.onreadystatechange = function() {
+        if( xhr.readyState == 4 && xhr.status == 200 ) {
+            switch ( xhr.status ) {
+                case 200:
+                    var data = JSON.parse( xhr.responseText );
+                    if ( data ) {
+                        if ( data.error === false ) { writeLink( data.uri, data.unrolled_uri ); }
+                    }
+                    break;
+
+                default:
+                    return false;
+            }
+        }
+    }
+    xhr.send();
+}
+function checkLink( link ) { return window.links.hasOwnProperty(link.toLowerCase() ); }
+function writeLink( orig, final ) { window.links[orig.toLowerCase()] = final.toLowerCase(); }
+function readLink( link ) {
+    if ( window.links.hasOwnProperty(link.toLowerCase()) ) { return window.links[link.toLowerCase()]; } else { return link.toLowerCase(); }
 }

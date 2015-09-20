@@ -13,12 +13,15 @@ function fillPrefsWindow( opt ) {
 
     switch ( opt ) {
         case 'main':
-            var items = { 'streams': { 'label': "Streams", 'icon': "fa-bullhorn", 'action': "fillPrefsWindow('streams');" },
-                          'prefs'  : { 'label': "Preferences", 'icon': "fa-sliders", 'action': "fillPrefsWindow('prefs');" },
-                          'accts'  : { 'label': "Accounts", 'icon': "fa-users", 'action': "fillPrefsWindow('accts');"},
-                          'tools'  : { 'label': "Tools", 'icon': "fa-wrench", 'action': "fillPrefsWindow('tools');"},
-                          'logout' : { 'label': "Log Out", 'icon': "fa-sign-out", 'action': "doLogout();" }
+            var items = { 'streams': { 'label': getLangString('btnReads'), 'icon': "fa-bullhorn", 'action': "fillPrefsWindow('streams');" },
+                          'prefs'  : { 'label': getLangString('btnPrefs'), 'icon': "fa-sliders", 'action': "fillPrefsWindow('prefs');" },
+                          'accts'  : { 'label': getLangString('btnAccts'), 'icon': "fa-users", 'action': "fillPrefsWindow('accts');"},
+                          'tools'  : { 'label': getLangString('btnTools'), 'icon': "fa-wrench", 'action': "fillPrefsWindow('tools');"},
+                          'logout' : { 'label': getLangString('btnLeave'), 'icon': "fa-sign-out", 'action': "doLogout();" }
                         };
+            if ( readStorage('debug_on', false) === 'Y' ) {
+                items['network'] = { 'label': getLangString('btnNetwk'), 'icon': "fa-bug", 'action': "fillPrefsWindow('network');" };
+            }
             for ( item in items ) {
                 html += '<button class="btn btn-prefs" style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
                                ' onClick="' + items[item].action + '">' +
@@ -34,7 +37,7 @@ function fillPrefsWindow( opt ) {
                 version_no = ( i === (version_str.length - 1) && version_str[i] === '0' ) ? '' : version_str[i] + version_no;
                 cnt++;
             }
-            html += '<version>Version: ' + version_no + '</version>';
+            html += '<version>' + getLangString('version_no') + ': ' + version_no + '</version>';
             break;
 
         case 'accts':
@@ -43,7 +46,7 @@ function fillPrefsWindow( opt ) {
             for (var key in localStorage){
                 if ( key.substring(0, 5) === 'acct_' ) { items[key] = JSON.parse(readStorage(key)); }
             }
-            html = '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">Choose an Account</strong>';
+            html = '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' + getLangString('account_title') + '</strong>';
             for ( i in items ) {
                 if ( items[i].account === uname ) {
                     var bg = '#' + readStorage('header_color'),
@@ -60,21 +63,21 @@ function fillPrefsWindow( opt ) {
             }
             html += '<button class="btn btn-prefs" style="background-color: ' + bgColor + '; color: ' + frColor + '" onClick="addAccount();">' +
                         '<i class="fa fa-plus" style="padding: 15px 0;"></i>' +
-                        '<span>Add Account</span>' +
+                        '<span>' + getLangString('add_acct') + '</span>' +
                     '</button>' +
                     '<br><br>' +
                     '<button style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
-                           ' onClick="fillPrefsWindow(\'main\');"><i class="fa fa-reply"></i> Back</button>';
+                           ' onClick="fillPrefsWindow(\'main\');"><i class="fa fa-reply"></i> ' + getLangString('back') + '</button>';
             break;
         
         case 'tools':
             var uname = readStorage('username');
-            var items = { 'archive': { 'label': "Archive", 'icon': "fa-cloud-download" },
-                          'files':   { 'label': "Files", 'icon': "fa-th-list" },
-                          'follows': { 'label': "Following", 'icon': "fa-users" },
-                          'proxy':   { 'label': "Nice Proxy", 'icon': "fa-rocket" }
+            var items = { 'archive': { 'label': getLangString('btnArchs'), 'icon': "fa-cloud-download" },
+                          'files':   { 'label': getLangString('btnFiles'), 'icon': "fa-th-list" },
+                          'follows': { 'label': getLangString('btnFolls'), 'icon': "fa-users" },
+                          'proxy':   { 'label': getLangString('btnProxy'), 'icon': "fa-rocket" }
                         };
-            html += '<strong class="lbltxt">What Would You Like to See?</strong>';
+            html += '<strong class="lbltxt">' + getLangString('tools_title') + '</strong>';
             for ( item in items ) {
                 html += '<button id="btn-tl-' + item + '" class="btn btn-prefs" style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
                                ' onClick="fillPrefsWindow(\'' + item + '\')">' +
@@ -83,19 +86,19 @@ function fillPrefsWindow( opt ) {
                         '</button>';
             }
             html += '<br><br>' +
-                    '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">PLEASE READ THIS!</strong>' +
-                    '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">Using any of these functions means that you will be accessing your App.Net data through the Nice.Social API created by me (@matigo). I don&apos;t track your data, nor will I be keeping your ADN Access Token on my servers. The Nice.Social API is being used to ensure consistent information and to return more data with fewer API calls. This means you receive more information in less time with fewer inconsistencies.</p>' +
-                    '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">If you do not want your App.Net credentials going through the Nice.Social API, then please do not use any of the "tool" functions. Have any questions? Get in touch with me at @matigo.</p>' +
+                    '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' + getLangString('xproxy_title') + '</strong>' +
+                    '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' + getLangString('xproxy_line1') + '</p>' +
+                    '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' + getLangString('xproxy_line2') + '</p>' +
                     '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
-                           ' onClick="fillPrefsWindow(\'main\');"><i class="fa fa-reply"></i> Back</button>';
+                           ' onClick="fillPrefsWindow(\'main\');"><i class="fa fa-reply"></i> ' + getLangString('back') + '</button>';
             break;
-        
+
         case 'archive':
         case 'files':
             html += '<strong class="lbltxt">Sadly, this has not been coded. Check back soon, though!</strong>' +
                     '<br><br>' +
                     '<button style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
-                           ' onClick="fillPrefsWindow(\'tools\');"><i class="fa fa-reply"></i> Back</button>';
+                           ' onClick="fillPrefsWindow(\'tools\');"><i class="fa fa-reply"></i> ' + getLangString('back') + '</button>';
             break;
 
         case 'follows':
@@ -105,10 +108,10 @@ function fillPrefsWindow( opt ) {
 
         case 'proxy':
             var spacer = '';
-            var items = { 0: { 'label': "Nice.Social Proxy Service",
-                               'notes': "Save Your Bandwidth, CPU, and Memory",
+            var items = { 0: { 'label': getLangString('proxy_title'),
+                               'notes': getLangString('proxy_label'),
                                'icon' : "fa-rocket",
-                               'items': { 'nice_proxy': { 'label': "Enable", 'type': "yn", 'js': "" }
+                               'items': { 'nice_proxy': { 'label': getLangString('enable'), 'type': "yn", 'js': "" }
                                          }
                               }
                          };
@@ -132,31 +135,31 @@ function fillPrefsWindow( opt ) {
                 spacer = '<br><br>';
             }
             html += '<br><br>' +
-                    '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">YOU MUST READ THIS!</strong>' +
-                    '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">Using the Nice.Social Proxy service means that any data you receive from App.Net will first go through the Nice.Social API. What this will do is allow the Nice server to do the heavy CPU work of determining if a post should be displayed or not, as well as ensure that all of the necessary account details (such as avatars and names) exist before the data reaches your browser. Any time you create a new post, that information will go directly to App.Net as there is nothing the Nice.Social API has to do to the data.</p>' +
-                    '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">Your App.Net credentials are never stored on the Nice.Social API servers. I don&apos;t want to access your data, nor do I have any right to. This service is only to reduce the amount of bandwidth, CPU, and memory that Nice uses on your device, while also providing more complete information. Account names in the Private Messages column would be a good example of this.</p>' +
-                    '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">If you do not want your App.Net access token going through my Nice.Social API servers, do not enable this feature.</p>' +
-                    '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">Have any questions, comments, concerns, feedback? Get in touch with me at @matigo.</p>' +
+                    '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' + getLangString('yproxy_title') + '</strong>' +
+                    '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' + getLangString('yproxy_line1') + '</p>' +
+                    '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' + getLangString('yproxy_line2') + '</p>' +
+                    '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' + getLangString('yproxy_line3') + '</p>' +
+                    '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' + getLangString('yproxy_line4') + '</p>' +
                     '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
-                           ' onClick="fillPrefsWindow(\'tools\');"><i class="fa fa-reply"></i> Back</button>';
+                           ' onClick="fillPrefsWindow(\'tools\');"><i class="fa fa-reply"></i> ' + getLangString('back') + '</button>';
             break;
 
         case 'color':
-            var items = { 'Interface Colours': { 'body_background': "Background Colour",
-                                                 'header_background': "Header Background",
-                                                 'header_color': "Header Colour" },
-                          'Post Colours': { 'post-name_color': "Account Name Text",
-                                            'post-content_color': "Post Content Text",
-                                            'post-mention_color': "Post Mentions Text",
-                                            'post-highlight_color': "Post Hightlight Colour" },
-                          'Avatar Colours': { 'one-day_color': "Brand New Ring",
-                                              'one-week_color': "New Account Ring",
-                                              'mention_color': "Mentions Ring",
-                                              'avatar_color': "Regular Ring" }
+            var items = { 'color_interface': { 'body_background': getLangString('body_background'),
+                                               'header_background': getLangString('header_background'),
+                                               'header_color': getLangString('header_color') },
+                          'color_posts': { 'post-name_color': getLangString('post-name_color'),
+                                           'post-content_color': getLangString('post-content_color'),
+                                           'post-mention_color': getLangString('post-mention_color'),
+                                           'post-highlight_color': getLangString('post-highlight_color') },
+                          'color_avatar': { 'one-day_color': getLangString('one-day_color'),
+                                            'one-week_color': getLangString('one-week_color'),
+                                            'mention_color': getLangString('mention_color'),
+                                            'avatar_color': getLangString('avatar_color') }
                          };
             var presets = getCSSPresets();
-            html = '<strong class="lbltxt" style="width: 95%; padding: 0 2.5%;">Choose a Colour Scheme You Like:</strong>' +
-                   '<label class="lbltxt" for="preset">Presets:</label>' +
+            html = '<strong class="lbltxt" style="width: 95%; padding: 0 2.5%;">' + getLangString('color_title') + ':</strong>' +
+                   '<label class="lbltxt" for="preset">' + getLangString('color_label') + ':</label>' +
                    '<select id="preset" onChange="loadCSSPreset(this.value);">';
             for ( idx in presets ) {
                 html += '<option value="' + idx + '">' + presets[idx].label + '</option>';
@@ -164,7 +167,7 @@ function fillPrefsWindow( opt ) {
             html +='</select>';
 
             for ( item in items ) {
-                html += '<strong class="lbltxt" style="width: 95%; padding: 0 2.5%;">' + item + '</strong>';
+                html += '<strong class="lbltxt" style="width: 95%; padding: 0 2.5%;">' + getLangString(item) + '</strong>';
                 for ( itm in items[item] ) {
                     html += '<label class="lbltxt" for="' + itm + '">' + items[item][itm] + ':</label>' +
                             '<input type="text" id="' + itm + '" value="' + readStorage( itm ) + '"' +
@@ -174,49 +177,74 @@ function fillPrefsWindow( opt ) {
 
                 }
             }
-            html += '<button style="float: right;" class="btn-green" onClick="saveCSSPreferences();">Set</button>' +
+            html += '<button style="float: right;" class="btn-green" onClick="saveCSSPreferences();">' + getLangString('set') + '</button>' +
                     '<button style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
-                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
+                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> ' + getLangString('back') + '</button>';
             break;
 
         case 'display':
             loadMomentIfRequired( true );
             var spacer = '';
-            var items = { 0: { 'label': "Timestamps",
-                               'notes': "Customise How You See Post Times",
+            var items = { 0: { 'label': getLangString('disp_ts_label'),
+                               'notes': getLangString('disp_ts_notes'),
                                'icon' : "fa-clock-o",
-                               'items': { 'absolute_times': { 'label': "Timestamps", 'type': "ar", 'js': "setTimestamps();" },
-                                          /* 'keep_timezone': { 'label': "Keep Timezone", 'type': "yn", 'js':"" }, */
-                                          'show_24h_timestamps': { 'label': "24h Timestamps", 'type': "yn", 'js': "setTimestamps();" },
-                                          'show_live_timestamps': { 'label': "Live Timestamps", 'type': "yn", 'js': "setTimestamps();" },
-                                          'romanise_time': { 'label': "Roman Timestamps", 'type': "yn", 'js': "setTimestamps();" }
+                               'items': { 'absolute_times': { 'label': getLangString('disp_ts_label'), 'type': "ar", 'js': "setTimestamps();" },
+                                          'show_24h_timestamps': { 'label': getLangString('disp_ts_24h'), 'type': "yn", 'js': "setTimestamps();" },
+                                          'show_live_timestamps': { 'label': getLangString('disp_ts_live'), 'type': "yn", 'js': "setTimestamps();" },
+                                          'romanise_time': { 'label': getLangString('disp_ts_roman'), 'type': "yn", 'js': "setTimestamps();" }
                                          }
                               },
-                          1: { 'label': "Post Preferences",
-                               'notes': "Customise How Posts are Drawn",
+                          1: { 'label': getLangString('disp_pp_label'),
+                               'notes': getLangString('disp_pp_notes'),
                                'icon' : "fa-comments-o",
-                               'items': { 'hide_audio':    { 'label': "Hide Audio Files", 'type': "yn", 'js': "togglePostElement(\'hide_audio\');" },
-                                          'hide_avatars':  { 'label': "Hide Avatars", 'type': "yn", 'js': "togglePostElement(\'hide_avatars\');" },
-                                          'hide_images':   { 'label': "Hide Images", 'type': "yn", 'js': "togglePostElement(\'hide_images\');" },
-                                          'hide_geodata':  { 'label': "Hide GeoMaps", 'type': "yn", 'js': "togglePostElement(\'hide_geodata\');" },
-                                          'hide_longpost': { 'label': "Tiny Long Posts", 'type': "yn", 'js': "" },
-                                          'hide_muted':    { 'label': "Hide Muted Posts", 'type': "yn", 'js': "togglePostElement(\'hide_muted\');" }
+                               'items': { 'hide_audio':    { 'label': getLangString('disp_pp_audio'),
+                                                             'type': "yn",
+                                                             'js': "togglePostElement(\'hide_audio\');"
+                                                            },
+                                          'hide_avatars':  { 'label': getLangString('disp_pp_avatars'),
+                                                             'type': "yn",
+                                                             'js': "togglePostElement(\'hide_avatars\');"
+                                                            },
+                                          'hide_images':   { 'label': getLangString('disp_pp_images'),
+                                                             'type': "yn",
+                                                             'js': "togglePostElement(\'hide_images\');"
+                                                            },
+                                          'hide_geodata':  { 'label': getLangString('disp_pp_geodata'),
+                                                             'type': "yn",
+                                                             'js': "togglePostElement(\'hide_geodata\');"
+                                                            },
+                                          'hide_longpost': { 'label': getLangString('disp_pp_longpost'),
+                                                             'type': "yn",
+                                                             'js': ""
+                                                            },
+                                          'hide_muted':    { 'label': getLangString('disp_pp_muted'),
+                                                             'type': "yn",
+                                                             'js': "togglePostElement(\'hide_muted\');"
+                                                            },
+                                          'expand_links':  { 'label': getLangString('disp_pp_links'),
+                                                             'type': "yn",
+                                                             'js': ""
+                                                            }
                                          }
                               },
-                          2: { 'label': "Column Options",
-                               'notes': "Customise Your Columns",
+                          2: { 'label': getLangString('disp_co_label'),
+                               'notes': getLangString('disp_co_notes'),
                                'icon' : "fa-columns",
-                               'items': { 'blended_mentions': { 'label': "Show Interactions with Mentions", 'type': "yn", 'js':"" },
-                                          'named_columns': { 'label': "Show Column Names", 'type': "yn", 'js':"setHeaderNav();" }
+                               'items': { 'blended_mentions': { 'label': getLangString('disp_co_blend'), 'type': "yn", 'js':"" },
+                                          'named_columns': { 'label': getLangString('disp_co_named'), 'type': "yn", 'js':"setHeaderNav();" }
                                          }
                               },
-                          3: { 'label': "Account Profile",
-                               'notes': "Display and Hide Profile Information",
+                          3: { 'label': getLangString('disp_ap_label'),
+                               'notes': getLangString('disp_ap_notes'),
                                'icon' : "fa-street-view",
-                               'items': { 'display_nrscore': { 'label': "Show NR Score", 'type': "yn", 'js':"" },
-                                          'display_usage': { 'label': "Show Usage Graph", 'type': "yn", 'js':"" }
-                                          /* 'display_details': { 'label': "Show Account Details", 'type': "yn", 'js':"" },
-                                          'display_oneavatar': { 'label': "Prevent Avatar Changes", 'type': "yn", 'js':"" } */
+                               'items': { 'display_nrscore': { 'label': getLangString('disp_ap_score'), 'type': "yn", 'js':"" },
+                                          'display_usage': { 'label': getLangString('disp_ap_usage'), 'type': "yn", 'js':"" }
+                                         }
+                              },
+                          4: { 'label': getLangString('disp_dd_label'),
+                               'notes': getLangString('disp_dd_notes'),
+                               'icon' : "fa-bug",
+                               'items': { 'debug_on': { 'label': getLangString('enable'), 'type': "yn", 'js':"" }
                                          }
                               }
                          };
@@ -240,22 +268,22 @@ function fillPrefsWindow( opt ) {
                 spacer = '<br><br>';
             }
             html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
-                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
+                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> ' + getLangString('back') + '</button>';
             break;
 
         case 'font':
-            var items = { '10': { 'label': "Tiny", 'icon': "fa-font" },
-                          '12': { 'label': "Small", 'icon': "fa-font" },
-                          '14': { 'label': "Normal", 'icon': "fa-font" },
-                          '16': { 'label': "Larger", 'icon': "fa-font" },
-                          '18': { 'label': "Bigger", 'icon': "fa-font" },
-                          '20': { 'label': "HUGE!", 'icon': "fa-font" }
+            var items = { '10': { 'label': getLangString('font_tiny'), 'icon': "fa-font" },
+                          '12': { 'label': getLangString('font_small'), 'icon': "fa-font" },
+                          '14': { 'label': getLangString('font_normal'), 'icon': "fa-font" },
+                          '16': { 'label': getLangString('font_larger'), 'icon': "fa-font" },
+                          '18': { 'label': getLangString('font_bigger'), 'icon': "fa-font" },
+                          '20': { 'label': getLangString('font_huge'), 'icon': "fa-font" }
                         };
 
             var size_px = readStorage('font_size');
             var ff = readStorage('font_family');
-            html = '<strong class="lbltxt" style="width: 95%; padding: 0 2.5%;">Choose Your Text Preferences.</strong>' +
-                   '<label class="lbltxt" for="preset">Font Family:</label>' +
+            html = '<strong class="lbltxt" style="width: 95%; padding: 0 2.5%;">' + getLangString('font_title') + '</strong>' +
+                   '<label class="lbltxt" for="preset">' + getLangString('font_label') + ':</label>' +
                    '<select id="preset" onChange="setFontFamily(this.value);">';
             for ( familyName in availableFontFamilies ) {
                 var selText = ( familyName === ff ) ? ' selected' : '';
@@ -277,7 +305,7 @@ function fillPrefsWindow( opt ) {
                         '</button>';
             }
             html += '<button style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
-                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
+                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> ' + getLangString('back') + '</button>';
             break;
 
         case 'hover':
@@ -326,7 +354,7 @@ function fillPrefsWindow( opt ) {
             }
             html += '<button style="float: right;" class="btn-green" onClick="setDelaySeconds();">Set</button>' +
                     '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
-                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
+                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> ' + getLangString('back') + '</button>';
             break;
 
         case 'language':
@@ -354,7 +382,7 @@ function fillPrefsWindow( opt ) {
                     '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">PLEASE NOTE:</strong>' +
                     '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">Translations aren&apos;t close to done, or even correct in some instances. If you find a typo, let @matigo know. Thanks!</p>' +
                     '<button style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
-                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
+                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> ' + getLangString('back') + '</button>';
             break;
         
         case 'mutes':
@@ -385,7 +413,7 @@ function fillPrefsWindow( opt ) {
                         '</em>';
             }
             html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
-                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
+                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> ' + getLangString('back') + '</button>';
             break;
 
         case 'global':
@@ -418,7 +446,7 @@ function fillPrefsWindow( opt ) {
             }
 
             html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
-                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
+                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> ' + getLangString('back') + '</button>';
             break;
         
         case 'keyboard':
@@ -453,7 +481,7 @@ function fillPrefsWindow( opt ) {
                 spacer = '<br><br>';
             }
             html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
-                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
+                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> ' + getLangString('back') + '</button>';
             break;
 
         case 'ppcolumn':
@@ -483,7 +511,7 @@ function fillPrefsWindow( opt ) {
                         '</button>';
             }
             html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
-                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
+                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> ' + getLangString('back') + '</button>';
             break;
 
         case 'prefs':
@@ -508,7 +536,7 @@ function fillPrefsWindow( opt ) {
                         '</button>';
             }
             html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
-                           ' onClick="fillPrefsWindow(\'main\');"><i class="fa fa-reply"></i> Back</button>';
+                           ' onClick="fillPrefsWindow(\'main\');"><i class="fa fa-reply"></i> ' + getLangString('back') + '</button>';
             break;
         
         case 'refresh':
@@ -538,16 +566,16 @@ function fillPrefsWindow( opt ) {
                         '</button>';
             }
             html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
-                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
+                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> ' + getLangString('back') + '</button>';
             break;
 
         case 'streams':
-            var items = { 'home': { 'label': "Home", 'icon': "fa-home" },
-                          'mentions': { 'label': "Mentions", 'icon': "fa-comment" },
-                          'global': { 'label': "Filtered Global", 'icon': "fa-globe" },
-                          'pms': { 'label': "PMs", 'icon': "fa-lock" },
-                          'interact': { 'label': "Interactions", 'icon': "fa-heartbeat" },
-                          'add': { 'label': "Add", 'icon': "fa-plus" }
+            var items = { 'home': { 'label': getLangString('tl_home'), 'icon': "fa-home" },
+                          'mentions': { 'label': getLangString('tl_mentions'), 'icon': "fa-comment" },
+                          'global': { 'label': getLangString('tl_global'), 'icon': "fa-globe" },
+                          'pms': { 'label': getLangString('tl_pms'), 'icon': "fa-lock" },
+                          'interact': { 'label': getLangString('tl_interact'), 'icon': "fa-heartbeat" },
+                          'add': { 'label': getLangString('tl_add'), 'icon': "fa-plus" }
                         };
             for ( item in items ) {
                 var bg = '#' + readStorage('header_background'),
@@ -563,7 +591,7 @@ function fillPrefsWindow( opt ) {
                         '</button>';
             }
             html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
-                           ' onClick="fillPrefsWindow(\'main\');"><i class="fa fa-reply"></i> Back</button>';
+                           ' onClick="fillPrefsWindow(\'main\');"><i class="fa fa-reply"></i> ' + getLangString('back') + '</button>';
             break;
 
         case 'widths':
@@ -584,7 +612,38 @@ function fillPrefsWindow( opt ) {
                         'Reported Screen Width: ' + sWidth + 'px / Height: ' + sHeight + 'px' +
                     '</em>';
             html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
-                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> Back</button>';
+                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> ' + getLangString('back') + '</button>';
+            break;
+
+        case 'network':
+            var data = readNetworkLog(25);
+            html  = '<strong class="lbltxt" style="width: 95%; padding: 0 2.5%;">' + getLangString('network_title') + '</strong>' +
+                    '<em class="lbltxt" style="display: block; width: 95%; text-align: justify; padding: 0 2.5%;">' +
+                        getLangString('network_label') +
+                    '</em><br>';
+
+            if ( data ) {
+                html += '<em class="lbltxt" style="display: block; width: 95%; text-align: justify; padding: 0 2.5%;">' +
+                            ((readStorage('nice_proxy') === 'Y') ? getLangString('srv_nice') : getLangString('srv_adn'))
+                        '</em><br>';
+                html += '<table style="width: 100%; margin-top: 10px; font-style: normal;">' +
+                        '<thead style="border-bottom: 1px solid #eee;">' +
+                            '<th style="text-align: left;">' + getLangString('endpoint') + '</th>' +
+                            '<th style="text-align: center;">' + getLangString('status') + '</th>' +
+                            '<th style="text-align: right;">' + getLangString('rspTime') + '</th>' +
+                        '</thead><tbody>';
+                for ( idx in data ) {
+                    html += '<tr>' +
+                                '<td>' + data[idx].endpoint + '</td>' +
+                                '<td style="text-align: center;">' + data[idx].status + '</td>' +
+                                '<td style="text-align: right;">' + addCommas(data[idx].rspTime) + '</td>' +
+                            '</tr>';
+                }
+                html += '</tbody></table>';
+            }
+
+            html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
+                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> ' + getLangString('back') + '</button>';
             break;
 
         default:

@@ -5,6 +5,16 @@ String.prototype.ireplaceAll = function(strReplace, strWith) {
     var reg = new RegExp(strReplace, 'ig');
     return this.replace(reg, strWith);
 };
+String.prototype.hashCode = function() {
+    var hash = 0, i, chr, len;
+    if (this.length == 0) return hash;
+    for (i = 0, len = this.length; i < len; i++) {
+        chr   = this.charCodeAt(i);
+        hash  = ((hash << 5) - hash) + chr;
+        hash |= 0;
+    }
+    return hash;
+};
 jQuery.fn.scrollTo = function(elem, speed) { 
     $(this).animate({
         scrollTop:  $(this).scrollTop() - $(this).offset().top + $(elem).offset().top 
@@ -251,6 +261,7 @@ function testInfiniteLoop() {
                 var ts = new Date().getTime();
                 saveStorage('last_global_query', ts, true);
                 window.setInterval(function(){ getGlobalItems(); }, 1000);
+                console.log('[' + curr_ts + '] Restarting getGlobalItems');
             }
         }
     }
@@ -311,7 +322,7 @@ function testADNAccessToken() {
 function parseMyToken( data ) {
     if ( data ) {
         document.getElementById('mnu-avatar').style.backgroundImage = 'url("' + data.avatar_image.url + '")';
-        document.getElementById('doAction').innerHTML = 'New Post';
+        document.getElementById('doAction').innerHTML = getLangString('new_post');
         setSplashMessage('Parsing Token Information');
         saveStorage('long_length', 8000, true );
         saveStorage('chan_length', 2048, true);
@@ -383,8 +394,10 @@ function prepApp() {
                   12: { 'key': 'hide_avatars', 'value': 'N', 'useStore': false },
                   13: { 'key': 'hide_longpost', 'value': 'N', 'useStore': false },
                   14: { 'key': 'hide_muted', 'value': 'N', 'useStore': false },
-                  15: { 'key': 'show_24h_timestamps', 'value': 'N', 'useStore': false },
-                  16: { 'key': 'romanise_time', 'value': 'N', 'useStore': false },
+                  15: { 'key': 'expand_links', 'value': 'N', 'useStore': false },
+                  16: { 'key': 'show_24h_timestamps', 'value': 'N', 'useStore': false },
+                  17: { 'key': 'romanise_time', 'value': 'N', 'useStore': false },
+                  18: { 'key': 'debug_on', 'value': 'N', 'useStore': false },
 
                   20: { 'key': 'refresh_last', 'value': seconds, 'useStore': true },
                   21: { 'key': 'is_uploading', 'value': 'N', 'useStore': true },
@@ -702,7 +715,7 @@ function getUserProfileActions( data ) {
                     '<li id="profile-drop" class="hide" onclick="toggleProfileDrop();">' +
                         '<i class="fa fa-cog"></i>' +
                         '<ul>' +
-                            '<li onClick="editProfile();">Edit My Profile</li>' +
+                            '<li onClick="editProfile();">' + getLangString('edit_profile') + '</li>' +
                         '</ul>' +
                     '</li>' +
                 '</ul>';
@@ -712,12 +725,12 @@ function getUserProfileActions( data ) {
                         '<i class="fa fa-cog"></i>' +
                         '<ul>' +
                             '<li onClick="blockAccount(' + data.you_blocked + ', ' + data.id + ');">' + 
-                                ((data.you_blocked) ? 'Unblock' : 'Block') + 
+                                ((data.you_blocked) ? getLangString('unblock') : getLangString('block')) + 
                             '</li>' +
                             '<li onClick="muteAccount(' + data.you_muted + ', ' + data.id + ');">' + 
-                                ((data.you_muted) ? 'Listen Again' : 'Mute') +
+                                ((data.you_muted) ? getLangString('unmute') : getLangString('mute')) +
                             '</li>' +
-                            '<li onClick="reportAccount(' + data.id + ');">Report Spammer</li>' +
+                            '<li onClick="reportAccount(' + data.id + ');">' + getLangString('spammer') + '</li>' +
                         '</ul>' +
                     '</li>' +
                 '</ul>';
@@ -729,13 +742,13 @@ function getUserProfileNumbers( data ) {
     if ( readStorage('display_nrscore') === 'Y' ) { html += '<div id="history-score" class="score">&nbsp;</div>'; }
     if ( readStorage('display_usage') === 'Y' ) { html += '<div id="history-bars" class="history">&nbsp;</div>'; }
     html += '<div class="detail" style="border-right: 1px solid #ccc;" onclick="doShowUser(' + data.id + ');">' +
-                '<strong>Posts</strong><p>' + addCommas( data.counts.posts ) + '</p>' +
+                '<strong>' + getLangString('count_posts') + '</strong><p>' + addCommas( data.counts.posts ) + '</p>' +
             '</div>' +
             '<div class="detail" style="border-right: 1px solid #ccc;" onclick="showUserList(\'following\', ' + data.id + ');">' +
-                '<strong>Following</strong><p>' + addCommas( data.counts.following ) + '</p>' +
+                '<strong>' + getLangString('count_follows') + '</strong><p>' + addCommas( data.counts.following ) + '</p>' +
             '</div>' +
             '<div class="detail" onclick="showUserList(\'followers\', ' + data.id + ');">' +
-                '<strong>Followers</strong><p>' + addCommas( data.counts.followers ) + '</p>' +
+                '<strong>' + getLangString('count_followers') + '</strong><p>' + addCommas( data.counts.followers ) + '</p>' +
             '</div>';
     return html;
 }
@@ -745,6 +758,7 @@ function parseUserProfile( data ) {
             action_html = '';
         var my_id = readStorage('user_id');
         var h4color = readStorage('post-content_color');
+        var verified = '';
         parseAccountNames( data );
 
         // Set the Header Information
@@ -753,23 +767,28 @@ function parseUserProfile( data ) {
         document.getElementById( 'usr-names' ).innerHTML =  '<h3>' + data.username + '</h3>' +
                                                             '<h4 style="color:#' + h4color + '">' + data.name + '</h4>' +
                                                             '<h5>' + getUserProfileActions( data ) + '</h5>';
-
-        document.getElementById( 'usr-info' ).innerHTML = parseText( data.description );
+        if ( data.hasOwnProperty('verified_domain') && data.hasOwnProperty('verified_link') ) {
+            verified = '<verified>' +
+                           '<i class="fa fa-check-circle"></i> ' + getLangString('verified') +
+                           ' <a href="' + data.verified_link + '" title="' + data.verified_domain + '">' + data.verified_domain + '</a>' +
+                       '</verified>';
+        }
+        document.getElementById( 'usr-info' ).innerHTML = verified + parseText( data.description );
         document.getElementById( 'usr-numbers' ).innerHTML = getUserProfileNumbers( data );
 
-        if ( data.follows_you ) { action_html += '<em>Follows You</em>'; }
+        if ( data.follows_you ) { action_html += '<em>' + getLangString('follows_you') + '</em>'; }
         if ( data.you_follow ) {
-            action_html += '<button onclick="doFollow(' + data.id + ', true)" class="btn-red">Unfollow</button>';
+            action_html += '<button onclick="doFollow(' + data.id + ', true)" class="btn-red">' + getLangString('unfollow') + '</button>';
         } else {
             if ( data.id !== my_id ) {
                 if ( data.you_can_follow ) {
-                    action_html += '<button onclick="doFollow(' + data.id + ', false)" class="btn-green">Follow</button>';
+                    action_html += '<button onclick="doFollow(' + data.id + ', false)" class="btn-green">' + getLangString('follow') + '</button>';
                 } else {
                     action_html = '&nbsp;';
                 }
                 
             } else {
-                action_html += '<span>I think this is you.</span>';
+                action_html += '<span>' + getLangString('is_you') + '</span>';
             }
         }
         document.getElementById( 'usr-actions' ).innerHTML = action_html;
@@ -779,7 +798,7 @@ function parseUserProfile( data ) {
         if ( data.counts.posts > 0 ) {
             getUserPosts( data.id );
         } else {
-            document.getElementById( 'user_posts' ).innerHTML = '<div class="post-item">There Are No Posts to Show</div>';
+            document.getElementById( 'user_posts' ).innerHTML = '<div class="post-item">' + getLangString('no_posts') + '</div>';
         }
         toggleClassIfExists('dialog','hide','show');
     }
@@ -961,20 +980,37 @@ function parseItems( data ) {
 
                 if ( data[i].is_deleted === true ) { setDelete( data[i].id ); }
                 if ( (account_rank >= min_rank && is_human == 'Y') || (data[i].user.id === my_id) || followed ) {
-                    window.coredata[ 'net.app.global' ][ data[i].id ] = data[i];
-                    if ( data[i].hasOwnProperty('repost_of') ) {
-                        if ( window.coredata['net.app.global'].hasOwnProperty(data[i].repost_of.id) === false ) {
-                            window.coredata[ 'net.app.global' ][ data[i].repost_of.id ] = data[i].repost_of;
+                    var item_hash = JSON.stringify(data[i]).hashCode();
+                    if ( window.coredata[ 'net.app.global' ].hasOwnProperty( data[i].id ) === false ) {
+                        savePostToCore(data[i], item_hash);
+                    } else {
+                        if ( item_hash !== window.coredata['net.app.global'][data[i].id].hash ) {
+                            savePostToCore(data[i], item_hash);
                         }
                     }
-                    window.coredata[ 'net.app.global-ts' ] = Math.floor(Date.now() / 1000);
-                    parseAccountNames( data[i].user );
                 }
             }
         }
         saveStorage('_refresher', -1, true)
         trimPosts();
     }
+}
+function savePostToCore( post, hash ) {
+    var unshorten_links = readStorage('expand_links', false);
+    if ( unshorten_links === 'Y' && post.entities.links.length > 0 ) {
+        for ( var lnk = 0; lnk < post.entities.links.length; lnk++ ) { unshorten( post.entities.links[lnk].url ); }
+    }
+    post.hash = hash;
+    window.coredata[ 'net.app.global' ][ post.id ] = post;
+    if ( post.hasOwnProperty('repost_of') ) {
+        if ( window.coredata['net.app.global'].hasOwnProperty(post.repost_of.id) === false ) {
+            var rp_hash = JSON.stringify(post.repost_of).hashCode();
+            post.repost_of.hash = rp_hash;
+            window.coredata['net.app.global'][post.repost_of.id] = post.repost_of;
+        }
+    }
+    window.coredata['net.app.global-ts'] = Math.floor(Date.now() / 1000);
+    parseAccountNames(post.user);
 }
 function buildHTMLSection( post ) {
     var show_time = readStorage('show_live_timestamps');
@@ -1061,7 +1097,7 @@ function buildNode( post_id, tl_ref, data, type, html ) {
 }
 function parseText( post ) {
     if ( post === undefined || post === false ) { return '&nbsp;'; }
-    var html = ( post.hasOwnProperty('html') ) ? post.html.replaceAll('<a href=', '<a target="_blank" href=', '') + ' ' : '*{Message Deleted}*',
+    var html = ( post.hasOwnProperty('html') ) ? post.html.replaceAll('<a href=', '<a target="_blank" href=', '') + ' ' : getLangString('post_gone'),
         name = '',
         cStr = ' class="post-mention" style="font-weight: bold; cursor: pointer;"';
     var highlight = readStorage('post-highlight_color');
@@ -1154,8 +1190,26 @@ function parseText( post ) {
             html = html.replace(searchRegex, cStr + ' onClick="doShowHash(\'' + post.entities.hashtags[i].name + '\');"$1');
         }
     }
+    
+    /* Do Any of the HTML Links Need to be Changed? */
+    if ( post.entities.links.length > 0 ) {
+        for ( var i = 0; i < post.entities.links.length; i++ ) {
+            var clean_url = readLink( post.entities.links[i].url );
+            if ( clean_url !== undefined && plainURL(clean_url) !== plainURL(post.entities.links[i].url) ) {
+                html = html.ireplaceAll('"' + post.entities.links[i].url + '"', '"' + clean_url + '"');
+                html = html.ireplaceAll('>' + post.entities.links[i].text + '<', '>' + readLink(post.entities.links[i].text) + '<');
+            }
+        }
+    }
+
     html = parseMarkdown( html );
     return html;
+}
+function plainURL( url ) {
+    var rVal = url.toLowerCase();
+        rVal = rVal.ireplaceAll('https:', '');
+        rVal = rVal.ireplaceAll('http:', '');
+    return rVal;
 }
 function fixReturns(text) {
     var rVal = text.ireplaceAll('\n\n', '<br><br>');
@@ -1607,10 +1661,10 @@ function constructDialog( dialog_id ) {
             dialog_id = 'conversation';
             _html = '<div class="chatbox">' +
                         '<div class="title" onclick="doShowConv();">' +
-                            'Conversation View <em id="chat_count">&nbsp;</em>' +
+                            getLangString('conv_view') + ' <em id="chat_count">&nbsp;</em>' +
                             '<span><i class="fa fa-times-circle-o"></i></span>' +
                         '</div>' +
-                        '<div class="title_btn"><button onclick="doConvReply();">Reply</button></div>' +
+                        '<div class="title_btn"><button onclick="doConvReply();">' + getLangString('reply') + '</button></div>' +
                         '<div id="chat_posts" class="chat"></div>' +
                     '</div>';
             break;
@@ -1618,7 +1672,7 @@ function constructDialog( dialog_id ) {
         case 'conversation':
             _html = '<div class="chatbox">' +
                         '<div class="title" onclick="doShowConv();">' +
-                            'Conversation View <em id="chat_count">&nbsp;</em>' +
+                            getLangString('conv_view') + ' <em id="chat_count">&nbsp;</em>' +
                             '<span><i class="fa fa-times-circle-o"></i></span>' +
                         '</div>' +
                         '<div class="title_bg">&nbsp;</div>' +
@@ -1643,11 +1697,11 @@ function constructDialog( dialog_id ) {
 
         case 'draftbox':
             _html = '<div class="msgbox">' +
-                        '<div class="title">Before You Go ...</div>' +
-                        '<div id="msg" class="message">Would you like to save this message as a draft?</div>' +
+                        '<div class="title">' + getLangString('draft_title') + '</div>' +
+                        '<div id="msg" class="message">' + getLangString('draft_qyest') + '</div>' +
                         '<div class="buttons">' +
-                            '<button onclick="showSaveDraft();" class="btn-red">No, Thanks</button>' +
-                            '<button onclick="saveDraft();" class="btn-green">Yes, Please</button>' +
+                            '<button onclick="showSaveDraft();" class="btn-red">' + getLangString('draft_no') + '</button>' +
+                            '<button onclick="saveDraft();" class="btn-green">' + getLangString('draft_yes') + '</button>' +
                         '</div>' +
                     '</div>';
             break;
@@ -1655,10 +1709,12 @@ function constructDialog( dialog_id ) {
         case 'hashbox':
             _html = '<div class="chatbox">' +
                         '<div class="title" onclick="doShowHash();">' +
-                            'Hashtag View <em id="hash_count">&nbsp;</em>' +
+                            getLangString('hash_view') + ' <em id="hash_count">&nbsp;</em>' +
                             '<span><i class="fa fa-times-circle-o"></i></span>' +
                         '</div>' +
-                        '<div id="mute_hash" class="title_btn"><button onclick="doMuteHash(\'hashtag\');">Mute Hashtag</button></div>' +
+                        '<div id="mute_hash" class="title_btn">' +
+                            '<button onclick="doMuteHash(\'hashtag\');">' + getLangString('hash_mute') + '</button>' +
+                        '</div>' +
                         '<div id="hash_posts" class="chat"></div>' +
                     '</div>';
             break;
@@ -1668,7 +1724,7 @@ function constructDialog( dialog_id ) {
                         '<div class="title">' + readStorage('msgTitle', true) + '</div>' +
                         '<div id="msg" class="message">' + readStorage('msgText', true) + '</div>' +
                         '<div class="buttons">' +
-                            '<button onclick="dismissOKbox();" class="btn-green">OK</button>' +
+                            '<button onclick="dismissOKbox();" class="btn-green">' + getLangString('ok') + '</button>' +
                         '</div>' +
                     '</div>';
             break;
@@ -1676,7 +1732,7 @@ function constructDialog( dialog_id ) {
         case 'prefs':
             _html = '<div class="chatbox">' +
                         '<div class="title" onclick="doShowPrefs();">' +
-                            'Settings <em id="hash_count">&nbsp;</em>' +
+                            getLangString('setting_title') + ' <em id="hash_count">&nbsp;</em>' +
                             '<span><i class="fa fa-times-circle-o"></i></span>' +
                         '</div>' +
                         '<div id="pref-list" class="chat"></div>' +
@@ -1689,8 +1745,8 @@ function constructDialog( dialog_id ) {
                         '<div class="actions">' +
                             '<span id="rpy-length">256</span>' +
                             '<span id="rpy-draft" style="display: inline-block; font-size: 160%; margin: 4px 0 0 25px;" onclick="loadDraft();"></span>' +
-                            '<button id="rpy-kill" class="btn-red">Cancel</button>' +
-                            '<button id="rpy-send" class="btn-grey">Send</button>' +
+                            '<button id="rpy-kill" class="btn-red">' + getLangString('cancel') + '</button>' +
+                            '<button id="rpy-send" class="btn-grey">' + getLangString('send') + '</button>' +
                         '</div>' +
                     '</div>';
             break;
@@ -2003,12 +2059,12 @@ function setFollow( data ) {
         } else {
             if ( data.follows_you ) { html += '<em>Follows You</em>'; }
             if ( data.you_follow ) {
-                html += '<button onclick="doFollow(' + data.id + ', true)" class="btn-red">Unfollow</button>';
+                html += '<button onclick="doFollow(' + data.id + ', true)" class="btn-red">' + getLangString('unfollow') + '</button>';
             } else {
                 if ( data.id !== my_id ) {
-                    html += '<button onclick="doFollow(' + data.id + ', false)" class="btn-green">Follow</button>';
+                    html += '<button onclick="doFollow(' + data.id + ', false)" class="btn-green">' + getLangString('follow') + '</button>';
                 } else {
-                    html += '<span>I think this is you.</span>';
+                    html += '<span>' + getLangString('is_you') + '</span>';
                 }
             }
             document.getElementById( 'usr-actions' ).innerHTML = html;
@@ -2098,7 +2154,7 @@ function parseConversation( data ) {
             post_client = data[i].source.name || 'unknown';
 
             if ( this_id === reply_to ) { sname = ' post-grey'; }
-            html += '<div id="conv-' + data[i].id + '" class="post-item' + sname + '">' +
+            html += '<div id="conv-' + data[i].id + '" class="post-item' + sname + '" onClick="showHideActions(' + data[i].id + ', \'-c\');">' +
                         '<div id="' + data[i].id + '-po" class="post-avatar">' +
                             '<img class="avatar-round"' +
                                 ' onClick="doShowUser(' + data[i].user.id + ');"' +
@@ -2108,7 +2164,7 @@ function parseConversation( data ) {
                             '<h5 class="post-name"><span>' + data[i].user.username + '</span></h5>' +
                             parseText( data[i] ) +
                             '<p class="post-time">' +
-                                '<em onClick="showHideActions(' + data[i].id + ', \'-c\');">' + post_time + post_source + '</em>' +
+                                '<em>' + post_time + post_source + '</em>' +
                             '</p>' +
                         '</div>' +
                         respond.replaceAll('[TL]', '-c') +
@@ -2236,7 +2292,6 @@ function getReplyText() {
 
     return txt;
 }
-function switchLanguage( lang_cd ) { alert( '[Debug] Change Language To: ' + lang_cd ); }
 function showImage( image_url ) {
     if ( image_url != '' ) {
         var screen_height = window.innerHeight || docuemnt.body.clientHeight;
@@ -2311,7 +2366,7 @@ function parseEmbedded( post ) {
                                                 '<audio controls>' +
                                                     '<source src="' + post.annotations[i].value.url + '"' +
                                                            ' type="' + post.annotations[i].value.mime_type + '">' +
-                                                    'Your browser does not support the audio element.' +
+                                                    getLangString('err_invalid_audio') +
                                                 '</audio>' +
                                             '</div>';
                                 }
@@ -2343,11 +2398,11 @@ function parseEmbedded( post ) {
                                     '<audio controls>' +
                                         '<source src="' + post.annotations[i].value.short_url + '"' +
                                                ' type="' + post.annotations[i].value.mimetype + '">' +
-                                        'Your browser does not support the audio element.' +
+                                        getLangString('err_invalid_audio') +
                                     '</audio>' +
                                     '<p>' +
                                         '<a href="' + post.annotations[i].value.short_url + '" title="' + post.annotations[i].value.filename + '">' +
-                                            '<i class="fa fa-cloud-download"></i> Download This File' +
+                                            '<i class="fa fa-cloud-download"></i> ' + getLangString('download_file') +
                                         '</a>' +
                                     '</p>' +
                                 '</div>';
@@ -2480,7 +2535,7 @@ function parseHashDetails( data ) {
         showWaitState('hash_posts', 'Reading Posts');
 
         document.getElementById( 'hash_count' ).innerHTML = '(' + data.length + ((data.length === 200) ? '+' : '') + ' Posts)';
-        document.getElementById('mute_hash').innerHTML = '<button onclick="doMuteHash(\'' + name + '\');">Mute #' + name + '</button>';
+        document.getElementById('mute_hash').innerHTML = '<button onclick="doMuteHash(\'' + name + '\');">' + getLangString('hash_mutetag') + name + '</button>';
         for ( var i = 0; i < data.length; i++ ) {
             showWaitState('hash_posts', 'Reading Posts (' + (i + 1) + '/' + data.length + ')');
             nicerank = ( readStorage('nice_proxy') === 'Y' ) ? data[i].nicerank : parseInt( readStorage( data[i].user.id + '_rank', true) );
@@ -2664,26 +2719,26 @@ function getGeoPosition() {
             console.log( JSON.stringify(window.store['location']) );
             setSplashMessage('');
         }, function(error) {
-            saveStorage('msgTitle', 'Geolocation Problem', true);
+            saveStorage('msgTitle', getLangString('err_geotitle'), true);
             switch ( error.code ) {
                 case 1:
-                    saveStorage('msgText', 'Uh oh. Nice Is Not Permitted to Access Your Location Data', true);
+                    saveStorage('msgText', getLangString('err_geocase1'), true);
                     break;
 
                 case 3:
-                    saveStorage('msgText', 'Very sorry. Nice Cannot Add Your Location. The Geolocation API Timed Out.', true);
+                    saveStorage('msgText', getLangString('err_geocase3'), true);
                     break;
 
                 default:
-                    saveStorage('msgText', 'Whoops! Nice Cannot Determine Your Location', true);
+                    saveStorage('msgText', getLangString('err_geodeflt'), true);
             }
             if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
             setSplashMessage('');
         },
         { maximumAge: 600000, timeout: 10000 });
     } else {
-        saveStorage('msgTitle', 'Geolocation Problem', true);
-        saveStorage('msgText', 'Very sorry. The Geolocation API Is Not Supported By Your Browser', true);
+        saveStorage('msgTitle', getLangString('err_geotitle'), true);
+        saveStorage('msgText', getLangString('err_geosorry'), true);
         if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
         setSplashMessage('');
     }
@@ -2786,7 +2841,8 @@ function parseFileUpload( response, file, anno_type ) {
     switch ( meta.code ) {
         case 400:
         case 507:
-            saveStorage('msgText', 'App.Net Returned a ' + meta.code + ' Error:<br>' + meta.error_message, true);
+            var msg = getLangString('err_upload01');
+            saveStorage('msgText', msg.ireplaceAll('[CODE]', meta.code).ireplaceAll('[MESSAGE]', meta.error_message), true);
             saveStorage('is_uploading', 'N', true);
             showMsg = true;
             break;
@@ -2800,8 +2856,9 @@ function parseFileUpload( response, file, anno_type ) {
                 xhr.upload.onprogress = function(e) {
                     var done = e.loaded, total = e.total;
                     var progress = (Math.floor(done/total*1000)/10);
-                    if ( progress > 0 && progress <= 99.99999 ) { setSplashMessage('Uploading ... ' + progress + '% Complete'); }
-                    if ( progress === 100 ) { setSplashMessage('Waiting for ADN to Validate ...'); }
+                    var msg = getLangString('file_progress');
+                    if ( progress > 0 && progress <= 99.99999 ) { setSplashMessage(msg.ireplaceAll('[PROGRESS]', progress)); }
+                    if ( progress === 100 ) { setSplashMessage( getLangString('file_validate') ); }
                     if ( progress <= 0 || progress > 100 ) { setSplashMessage(''); }
                     saveStorage('is_uploading', 'Y', true);
                     calcReplyCharacters();
@@ -2829,7 +2886,8 @@ function parseFileUpload( response, file, anno_type ) {
                             break;
 
                         case 507:
-                            saveStorage('msgText', 'App.Net Returned a ' + meta.code + ' Error:<br>' + meta.error_message, true);
+                            var msg = getLangString('err_upload01');
+                            saveStorage('msgText', msg.ireplaceAll('[CODE]', meta.code).ireplaceAll('[MESSAGE]', meta.error_message), true);
                             showMsg = true;
                             break;
 
@@ -2945,9 +3003,8 @@ function muteHashtag( name ) {
     for ( var idx = 0; idx <= hashes.length; idx++ ) { if ( hashes[idx] === name ) { return true; } }
     hashes.push(name);
     saveStorage('muted_hashes', JSON.stringify(hashes));
-
-    saveStorage('msgTitle', 'Muted #' + name, true);
-    saveStorage('msgText', 'Posts with a hashtag of "' + name + '" will now be muted.', true);
+    saveStorage('msgTitle', getLangString('mute_title').ireplaceAll('[NAME]', name), true);
+    saveStorage('msgText', getLangString('hash_mutemsg').ireplaceAll('[NAME]', name), true);
     if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
     return true;
 }
@@ -2991,7 +3048,7 @@ function isMutedItem( post_id ) {
     }
     var name = window.coredata['net.app.global'][post_id].source.name.trim();
     for ( var idx = 0; idx <= clients.length; idx++ ) { 
-        if ( clients[idx] === name ) { 'Muted Client (' + name + ')'; }
+        if ( clients[idx] === name ) { getLangString('muted_client').ireplaceAll('[NAME]', name); }
     }
 
     if ( window.coredata['net.app.global'][post_id].entities.hashtags.length > 0 ) {
@@ -3000,7 +3057,7 @@ function isMutedItem( post_id ) {
             var tags = window.coredata['net.app.global'][post_id].entities.hashtags;
             for ( n in tags ) {
                 for ( idx in hashes ) {
-                    if ( hashes[idx] === tags[n].name ) { return 'Muted Hashtag (#' + tags[n].name + ')'; }
+                    if ( hashes[idx] === tags[n].name ) { return getLangString('muted_hashtag').ireplaceAll('[NAME]', tags[n].name); }
                 }
             }
         }
@@ -3030,18 +3087,18 @@ function blockAccount( isblocked, account_id ) {
     }
 }
 function parseMuteAction( data ) {
+    var mute_text = (data.you_muted) ? getLangString('mute_start') : getLangString('mute_finish');
     showHidePostsFromAccount(data.id, data.you_muted);
-    saveStorage('msgTitle', 'Done and Done', true);
-    saveStorage('msgText', ((data.you_muted) ? "You won't see any more posts from " + data.username + "."
-                                             : "You'll start seeing posts from " + data.username + " again."), true);
+    saveStorage('msgTitle', getLangString('done_and_done'), true);
+    saveStorage('msgText', mute_text.ireplaceAll('[NAME]', data.username), true);
     if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
     showHideDialog();
 }
 function parseBlockAction( data ) {
+    var mute_text = (data.you_muted) ? getLangString('block_start') : getLangString('block_finish');
     showHidePostsFromAccount(data.id, data.you_blocked);
-    saveStorage('msgTitle', 'Done and Done', true);
-    saveStorage('msgText', ((data.you_blocked) ? "You won't see any more posts from " + data.username + "."
-                                               : "You've successfully unblocked " + data.username + "."), true);
+    saveStorage('msgTitle', getLangString('done_and_done'), true);
+    saveStorage('msgText', mute_text.ireplaceAll('[NAME]', data.username), true);
     if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
     showHideDialog();
 }
@@ -3057,11 +3114,11 @@ function parseReport( data ) {
             showHidePostsFromAccount( data.id, false );
             saveStorage( data.id + '_rank', 0.1, true );
             saveStorage( data.id + '_human', 'N', true );
-            saveStorage('msgTitle', 'Reported Account', true);
-            saveStorage('msgText', 'Thank You For Making ADN A Little Bit Better!', true);
+            saveStorage('msgTitle', getLangString('spammer_title'), true);
+            saveStorage('msgText', getLangString('spammer_thank'), true);
         } else {
-            saveStorage('msgTitle', 'Whoops', true);
-            saveStorage('msgText', 'There Was a Problem When Reporting This Account', true);
+            saveStorage('msgTitle', getLangString('oops_title'), true);
+            saveStorage('msgText', getLangString('spammer_error'), true);
         }
         if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
     }
@@ -3216,11 +3273,11 @@ function setGlobalShow( type ) {
 function setDelaySeconds() {
     var sec = parseInt( document.getElementById('show_hover_delay').value );
     if ( sec === undefined || isNaN(sec) ) {
-        alert( "Whoops. Please Enter a Value Between 1 and 15." );
+        alert( getLangString('err_one_fifteen') );
         return false;
     }
     if ( sec < 1 || sec > 15 ) {
-        alert( "Whoops. Please Enter a Value Between 1 and 15." );
+        alert( getLangString('err_one_fifteen') );
         return false;
     }
     saveStorage('show_hover_delay', (sec * 1000));
@@ -3265,10 +3322,10 @@ function parseUserList( data ) {
                         ( (data[i].name !== '') ? ' <em>(' + data[i].name  + ')</em>' : '' ) +
                     '</strong>' +
                     '<div class="buttons">' +
-                        ( (data[i].follows_you === true) ? '<em>Follows You</em>' : '') +
+                        ( (data[i].follows_you === true) ? '<em>' + getLangString('follows_you') + '</em>' : '') +
                         '<button id="btn-follow-' + data[i].id + '" class="btn ' + ( (data[i].you_follow === true) ? 'btn-red' : 'btn-green') + '"' +
                                ' onclick="doFollow(' + data[i].id + ',' + data[i].you_follow + ');">' +
-                            ( (data[i].you_follow === true) ? 'Unfollow' : 'Follow') +
+                            ( (data[i].you_follow === true) ? getLangString('unfollow') : getLangString('follow')) +
                         '</button>' +
                     '</div>' +
                     '<div id="more-' + data[i].id + '" class="user-detail">' +
@@ -3279,7 +3336,7 @@ function parseUserList( data ) {
                                                                                   document.getElementById(_id) );
         }
         if ( account_id === my_id && type === 'following' ) {
-            _html = '<center><button class="btn btn-green" onclick="showFullUserList();">Show Me Everyone</button></center>';
+            _html = '<center><button class="btn btn-green" onclick="showFullUserList();">' + getLangString('show_everyone') + '</button></center>';
             document.getElementById('user_posts').insertBefore( buildGenericNode( 'usr-btn', 'ubtn', 'user-item', _html ),
                                                                                   document.getElementById(_id) );
             _id = 'usr-btn';
@@ -3307,11 +3364,10 @@ function showFullUserList() {
             access_token: access_token,
             account_id: my_id
         };
-        doJSONQuery( '/user/followers', false, 'GET', params, parseFullUserList, '' );
+        doJSONQuery( '/user/followers', true, 'GET', params, parseFullUserList, '' );
     }
 }
-function parseFullUserList( rslt ) {
-    var data = rslt.data;
+function parseFullUserList( data ) {
     if ( data ) {
         var _html = '',
             _id = '0-ul';
@@ -3320,6 +3376,9 @@ function parseFullUserList( rslt ) {
             post_time = '',
             last_time = '';
         for ( var i = 0; i < data.length; i++ ) {
+            var post_via = getLangString('posted_via'),
+                post_on = getLangString('posted_on'),
+                c_month = getLangString('count_month');
             post_time = getTimestamp( data[i].recent_message.created_at );
             last_time = getTimestamp( data[i].last_post_unix * 1000 );
             _html = '<div class="post-avatar">' +
@@ -3330,36 +3389,35 @@ function parseFullUserList( rslt ) {
                     '<div class="post-content">' +
                         '<h5 class="post-name"><span>' + data[i].username + '</span></h5>' +
                         '<div class="buttons">' +
-                            ( (data[i].follows_you === true) ? '<em>Follows You</em>' : '') +
+                            ( (data[i].follows_you === true) ? '<em>' + getLangString('follows_you') + '</em>' : '') +
                             '<button id="btn-follow-' + data[i].id + '" class="btn ' + ( (data[i].you_follow === true) ? 'btn-red' : 'btn-green') + '"' +
                                    ' onclick="doFollow(' + data[i].id + ',' + data[i].you_follow + ');">' +
-                                ( (data[i].you_follow === true) ? 'Unfollow' : 'Follow') +
+                                ( (data[i].you_follow === true) ? getLangString('unfollow') : getLangString('follow')) +
                             '</button>' +
                         '</div>' +
                         '<div class="user-detail">' +
-                            '<p>&nbsp;&nbsp;Timezone: ' + data[i].timezone + '</p>' +
-                            '<p>&nbsp;&nbsp;NiceRank: ' + data[i].nicerank + '</p>' +
-                            '<p>This Month: ' + addCommas(data[i].recent_posts) + ' Posts</p>' +
+                            '<p>&nbsp;&nbsp;' + getLangString('acct_timezone') + ': ' + data[i].timezone + '</p>' +
+                            '<p>&nbsp;&nbsp;' + getLangString('acct_nicerank') + ': ' + data[i].nicerank + '</p>' +
+                            '<p>' + c_month.replaceAll('[COUNT]', addCommas(data[i].recent_posts)) + '</p>' +
                         '</div>' +
                     '</div>' +
                     '<div class="numbers">' +
                         '<div class="detail" style="border-right: 1px solid #ccc;">' +
-                            '<strong>Posts</strong><p>' + addCommas(data[i].counts.posts) + '</p>' +
+                            '<strong>' + getLangString('count_posts') + '</strong><p>' + addCommas(data[i].counts.posts) + '</p>' +
                         '</div>' +
                         '<div class="detail" style="border-right: 1px solid #ccc;">' +
-                            '<strong>Following</strong><p>' + addCommas(data[i].counts.following) + '</p>' +
+                            '<strong>' + getLangString('count_follows') + '</strong><p>' + addCommas(data[i].counts.following) + '</p>' +
                         '</div>' +
                         '<div class="detail" style="border-right: 1px solid #ccc;">' +
-                            '<strong>Followers</strong><p>' + addCommas(data[i].counts.followers) + '</p>' +
+                            '<strong>' + getLangString('count_followers') + '</strong><p>' + addCommas(data[i].counts.followers) + '</p>' +
                         '</div>' +
-                        '<div class="detail"><strong>Stars</strong><p>' + addCommas(data[i].counts.stars) + '</p></div>' +
+                        '<div class="detail"><strong>' + getLangString('count_stars') + '</strong><p>' + addCommas(data[i].counts.stars) + '</p></div>' +
                     '</div>' +
                     '<div class="pulse-content">' +
                         parseText( data[i].recent_message ) +
-                        '<p class="post-time"><em>via ' + data[i].recent_message.source.name + '</em></p>' +
-                        '<p class="post-time"><em>Posted ' + post_time + '</em></p>' +
+                        '<p class="post-time"><em>' + post_via.replaceAll('[NAME]', data[i].recent_message.source.name) + '</em></p>' +
+                        '<p class="post-time"><em>' + post_on.replaceAll('[DATE]', post_time) + '</em></p>' +
                     '</div>';
-
 
             document.getElementById('userlist').insertBefore( buildGenericNode( data[i].id + '-ul', data[i].id, 'post-item', _html ),
                                                                                 document.getElementById(_id) );
