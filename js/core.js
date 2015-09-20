@@ -770,7 +770,7 @@ function parseUserProfile( data ) {
         if ( data.hasOwnProperty('verified_domain') && data.hasOwnProperty('verified_link') ) {
             verified = '<verified>' +
                            '<i class="fa fa-check-circle"></i> ' + getLangString('verified') +
-                           ' <a href="' + data.verified_link + '" title="' + data.verified_domain + '">' + data.verified_domain + '</a>' +
+                           ' <a href="' + data.verified_link + '" target="_blank">' + data.verified_domain + '</a>' +
                        '</verified>';
         }
         document.getElementById( 'usr-info' ).innerHTML = verified + parseText( data.description );
