@@ -3048,7 +3048,10 @@ function isMutedItem( post_id ) {
     }
     var name = window.coredata['net.app.global'][post_id].source.name.trim();
     for ( var idx = 0; idx <= clients.length; idx++ ) { 
-        if ( clients[idx] === name ) { getLangString('muted_client').ireplaceAll('[NAME]', name); }
+        if ( clients[idx] === name ) { 
+            var mm = getLangString('muted_client');
+            return mm.replaceAll('[NAME]', name);
+        }
     }
 
     if ( window.coredata['net.app.global'][post_id].entities.hashtags.length > 0 ) {
@@ -3057,7 +3060,8 @@ function isMutedItem( post_id ) {
             var tags = window.coredata['net.app.global'][post_id].entities.hashtags;
             for ( n in tags ) {
                 for ( idx in hashes ) {
-                    if ( hashes[idx] === tags[n].name ) { return getLangString('muted_hashtag').ireplaceAll('[NAME]', tags[n].name); }
+                    var hh = getLangString('muted_hashtag');
+                    if ( hashes[idx] === tags[n].name ) { return hh.replaceAll('[NAME]', tags[n].name); }
                 }
             }
         }
@@ -3090,7 +3094,7 @@ function parseMuteAction( data ) {
     var mute_text = (data.you_muted) ? getLangString('mute_start') : getLangString('mute_finish');
     showHidePostsFromAccount(data.id, data.you_muted);
     saveStorage('msgTitle', getLangString('done_and_done'), true);
-    saveStorage('msgText', mute_text.ireplaceAll('[NAME]', data.username), true);
+    saveStorage('msgText', mute_text.replaceAll('[NAME]', data.username), true);
     if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
     showHideDialog();
 }
@@ -3098,7 +3102,7 @@ function parseBlockAction( data ) {
     var mute_text = (data.you_muted) ? getLangString('block_start') : getLangString('block_finish');
     showHidePostsFromAccount(data.id, data.you_blocked);
     saveStorage('msgTitle', getLangString('done_and_done'), true);
-    saveStorage('msgText', mute_text.ireplaceAll('[NAME]', data.username), true);
+    saveStorage('msgText', mute_text.replaceAll('[NAME]', data.username), true);
     if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
     showHideDialog();
 }
