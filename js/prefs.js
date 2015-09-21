@@ -95,7 +95,7 @@ function fillPrefsWindow( opt ) {
 
         case 'archive':
         case 'files':
-            html += '<strong class="lbltxt">Sadly, this has not been coded. Check back soon, though!</strong>' +
+            html += '<strong class="lbltxt">' + getLangString('err_implement') + '</strong>' +
                     '<br><br>' +
                     '<button style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
                            ' onClick="fillPrefsWindow(\'tools\');"><i class="fa fa-reply"></i> ' + getLangString('back') + '</button>';
@@ -309,10 +309,10 @@ function fillPrefsWindow( opt ) {
             break;
 
         case 'hover':
-            var items = { 'label': "Mouse Hover Options",
-                          'notes': "You can have the Interaction buttons appear when your mouse hovers over a post if you&apos;d like.",
-                          'items': { 'show_hover': { 'label': "Show Interactions", 'style': 'bool', 'type': "ed" },
-                                     'show_hover_delay': { 'label': "Hide After (Seconds)", 'style': 'seconds', 'type': '' }
+            var items = { 'label': getLangString('hover_label'),
+                          'notes': getLangString('hover_notes'),
+                          'items': { 'show_hover': { 'label': getLangString('disp_co_inter'), 'style': 'bool', 'type': "ed" },
+                                     'show_hover_delay': { 'label': getLangString('hover_delay'), 'style': 'seconds', 'type': '' }
                                     }
                               };
             html += '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' +
@@ -363,7 +363,7 @@ function fillPrefsWindow( opt ) {
                           'ja': { 'label': "日本語", 'icon': "fa-comments-o" }
                         };
             var lang_cd = readStorage('lang_cd');
-            html += '<strong style="width: 95%; text-align: justify; padding: 0 2.5%;">Choose a Display Language:</strong>';
+            html += '<strong style="width: 95%; text-align: justify; padding: 0 2.5%;">' + getLangString('lang_choose') + '</strong>';
             for ( item in items ) {
                 if ( item === lang_cd ) {
                     var bg = '#' + readStorage('header_color'),
@@ -379,8 +379,8 @@ function fillPrefsWindow( opt ) {
                         '</button>';
             }
             html += '<br><br>' +
-                    '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">PLEASE NOTE:</strong>' +
-                    '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">Translations aren&apos;t close to done, or even correct in some instances. If you find a typo, let @matigo know. Thanks!</p>' +
+                    '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' + getLangString('lang_note') + '</strong>' +
+                    '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' + getLangString('lang_translations') + '</p>' +
                     '<button style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
                            ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> ' + getLangString('back') + '</button>';
             break;
@@ -397,7 +397,7 @@ function fillPrefsWindow( opt ) {
             }
             if ( hashes.length === 0 ) {
                 html += '<em class="lbltxt" style="display: block; width: 90%; text-align: center; padding: 15px 5%;">' +
-                            'You Have Not Muted Any Hashtags' +
+                            getLangString('mutes_hashtags') +
                         '</em>';
             }
             html += '<strong class="lbltxt" style="display: block; margin-top: 15px; width: 95%; text-align: justify; padding: 0 2.5%;">Muted Clients:</strong>';
@@ -409,7 +409,7 @@ function fillPrefsWindow( opt ) {
             }
             if ( clients.length === 0 ) {
                 html += '<em class="lbltxt" style="display: block; width: 90%; text-align: center; padding: 15px 5%;">' +
-                            'You Have Not Muted Any Clients' +
+                            getLangString('mutes_clients') +
                         '</em>';
             }
             html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
@@ -418,11 +418,11 @@ function fillPrefsWindow( opt ) {
 
         case 'global':
             var spacer = '';
-            var items = { 0: { 'label': "Basic Global Timeline Filters",
-                               'notes': "Customise How You See the Global Timeline",
+            var items = { 0: { 'label': getLangString('global_label'),
+                               'notes': getLangString('global_notes'),
                                'items': { 'nicerank': { 'label': "NiceRank", 'type': "ed" },
                                           'feeds_hide': { 'label': "Feed Accounts", 'type': "vh" },
-                                          'global_hide': { 'label': "Accounts I Follow", 'type': "vh" },
+                                          'global_hide': { 'label': getLangString('global_global_hide'), 'type': "vh" },
                                          }
                               }
                          };
@@ -451,13 +451,13 @@ function fillPrefsWindow( opt ) {
         
         case 'keyboard':
             var spacer = '';
-            var items = { 0: { 'label': "Keyboard Shortcuts",
-                               'notes': "Choose the Keyboard Shortcuts You Use",
+            var items = { 0: { 'label': getLangString('keyboard_label'),
+                               'notes': getLangString('keyboard_notes'),
                                'icon' : "fa-keyboard-o",
-                               'items': { 'shortkey_n': { 'label': "New Post (N)", 'type': "yn", 'js':"" },
-                                          'shortkey_f3': { 'label': "Preferences (F3)", 'type': "yn", 'js':"" },
-                                          'shortkey_down': { 'label': "Auto-Complete (▼)", 'type': "yn", 'js':"" },
-                                          'shortkey_esc': { 'label': "Escape (Esc)", 'type': "yn", 'js':"" },
+                               'items': { 'shortkey_n': { 'label': getLangString('keyboard_n'), 'type': "yn", 'js':"" },
+                                          'shortkey_f3': { 'label': getLangString('keyboard_f3'), 'type': "yn", 'js':"" },
+                                          'shortkey_down': { 'label': getLangString('keyboard_down'), 'type': "yn", 'js':"" },
+                                          'shortkey_esc': { 'label': getLangString('keyboard_esc'), 'type': "yn", 'js':"" },
                                          }
                               }
                          };
@@ -515,19 +515,19 @@ function fillPrefsWindow( opt ) {
             break;
 
         case 'prefs':
-            var items = { 'color': { 'label': "Colours", 'icon': "fa-paint-brush" },
-                          'ppcolumn': { 'label': "Column Length", 'icon': "fa-columns" },
-                          'display': { 'label': "Display Prefs", 'icon': "fa-cloud" },
-                          'font': { 'label': "Fonts", 'icon': "fa-font" },
-                          'hover': { 'label': "Hovers", 'icon': "fa-location-arrow" },
-                          'global': { 'label': "Filtering", 'icon': "fa-globe" },
-                          'keyboard': { 'label': "Keyboard Shortcuts", 'icon': "fa-keyboard-o" },
-                          'mutes': { 'label': "Muted Items", 'icon': "fa-microphone-slash" },
-                          'language': { 'label': "Languages", 'icon': "fa-language" },
-                          'refresh': { 'label': "Refresh Rate", 'icon': "fa-refresh" },
-                          'widths': { 'label': "Column Widths", 'icon': "fa-arrows-h" }
+            var items = { 'color': { 'label': getLangString('prefs_colours'), 'icon': "fa-paint-brush" },
+                          'ppcolumn': { 'label': getLangString('prefs_column_length'), 'icon': "fa-columns" },
+                          'display': { 'label': getLangString('prefs_display_prefs'), 'icon': "fa-cloud" },
+                          'font': { 'label': getLangString('prefs_fonts'), 'icon': "fa-font" },
+                          'hover': { 'label': getLangString('prefs_hovers'), 'icon': "fa-location-arrow" },
+                          'global': { 'label': getLangString('prefs_filtering'), 'icon': "fa-globe" },
+                          'keyboard': { 'label': getLangString('prefs_kb_shortcuts'), 'icon': "fa-keyboard-o" },
+                          'mutes': { 'label': getLangString('prefs_muted_items'), 'icon': "fa-microphone-slash" },
+                          'language': { 'label': getLangString('prefs_langs'), 'icon': "fa-language" },
+                          'refresh': { 'label': getLangString('prefs_refresh_rate'), 'icon': "fa-refresh" },
+                          'widths': { 'label': getLangString('prefs_column_widths'), 'icon': "fa-arrows-h" }
                         };
-            html += '<strong class="lbltxt">What Would You Like to Change?</strong>';
+            html += '<strong class="lbltxt">' + getLangString('prefs_label') +  '</strong>';
             for ( item in items ) {
                 html += '<button id="btn-tl-' + item + '" class="btn btn-prefs" style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
                                ' onClick="fillPrefsWindow(\'' + item + '\')">' +
@@ -549,7 +549,7 @@ function fillPrefsWindow( opt ) {
                         };
             var rrate = readStorage('refresh_rate');
             html += '<strong class="lbltxt" style="width: 95%; padding: 0 2.5%;">' +
-                        'How Often Should the Timelines Be Updated?' +
+                        getLangString('refresh_rate') +
                     '</strong>';
             for ( item in items ) {
                 var bg = '#' + readStorage('header_background'),
@@ -601,15 +601,15 @@ function fillPrefsWindow( opt ) {
 
             if ( isNaN(sb_adjust) || sb_adjust === false ) { sb_adjust = 0; } else { sb_adjust = parseInt(sb_adjust); }
             html  = '<strong class="lbltxt" style="width: 95%; padding: 0 2.5%;">' +
-                        'Column Widths Off a Bit? Adjust Them Here.' +
+                        getLangString('width_adjust') + 
                     '</strong>' +
                     '<em class="lbltxt" style="display: block; width: 95%; text-align: justify; padding: 0 2.5%;">' +
-                        'Note: Negative Numbers Expand the Columns, Positive Numbers Narrow the Columns' +
+                        getLangString('width_note') +
                     '</em>' +
-                    '<label class="lbltxt">Width Adjustment</label>' +
+                    '<label class="lbltxt">' + getLangString('width_label') + '</label>' +
                     '<input type="number" id="scroll_amt" max="50" min="-50" onChange="setColumnWidthAdjustment();" value="' + sb_adjust + '">' +
                     '<em class="lbltxt" style="display: block; width: 95%; text-align: justify; margin-top: 25px; padding: 0 2.5%;">' +
-                        'Reported Screen Width: ' + sWidth + 'px / Height: ' + sHeight + 'px' +
+                        getLangString('width_screen') + ': ' + sWidth + 'px / ' + getLangString('width_height') +': ' + sHeight + 'px' +
                     '</em>';
             html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
                            ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> ' + getLangString('back') + '</button>';
@@ -678,7 +678,7 @@ function getButtonValue( id, item, type, on_click ) {
 }
 function toggleTimeline( tl ) {
     if ( tl === 'add' ) {
-        alert("[Debug] Sorry ... just a little more testing to do.");
+        alert("[Debug] " + getLangString('debug_testing'));
         return false;
     }
     window.timelines[tl] = !window.timelines[tl];

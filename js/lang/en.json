@@ -70,6 +70,8 @@
     "mute_finish": "You&apos;ll start seeing posts from [NAME] again",
     "block_start": "You won&apos;t see any more posts from [NAME]",
     "block_finish": "You&apos;ve successfully unblocked [NAME]",
+    "mutes_clients": "You Have Not Muted Any Clients",
+    "mutes_hashtags": "You Have Not Muted Any Hashtags",
 
     "spammer_title": "Reported Account",
     "spammer_thank": "Thank You For Making ADN A Little Bit Better!",
@@ -127,6 +129,7 @@
     "disp_co_label": "Column Options",
     "disp_co_notes": "Customise Your Columns",
     "disp_co_blend": "Show Interactions with Mentions",
+    "disp_co_inter": "Show Interactions",
     "disp_co_named": "Show Column Names",
     "disp_ap_label": "Account Profile",
     "disp_ap_notes": "Display and Hide Profile Information",
@@ -169,7 +172,48 @@
     "endpoint": "Endpoint",
     "status": "Status",
     "rspTime": "Time (ms)",
-
+    
+    "hover_label": "Mouse Hover Options",
+    "hover_notes": "You can have the Interaction buttons appear when your mouse hovers over a post if you&apos;d like.",
+    "hover_delay": "Hide After (Seconds)",
+    
+    "global_label": "Basic Global Timeline Filters",
+    "global_notes": "Customise How You See the Global Timeline",
+    "global_global_hide": "Accounts I Follow",
+     
+    "keyboard_label": "Keyboard Shortcuts",
+    "keyboard_notes": "Choose the Keyboard Shortcuts You Use",
+    "keyboard_n": "New Post (N)",
+    "keyboard_f3": "Preferences (F3)",
+    "keyboard_down": "Auto-Complete (▼)",
+    "keyboard_esc": "Escape (Esc)", 
+    
+    "lang_note": "PLEASE NOTE:",
+    "lang_translations": "Translations aren&apos;t close to done, or even correct in some instances. If you find a typo, let @matigo know. Thanks!",
+    "lang_choose": "Choose a Display Language:",
+    
+    "refresh_rate": "How Often Should the Timelines Be Updated?",
+    
+    "width_adjust": "Column Widths Off a Bit? Adjust Them Here.",
+    "width_note": "Note: Negative Numbers Expand the Columns, Positive Numbers Narrow the Columns",
+    "width_label": "Width Adjustment",
+    "width_screen": "Reported Screen Width: ",
+    "width_height": "Height",
+    
+    "prefs_label": "What Would You Like to Change?",
+    "prefs_colours": "Colours",
+    "prefs_column_length": "Column Length",
+    "prefs_display_prefs": "Display Prefs",
+    "prefs_fonts": "Fonts",
+    "prefs_hovers": "Hovers",
+    "prefs_filtering": "Filtering",
+    "prefs_kb_shortcuts": "Keyboard Shortcuts",
+    "prefs_muted_items": "Muted Items",
+    "prefs_langs": "Languages",
+    "prefs_refresh_rate": "Refresh Rate",
+    "prefs_column_widths": "Column Widths",
+    
+     
     "color_interface": "Interface Colours",
     "color_posts": "Post Colours",
     "color_avatar": "Avatar Colours",
@@ -198,11 +242,15 @@
     "file_progress": "Uploading ... [PROGRESS]% Complete",
     "file_validate": "Waiting for ADN to Validate File",
     
+    "debug_testing": "Sorry ... just a little more testing to do.",
+    
     "oops_title": "Oops ...",
     "err_invalid_audio": "Your browser does not support the audio element.",
     "err_one_fifteen": "Whoops. Please enter a value between 1 and 15",
     
     "err_upload01": "App.Net Returned a [CODE] Error:<br>[MESSAGE]",
+    
+    "err_implement": "Sadly, this has not been coded. Check back soon, though!",
     
     "err_geotitle": "Geolocation Problem",
     "err_geocase1": "Uh oh. Nice Is Not Permitted to Access Your Location Data",

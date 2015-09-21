@@ -70,6 +70,8 @@
     "mute_finish": "Du siehst nun wieder Posts von [NAME]",
     "block_start": "Du wirst nun keine Posts mehr von [NAME] sehen",
     "block_finish": "Du hast [NAME] erfolgreich entblockt",
+    "mutes_clients": "Du hast keine Clients stumm geschaltet",
+    "mutes_hashtags": "Du hast keine Hashtags stumm geschaltet",
 
     "spammer_title": "Account gemeldet",
     "spammer_thank": "Danke dafür ADN ein bisschen besser gemacht zu haben!",
@@ -127,6 +129,7 @@
     "disp_co_label": "Spalten-Optionen",
     "disp_co_notes": "Passe deine Spalten an",
     "disp_co_blend": "Zeige Interaktionen mit Erwähnungen",
+    "disp_co_inter": "Zeige Interaktionen",
     "disp_co_named": "Zeige Spalten-Namen",
     "disp_ap_label": "Account Profil",
     "disp_ap_notes": "Profilinformationen zeigen und verstecken",
@@ -168,7 +171,47 @@
     "endpoint": "Endpunkt",
     "status": "Status",
     "rspTime": "Zeit (ms)",
+    
+    "hover_label": "Mouse Hover Optionen",
+    "hover_notes": "Du kannst den Interaktions-Button erscheinen lassen, wenn du deinen Mauszeiger über über einen Post fährst, der dir gefällt.",
+    "hover_delay": "Verstecke nach (Sekunden)",
 
+    "global_label": "Grundlegende globale Timeline-Filter",
+    "global_notes": "Passe an, wie du die globale Timeline siehst",
+    "global_global_hide": "Accounts, denen ich folge",
+    
+    "keyboard_label": "Tastatur Shortcuts",
+    "keyboard_notes": "Wähle die Tastatur Shortcuts, die du benutzen möchtest",
+    "keyboard_n": "Neuer Post (N)",
+    "keyboard_f3": "Einstellungen (F3)",
+    "keyboard_down": "Auto-Vervollständigung (▼)",
+    "keyboard_esc": "Beenden (Esc)",
+    
+    "lang_note": "BITTE BEACHTEN:",
+    "lang_translations": "Die Übersetzungen sind noch weit davon entfernt perfekt zu sein oder gar vollständig in einer Sprache verfügbar. Falls du einen Tippfehler findest, lasse es @matigo wissen. Danke!",
+    "lang_choose": "Wähle eine Anzeigesprache:",
+    
+    "refresh_rate": "Wie oft soll die Timelines aktualisiert werden?",
+    
+    "width_adjust": "Spaltenbreite falsch? Korrigiere sie hier.",
+    "width_note": "Notiz: Negative Nummer verbreitern die Spalte, positive verschmälern sie",
+    "width_label": "Breitenkorrektur",
+    "width_screen": "Erkannte Bildschirmbreite: ",
+    "width_height": "Höhe",
+    
+    "prefs_label": "Was würdest du gerne ändern?",
+    "prefs_colours": "Colours",
+    "prefs_column_length": "Column Length",
+    "prefs_display_prefs": "Display Prefs",
+    "prefs_fonts": "Fonts",
+    "prefs_hovers": "Hovers",
+    "prefs_filtering": "Filtering",
+    "prefs_kb_shortcuts": "Keyboard Shortcuts",
+    "prefs_muted_items": "Muted Items",
+    "prefs_langs": "Languages",
+    "prefs_refresh_rate": "Refresh Rate",
+    "prefs_column_widths": "Column Widths",
+    
     "color_interface": "Farben der Oberfläche",
     "color_posts": "Post-Farben",
     "color_avatar": "Avatar-Farben",
@@ -185,11 +228,11 @@
     "avatar_color": "Regulärer Ring",
 
     "xproxy_title": "BITTE LESEN!",
-    "xproxy_line1": "Die Benutzung jeder einzelnen dieser Funktionen setzt voraus, dass die auf die App.Net Daten über die Nice.Social API, erstellt von mir (@matigo), zugreifst. Ich tracke weder deine Daten, noch werde ich deinen ADN Access-Token auf meinen Servern speichern. Die Nice.Social API wird dazu genutzt, um konsistente Informationen zu gewährleisten und mehr Daten mit weniger API-Aufrufen zu erhalten. Das bedeutet, dass du mehr Informationen in geringerer Zeit mit weniger Inkonsistenzen erhälst.",
+    "xproxy_line1": "Die Benutzung jeder einzelnen dieser Funktionen setzt voraus, dass du auf deine App.Net Daten über die Nice.Social API, erstellt von mir (@matigo), zugreifst. Ich tracke weder deine Daten, noch werde ich deinen ADN Access-Token auf meinen Servern speichern. Die Nice.Social API wird dazu genutzt, um konsistente Informationen zu gewährleisten und mehr Daten mit weniger API-Aufrufen zu erhalten. Das bedeutet, dass du mehr Informationen in geringerer Zeit mit weniger Inkonsistenzen erhälst.",
     "xproxy_line2": "Falls du nicht möchtest, dass deine App.Net Zugangsdaten durch die Nice.Social API verarbeitet werden, benutze bitte keine der 'Werkzeug' Funktionen. Hast du irgendwelche Fragen? Setze dich mit mir unter @matigo in Verbindung.",
     
     "yproxy_title": "DU MUSST DIES LESEN!",
-    "yproxy_line1": "Die Benutzung des Nice.Social Proxy Service bedeutet, dass alle Daten, die du von App.Net erhälst, als Erstes durch die Nice.Social API gehen. Das bedeutet, dass die Nice Server einen Großteil der CPU-Arbeit machen, um heraus zu finden, ob ein Post angezeigt werden soll oder nicht, als auch sicher zu stellen, dass alle benötigten Account-Details (wie Avatare und Namen) existieren, bevor die Daten deinen Browser erreichen. Jedes Mal, wenn du einen Post erstellt, gehen diese Informationen direkt zu App.Net, da es dort nichts gibt, was die Nice.Social API mit den Daten machen muss.",
+    "yproxy_line1": "Die Benutzung des Nice.Social Proxy Service bedeutet, dass alle Daten, die du von App.Net erhälst, als erstes durch die Nice.Social API gehen. Das bedeutet, dass die Nice Server einen Großteil der CPU-Arbeit machen, um heraus zu finden, ob ein Post angezeigt werden soll oder nicht. Zudem gewährleistet es auch, dass alle benötigten Account-Details (wie Avatare und Namen) existieren, bevor die Daten deinen Browser erreichen. Jedes Mal, wenn du einen Post erstellt, gehen diese Informationen direkt zu App.Net, da es dort nichts gibt, was die Nice.Social API mit den Daten machen muss.",
     "yproxy_line2": "Deine App.Net Anmeldedaten werden zu keinem Zeitpunkt auf den Nice.Social API Servern gespeichert. Ich möchte weder Zugriff auf deine Daten, noch habe ich jegliches Recht dazu. Dieser Service existiert nur um Bandbreite, CPU und Speicher zu reduzieren, die Nice auf deinem Gerät benötigt, um vollständigere Informationen anzuzeigen. Accountnamen in der DN-Spalte wären etwa ein gutes Beispiel dafür.",
     "yproxy_line3": "Falls du dein App.Net Access-Token nicht durch meine Nice.Social API Server lassen möchtest, aktiviere diese Einstellung nicht.",
     "yproxy_line4": "Hast du irgendwelche Fragen, Kommentare, Bedenken, Feedback? Setze dich mit mir unter @matigo in Verbindung.",
@@ -197,11 +240,15 @@
     "file_progress": "Hochladen ... [PROGRESS]% fertig gestellt",
     "file_validate": "Warte auf ADN, um Datei zu validieren",
     
+    "debug_testing": "Sorry ... hier ist noch ein bisschen Arbeit nötig.",   
+    
     "oops_title": "Ups ...",
     "err_invalid_audio": "Dein Browser unterstützt dieses Audioelement nicht.",
     "err_one_fifteen": "Whoops. Bitte gib einen Wert zwischen 1 und 15 ein",
     
     "err_upload01": "App.Net antwortete mit einem [CODE] Error:<br>[MESSAGE]",
+    
+    "err_implement": "Leider wurde diese Funktion noch nicht implementiert. Komm doch bald wieder!",
     
     "err_geotitle": "Geolocation Problem",
     "err_geocase1": "Uh oh. Nice Is Not Permitted to Access Your Location Data",
