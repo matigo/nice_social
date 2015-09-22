@@ -45,6 +45,7 @@ function getChannelMessages( chan_id ) {
             include_annotations: 1,
             include_deleted: 1,
             include_machine: 0,
+            include_marker: 1,
             access_token: access_token,
             include_html: 1,
             include_read: 1,
@@ -58,12 +59,19 @@ function parseChannel( data ) {
         var my_id = readStorage('user_id');
         var html = '',
             side = '';
+        var marker_name = '',
+            marker_id = '';
         showWaitState('chat_posts', 'Reading Posts');
 
         document.getElementById( 'chat_count' ).innerHTML = '(' + data.length + ' ' + getLangString('posts') + ')';
         document.getElementById( 'rpy-sendto' ).placeholder = String(data[0].channel_id);
         for ( var i = 0; i < data.length; i++ ) {
             showWaitState('chat_posts', getLangString('reading_posts') + ' (' + (i + 1) + '/' + data.length + ')');
+
+            if ( marker_name === '' ) {
+                marker_name = 'channel:' + data[i].channel_id;
+                marker_id = (data[i].id || data[i].pagination_id);
+            }
 
             side = ( data[i].user.id === my_id ) ? 'right' : 'left';
             html += '<div id="conv-' + data[i].id + '" class="post-item ' + side + '">' +
@@ -83,6 +91,26 @@ function parseChannel( data ) {
         }
         document.getElementById( 'chat_posts' ).innerHTML = html;
         toggleClassIfExists('conversation','hide','show');
+        markChannelRead( marker_name, marker_id );
+    }
+}
+function markChannelRead( marker_name, post_id ) {
+    var access_token = readStorage('access_token');
+
+    if ( access_token !== false ) {
+        var params = {
+            access_token: access_token,
+            name: marker_name,
+            id: post_id
+        };
+        doJSONQuery( '/posts/marker', false, 'POST', params, parseMarkUpdate, '' );
+    }
+}
+function parseMarkUpdate( data ) {
+    if ( data ) {
+        if ( readStorage('debug_on', false) === 'Y' ) {
+            console.log('Channel Marker [' + data.name + '] id: ' + data.id + ' last_read_id: ' + data.last_read_id);
+        }
     }
 }
 function buildJSONChannelObject( text, destinations, in_reply_to ) {

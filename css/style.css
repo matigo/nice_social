@@ -1216,6 +1216,73 @@ nav:not(.mm-menu) { display: none; }
         width: 10%;
     }
 }
+
+
+
+
+
+
+
+.chat .post-item .post-actions span ul {
+    display: none;
+    float: right;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    left: -50%;
+    top: 0;
+    width: 220px;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    list-style-type: none;
+    opacity: 0;
+    visibility: hidden;
+    -webkit-transiton: opacity 0.2s;
+    -moz-transition: opacity 0.2s;
+    -ms-transition: opacity 0.2s;
+    -o-transition: opacity 0.2s;
+    -transition: opacity 0.2s;
+}
+
+
+
+#user_posts .post-item .post-actions.show span ul.rbdrop.hide,
+.post-list .post-item .post-actions.show span ul.rbdrop.hide,
+.chat .post-item .post-actions.show span ul.rbdrop.hide {
+    display: none;
+    opacity: 0;
+    visibility: hidden;
+}
+#user_posts .post-item .post-actions.show span ul.rbdrop.show,
+.post-list .post-item .post-actions.show span ul.rbdrop.show,
+.chat .post-item .post-actions.show span ul.rbdrop.show {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+}
+
+.chat .post-item .post-actions span ul.rbdrop.show li {
+    background: #000;
+    background-color: #000;
+    border-radius: 10px;
+    color: #fff;
+    cursor: pointer;
+    display: inline-block;
+    font-size: 80%;
+    margin: 5px 0 0;
+    padding: 5px 10px;
+    position: relative;
+    text-align: right;
+    -webkit-transition: all 0.2s;
+    -moz-transition: all 0.2s;
+    -ms-transition: all 0.2s;
+    -o-transition: all 0.2s;
+    transition: all 0.2s;
+    width: 100%;
+}
+
+
 #user_posts .post-item .post-video,
 .post-list .post-item .post-video {
     background: transparent;

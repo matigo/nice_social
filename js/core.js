@@ -1867,17 +1867,32 @@ function buildRespondBar( post, is_convo ) {
     } else {
         html += '<span onclick="doDelete(' + post.id + ');"><i class="fa fa-trash"></i></span>';
     }
-    html += '<span onclick="doShowConv(' + post_id + ');"><i class="fa fa-comments-o"></i></span>' +
-            '<span onclick="doQuote(' + post_id + ');" style="font-size: 90%;"><i class="fa fa-quote-right"></i></span>' +
-            '<span id="' + post_id + '-star[TL]" name="' + post_id + '-star" onclick="doStar(' + post_id + ');" class="' + css_s + '">' +
+    if ( is_convo === false ) { html += '<span onclick="doShowConv(' + post_id + ');"><i class="fa fa-comments-o"></i></span>'; }
+    html += '<span id="' + post_id + '-star[TL]" name="' + post_id + '-star" onclick="doStar(' + post_id + ');" class="' + css_s + '">' +
                 '<i class="fa ' + icn_s + '"></i>' +
             '</span>';
     if ( is_convo ) {
         var post_source = post.source.name || 'unknown';
-        html += '<span onclick="muteClient(\'' + post_source + '\');"><i class="fa fa-microphone-slash"></i></span>';
+        var pdid = makeID(6);
+        html += '<span onclick="toggleRBarDrop(\'' + pdid + '\');">' +
+                    '<i class="fa fa-bars"></i>' +
+                    '<ul id="' + pdid + '" class="rbdrop hide">' +
+                        '<li onclick="doQuote(' + post_id + ');">Quote <i class="fa fa-quote-right"></i></li>' +
+                        '<li onclick="doOpenPost(\'' + post.user.username + '\', ' + post_id + ');">Open in Alpha <i class="fa fa-object-ungroup"></i></li>' +
+                        '<li onclick="doShowConv(' + post_id + ');">Show Previous <i class="fa fa-comments-o"></i></li>' +
+                        '<li onclick="muteClient(\'' + post_source + '\');"">Mute Client <i class="fa fa-microphone-slash"></i></li>' +
+                    '</ul>' +
+                '</span>';
     }
     html += '</div>';
     return html;
+}
+function toggleRBarDrop( id ) {
+    toggleClassIfExists( id , 'hide', 'show', true);
+}
+function doOpenPost( account_name, post_id ) {
+    var w = window.open('https://alpha.app.net/' + account_name + '/post/' + post_id, '_blank');
+    w.focus();
 }
 function isMention( post ) {
     var my_id = readStorage('user_id');
@@ -2173,13 +2188,13 @@ function parseConversation( data ) {
             if ( show_ids.indexOf(this_id) >= 0 ) { show_ids.push(parseInt(data[i].reply_to)); }
             if ( show_ids.indexOf(this_id) < 0 ) { sname = ' post-minimum'; }
             if ( this_id === reply_to || this_id === post_id ) { sname = ' post-grey'; }
-            _html = '<div id="conv-' + data[i].id + '" class="post-item' + sname + '" onClick="showHideActions(' + data[i].id + ', \'-c\');">' +
+            _html = '<div id="conv-' + data[i].id + '" class="post-item' + sname + '">' +
                         '<div id="' + data[i].id + '-po" class="post-avatar">' +
                             '<img class="avatar-round"' +
                                 ' onClick="doShowUser(' + data[i].user.id + ');"' +
                                 ' src="' + data[i].user.avatar_image.url + '">' +
                         '</div>' +
-                        '<div id="' + data[i].id + '-dtl" class="post-content">' +
+                        '<div id="' + data[i].id + '-dtl" class="post-content" onClick="showHideActions(' + data[i].id + ', \'-c\');">' +
                             '<h5 class="post-name"><span>' + data[i].user.username + '</span></h5>' +
                             parseText( data[i] ) +
                             '<p class="post-time">' +
