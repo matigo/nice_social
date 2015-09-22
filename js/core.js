@@ -2690,7 +2690,6 @@ function doGreyConv( first_id, reply_id ) {
     if ( reply_id === 0 ) { return true; }
     [].forEach.call(document.getElementById("chat_posts").children, function(element) {
         removeClass(element.id, 'post-grey');
-        addClass(element.id,'post-minimum');
     });
     addClass('conv-' + first_id,'post-grey');
     removeClass('conv-' + first_id, 'post-minimum');
