@@ -29,7 +29,7 @@
 
     "starred_post": "starred your post",
     "reposted_post": "reposted your post",
-    "follows_you": "is now following you. Yay!",
+    "followed_you": "is now following you. Yay!",
     "no_posts": "There are no posts to show",
     "post_gone": "*{Message Deleted}*",
     "download_file": "Download this File",
@@ -151,6 +151,7 @@
     "btnFiles": "Files",
     "btnFolls": "Following",
     "btnProxy": "Nice Proxy",
+    "btnNetwk": "Network",
 
     "setting_title": "Settings",
     "account_title": "Choose an Account",

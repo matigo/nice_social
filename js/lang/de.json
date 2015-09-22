@@ -29,7 +29,7 @@
 
     "starred_post": "hat deinen Post favorisiert",
     "reposted_post": "hat deinen Post geteilt",
-    "follows_you": "folgt dir nun. Hurra!",
+    "followed_you": "folgt dir nun. Hurra!",
     "no_posts": "Keine Posts zum anzeigen",
     "post_gone": "*{Nachricht gelöscht}*",
     "download_file": "Lade diese Datei herunter",
@@ -156,6 +156,7 @@
     "btnFiles": "Dateien",
     "btnFolls": "Following",
     "btnProxy": "Nice Proxy",
+    "btnNetwk": "Network",
 
     "setting_title": "Einstellungen",
     "account_title": "Wähle deinen Account",

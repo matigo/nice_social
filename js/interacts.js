@@ -54,16 +54,17 @@ function parseInteractions( resp ) {
 }
 function buildInteractionItem( pagination_id ) {
     var data = window.coredata['net.app.interactions'][ pagination_id ];
+    var t_id = pagination_id + '-' + makeID(3);
     var html = '',
         icon = '',
         text = '',
         what = '',
-        when = '<span id="' + pagination_id + '-time">' + getTimestamp( data.event_date ).toLowerCase() + '</span>';
+        when = '<span id="' + t_id + '" name="' + pagination_id + '-time">' + getTimestamp( data.event_date ).toLowerCase() + '</span>';
 
     switch ( data.action ) {
         case 'follow':
             icon = 'fa-user-plus';
-            what = ' ' + getLangString('follows_you');
+            what = ' ' + getLangString('followed_you');
             break;
 
         case 'repost':
@@ -92,4 +93,15 @@ function buildInteractionItem( pagination_id ) {
                 what + text +
             '</div>';
     return html;
+}
+function makeID( length ) {
+    if ( parseInt(length) <= 0 || length === undefined ) { length = 3; }
+    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    var rVal = "";
+
+    for( var i=0; i < length; i++ ) {
+        rVal += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+
+    return rVal;
 }

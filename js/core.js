@@ -15,6 +15,14 @@ String.prototype.hashCode = function() {
     }
     return hash;
 };
+if(!Array.prototype.indexOf) {
+    Array.prototype.indexOf = function(needle) {
+        for(var i = 0; i < this.length; i++) {
+            if(this[i] === needle) { return i; }
+        }
+        return -1;
+    };
+}
 jQuery.fn.scrollTo = function(elem, speed) { 
     $(this).animate({
         scrollTop:  $(this).scrollTop() - $(this).offset().top + $(elem).offset().top 
@@ -825,6 +833,7 @@ function getTimeline() {
             include_annotations: 1,
             include_deleted: 0,
             include_machine: 0,
+            include_muted: 1,
             access_token: access_token,
             include_html: 1,
             count: 200
@@ -841,6 +850,7 @@ function getMentions() {
             include_annotations: 1,
             include_deleted: 0,
             include_machine: 0,
+            include_muted: 1,
             access_token: access_token,
             include_html: 1,
             count: 50
@@ -875,6 +885,7 @@ function getGlobalRecents( since_id ) {
         include_annotations: 1,
         include_deleted: 0,
         include_machine: 0,
+        include_muted: 1,
         include_html: 1,
         count: 200
     }
@@ -912,6 +923,7 @@ function getGlobalItems() {
         include_annotations: 1,
         include_deleted: 1,
         include_machine: 0,
+        include_muted: 1,
         include_html: 1,
         since_id: readStorage( 'since', true),
         count: 200        
@@ -1436,20 +1448,22 @@ function redrawPosts() {
     if ( last_ts != window.coredata[ 'net.app.global-ts' ] ) {
         var my_id = readStorage('user_id');
         var is_mention = false,
-            is_follow = false;
+            is_follow = false,
+            you_muted = false;
 
         for ( post_id in window.coredata['net.app.global'] ) {
             if ( window.coredata['net.app.global'][post_id] !== false ) {
                 action_at = window.coredata['net.app.global'][post_id].created_at;
                 is_mention = isMention( window.coredata['net.app.global'][post_id] );
-                is_follow = (window.coredata['net.app.global'][post_id].user.you_follow 
-                            || (window.coredata['net.app.global'][post_id].user.id === my_id) 
+                is_follow = (window.coredata['net.app.global'][post_id].user.you_follow
+                            || (window.coredata['net.app.global'][post_id].user.id === my_id)
                             || false);
+                you_muted = (window.coredata['net.app.global'][post_id].user.id === my_id) ? false : window.coredata['net.app.global'][post_id].user.you_muted;
                 postText = '';
 
                 if ( window.timelines.home ) {
                     if ( checkElementExists(post_id + '-h') === false ) {
-                        if ( is_mention || is_follow ) {
+                        if ( is_mention || (is_follow && you_muted === false) ) {
                             last_id = getPreviousElement(post_id, 'home', '-h');
                             if ( last_id !== false ) {
                                 if ( postText === '' ) { postText = getPostText(post_id); }
@@ -1500,7 +1514,7 @@ function redrawPosts() {
 
                 if ( window.timelines.global ) {
                     if ( checkElementExists(post_id + '-g') === false ) {
-                        if ( global_showall || is_follow === false ) {
+                        if ( (global_showall || is_follow === false) && you_muted === false ) {
                             last_id = getPreviousElement(post_id, 'global', '-g');
                             if ( last_id !== false ) {
                                 if ( postText === '' ) { postText = getPostText(post_id); }
@@ -1526,9 +1540,11 @@ function getPostText( post_id, override ) {
     if ( muted === false || override ) {
         _html = buildHTMLSection( window.coredata['net.app.global'][post_id] );
     } else {
-        _html = '<span onClick="showMutedPost(' + post_id + ', \'[TL]\');" class="post-muted">' +
-                    '@' + window.coredata['net.app.global'][post_id].user.username + ' - ' + muted +
-                '</span>';
+        if ( muted !== true ) {
+            _html = '<span onClick="showMutedPost(' + post_id + ', \'[TL]\');" class="post-muted">' +
+                        '@' + window.coredata['net.app.global'][post_id].user.username + ' - ' + muted +
+                    '</span>';
+        }
     }
     return _html;
 }
@@ -2107,7 +2123,7 @@ function parseConversation( data ) {
     if ( data ) {
         var respond = '',
             sname = '',
-            html = '';
+            _html = '';
         var is_mention = false,
             followed = false;
         var reply_to = 0,
@@ -2120,6 +2136,7 @@ function parseConversation( data ) {
             post_time = '',
             post_by = '';
         var my_id = readStorage('user_id');
+        var show_ids = [post_id];
 
         document.getElementById( 'chat_count' ).innerHTML = '(' + data.length + ' Posts)';
         for ( var i = 0; i < data.length; i++ ) {
@@ -2153,8 +2170,10 @@ function parseConversation( data ) {
             post_source = ' via ' + data[i].source.name || 'unknown';
             post_client = data[i].source.name || 'unknown';
 
-            if ( this_id === reply_to ) { sname = ' post-grey'; }
-            html += '<div id="conv-' + data[i].id + '" class="post-item' + sname + '" onClick="showHideActions(' + data[i].id + ', \'-c\');">' +
+            if ( show_ids.indexOf(this_id) >= 0 ) { show_ids.push(parseInt(data[i].reply_to)); }
+            if ( show_ids.indexOf(this_id) < 0 ) { sname = ' post-minimum'; }
+            if ( this_id === reply_to || this_id === post_id ) { sname = ' post-grey'; }
+            _html = '<div id="conv-' + data[i].id + '" class="post-item' + sname + '" onClick="showHideActions(' + data[i].id + ', \'-c\');">' +
                         '<div id="' + data[i].id + '-po" class="post-avatar">' +
                             '<img class="avatar-round"' +
                                 ' onClick="doShowUser(' + data[i].user.id + ');"' +
@@ -2168,10 +2187,11 @@ function parseConversation( data ) {
                             '</p>' +
                         '</div>' +
                         respond.replaceAll('[TL]', '-c') +
-                    '</div>';
+                    '</div>' + _html;
         }
-        document.getElementById( 'chat_posts' ).innerHTML = html;
+        document.getElementById( 'chat_posts' ).innerHTML = _html;
         toggleClassIfExists('conversation','hide','show');
+        document.getElementById('conv-' + post_id).scrollIntoView();
     }
 }
 
@@ -2216,7 +2236,11 @@ function showHideActions( post_id, tl ) {
             if ($(div).length) { toggleClassIfExists(post_id + '-rsp-' + tls[i],'show','hide'); }
         }
     } else {
-        toggleClassIfExists(post_id + '-rsp' + tl,'hide','show',true);
+        if ( tl === '-c' ) {
+            if ( checkHasClass('conv-' + post_id, 'post-minimum') === false ) { toggleClassIfExists(post_id + '-rsp' + tl,'hide','show',true); }
+        } else {
+            toggleClassIfExists(post_id + '-rsp' + tl,'hide','show',true);
+        }
     }
 }
 function showHideResponse() {
@@ -2663,12 +2687,16 @@ function setSelectionRange(input, selectionStart, selectionEnd) {
     }
 }
 function doGreyConv( first_id, reply_id ) {
+    if ( reply_id === 0 ) { return true; }
     [].forEach.call(document.getElementById("chat_posts").children, function(element) {
         removeClass(element.id, 'post-grey');
+        addClass(element.id,'post-minimum');
     });
     addClass('conv-' + first_id,'post-grey');
+    removeClass('conv-' + first_id, 'post-minimum');
     if ( reply_id > 0 ) {
         addClass('conv-' + reply_id,'post-grey');
+        removeClass('conv-' + reply_id, 'post-minimum');
         document.getElementById('conv-' + reply_id).scrollIntoView();
     }
 }
@@ -2842,7 +2870,7 @@ function parseFileUpload( response, file, anno_type ) {
         case 400:
         case 507:
             var msg = getLangString('err_upload01');
-            saveStorage('msgText', msg.ireplaceAll('[CODE]', meta.code).ireplaceAll('[MESSAGE]', meta.error_message), true);
+            saveStorage('msgText', msg.replaceAll('[CODE]', meta.code).replaceAll('[MESSAGE]', meta.error_message), true);
             saveStorage('is_uploading', 'N', true);
             showMsg = true;
             break;
@@ -2857,7 +2885,7 @@ function parseFileUpload( response, file, anno_type ) {
                     var done = e.loaded, total = e.total;
                     var progress = (Math.floor(done/total*1000)/10);
                     var msg = getLangString('file_progress');
-                    if ( progress > 0 && progress <= 99.99999 ) { setSplashMessage(msg.ireplaceAll('[PROGRESS]', progress)); }
+                    if ( progress > 0 && progress <= 99.99999 ) { setSplashMessage(msg.replaceAll('[PROGRESS]', progress)); }
                     if ( progress === 100 ) { setSplashMessage( getLangString('file_validate') ); }
                     if ( progress <= 0 || progress > 100 ) { setSplashMessage(''); }
                     saveStorage('is_uploading', 'Y', true);
@@ -2887,7 +2915,7 @@ function parseFileUpload( response, file, anno_type ) {
 
                         case 507:
                             var msg = getLangString('err_upload01');
-                            saveStorage('msgText', msg.ireplaceAll('[CODE]', meta.code).ireplaceAll('[MESSAGE]', meta.error_message), true);
+                            saveStorage('msgText', msg.replaceAll('[CODE]', meta.code).replaceAll('[MESSAGE]', meta.error_message), true);
                             showMsg = true;
                             break;
 
@@ -3003,8 +3031,8 @@ function muteHashtag( name ) {
     for ( var idx = 0; idx <= hashes.length; idx++ ) { if ( hashes[idx] === name ) { return true; } }
     hashes.push(name);
     saveStorage('muted_hashes', JSON.stringify(hashes));
-    saveStorage('msgTitle', getLangString('mute_title').ireplaceAll('[NAME]', name), true);
-    saveStorage('msgText', getLangString('hash_mutemsg').ireplaceAll('[NAME]', name), true);
+    saveStorage('msgTitle', getLangString('mute_title').replaceAll('[NAME]', name), true);
+    saveStorage('msgText', getLangString('hash_mutemsg').replaceAll('[NAME]', name), true);
     if ( constructDialog('okbox') ) { toggleClassIfExists('okbox','hide','show'); }
     return true;
 }
@@ -3043,6 +3071,7 @@ function muteClient( name ) {
 }
 function isMutedItem( post_id ) {
     var clients = readMutedClients();
+    var hide_muted = readStorage('hide_muted', false);
     if ( window.coredata['net.app.global'][post_id].source.name === undefined || window.coredata['net.app.global'][post_id].source.name === '' ) {
         return 'Unknown Client';
     }
@@ -3050,7 +3079,7 @@ function isMutedItem( post_id ) {
     for ( var idx = 0; idx <= clients.length; idx++ ) { 
         if ( clients[idx] === name ) { 
             var mm = getLangString('muted_client');
-            return mm.replaceAll('[NAME]', name);
+            return ( hide_muted === 'Y' ) ? true : mm.replaceAll('[NAME]', name);
         }
     }
 
@@ -3061,7 +3090,7 @@ function isMutedItem( post_id ) {
             for ( n in tags ) {
                 for ( idx in hashes ) {
                     var hh = getLangString('muted_hashtag');
-                    if ( hashes[idx] === tags[n].name ) { return hh.replaceAll('[NAME]', tags[n].name); }
+                    if ( hashes[idx] === tags[n].name ) { return ( hide_muted === 'Y' ) ? true : hh.replaceAll('[NAME]', tags[n].name); }
                 }
             }
         }
@@ -3074,7 +3103,7 @@ function muteAccount( ismuted, account_id ) {
 
     if ( access_token !== false ) {
         var params = { access_token: access_token };
-        doJSONQuery( '/users/' + account_id + '/mute', false, action_type, params, parseBlockAction, '' );
+        doJSONQuery( '/users/' + account_id + '/mute', false, action_type, params, parseMuteAction, '' );
     } else {
         getAuthorisation();
     }
@@ -3099,7 +3128,7 @@ function parseMuteAction( data ) {
     showHideDialog();
 }
 function parseBlockAction( data ) {
-    var mute_text = (data.you_muted) ? getLangString('block_start') : getLangString('block_finish');
+    var mute_text = (data.you_blocked) ? getLangString('block_start') : getLangString('block_finish');
     showHidePostsFromAccount(data.id, data.you_blocked);
     saveStorage('msgTitle', getLangString('done_and_done'), true);
     saveStorage('msgText', mute_text.replaceAll('[NAME]', data.username), true);
