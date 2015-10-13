@@ -243,7 +243,6 @@ function continueLoadProcess() {
     if ( prepApp() ) {
         window.setInterval(function(){
             getGlobalItems();
-            /* findTopPost(); */
             redrawList();
         }, 1000);
         window.setInterval(function(){ collectRankSummary(); }, 60*60*1000);
@@ -533,7 +532,7 @@ function writePost( text, in_reply_to ) {
             }
         });
         $.ajax({
-            url: window.apiURL + '/posts',
+            url: window.apiURL + '/posts?include_annotations=1',
             crossDomain: true,
             data: buildJSONPost(text, in_reply_to),
             type: 'POST',
@@ -1567,7 +1566,7 @@ function getPreviousElementByTime( time_str, timeline, tl_ref ) {
         var objTime = new Date( $('#' + elems.children[idx].id).data("content") );        
         if ( objTime < comTime ) { return elems.children[idx].id; }
     }
-    return '0' + tl_ref;    
+    return '0' + tl_ref;
 }
 function checkElementExists( div_id ) {
     var element =  document.getElementById( div_id );
@@ -2152,6 +2151,9 @@ function parseConversation( data ) {
             post_by = '';
         var my_id = readStorage('user_id');
         var show_ids = [post_id];
+        var post_min = 0,
+            post_max = 0,
+            post_cnt = 0;
 
         document.getElementById( 'chat_count' ).innerHTML = '(' + data.length + ' Posts)';
         for ( var i = 0; i < data.length; i++ ) {
@@ -2188,7 +2190,23 @@ function parseConversation( data ) {
             if ( show_ids.indexOf(this_id) >= 0 ) { show_ids.push(parseInt(data[i].reply_to)); }
             if ( show_ids.indexOf(this_id) < 0 ) { sname = ' post-minimum'; }
             if ( this_id === reply_to || this_id === post_id ) { sname = ' post-grey'; }
-            _html = '<div id="conv-' + data[i].id + '" class="post-item' + sname + '">' +
+            
+            if ( show_ids.indexOf(this_id) >= 0 ) {
+                if ( post_min > 0 ) {
+                    var lbl = (( post_cnt == 1 ) ? ' Post' : ' Posts');
+                    _html = '<div id="ph-' + post_min + '" class="post-item post-collapsed" data-min="' + post_min + '">' +
+                                '<div class="post-content" style="text-align: center;" onClick="showConvPosts(' + post_min + ');">' +
+                                    '<span class="item">' + addCommas(post_cnt) + lbl + ' Collapsed <i class="fa fa-expand"></i></span>' +
+                                '</div>' +
+                            '</div>' + _html;
+                    post_min = post_cnt = 0;
+                }
+            } else {
+                if ( post_min == 0 ) { post_min = this_id; }
+                post_cnt++;
+            }
+
+            _html = '<div id="conv-' + data[i].id + '" name="' + data[i].id + '" class="post-item' + sname + '" data-min="' + post_min + '">' +
                         '<div id="' + data[i].id + '-po" class="post-avatar">' +
                             '<img class="avatar-round"' +
                                 ' onClick="doShowUser(' + data[i].user.id + ');"' +
@@ -2209,10 +2227,18 @@ function parseConversation( data ) {
         document.getElementById('conv-' + post_id).scrollIntoView();
     }
 }
-
+function showConvPosts( min ) {
+    var elems = document.getElementById('chat_posts');
+    var min_id = 0;
+    for ( var idx = 0; idx < elems.children.length; idx++ ) {
+        min_id = $('#' + elems.children[idx].id).data("min");
+        if ( parseInt(min_id) === min ) { removeClassIfExists(elems.children[idx].id, 'post-minimum'); }
+    }
+    var element = document.getElementById('ph-' + min);
+    element.parentNode.removeChild(element);
+}
 function checkVisible( elm, evalType ) {
     evalType = evalType || "visible";
-
     var vpH = $(window).height(),
         st = $(window).scrollTop(),
         y = $('#' + elm).offset().top,

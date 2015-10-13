@@ -18,7 +18,7 @@ function populateAccountNames() {
     var post_id = document.getElementById( 'rpy-sendto' ).placeholder;
     var data = window.coredata['net.app.core.pm'][ post_id ];
     var my_id = readStorage('user_id');
-    var user_list = '@' + data.owner.username;
+    var user_list = (data.owner !== undefined) ? '@' + data.owner.username : '';
 
     /* Construct the User List */
     for ( var i = 0; i < data.writers.user_ids.length; i++ ) {
@@ -63,8 +63,8 @@ function parseChannel( data ) {
             marker_id = '';
         showWaitState('chat_posts', 'Reading Posts');
 
-        document.getElementById( 'chat_count' ).innerHTML = '(' + data.length + ' ' + getLangString('posts') + ')';
-        document.getElementById( 'rpy-sendto' ).placeholder = String(data[0].channel_id);
+        document.getElementById('chat_count').innerHTML = '(' + data.length + ' ' + getLangString('posts') + ')';
+        document.getElementById('rpy-sendto').placeholder = String(data[0].channel_id);
         for ( var i = 0; i < data.length; i++ ) {
             showWaitState('chat_posts', getLangString('reading_posts') + ' (' + (i + 1) + '/' + data.length + ')');
 
@@ -73,23 +73,25 @@ function parseChannel( data ) {
                 marker_id = (data[i].id || data[i].pagination_id);
             }
 
-            side = ( data[i].user.id === my_id ) ? 'right' : 'left';
-            html += '<div id="conv-' + data[i].id + '" class="post-item ' + side + '">' +
-                        '<div id="' + data[i].id + '-po" class="post-avatar">' +
-                            '<img class="avatar-round"' +
-                                ' onClick="doShowUser(' + data[i].user.id + ');"' +
-                                ' src="' + data[i].user.avatar_image.url + '">' +
-                        '</div>' +
-                        '<div id="' + data[i].id + '-dtl" class="post-content">' +
-                            '<h5 class="post-name"><span>' + data[i].user.username + '</span></h5>' +
-                            parseText( data[i] ) +
-                            '<p class="post-time">' +
-                                '<em onClick="showHideActions(' + data[i].id + ', \'-x\');">' + humanized_time_span(data[i].created_at) + '</em>' +
-                            '</p>' +
-                        '</div>' +
-                    '</div>';
+            if ( data[i].is_deleted === undefined ) {
+                side = ( data[i].user.id === my_id ) ? 'right' : 'left';
+                html += '<div id="conv-' + data[i].id + '" class="post-item ' + side + '">' +
+                            '<div id="' + data[i].id + '-po" class="post-avatar">' +
+                                '<img class="avatar-round"' +
+                                    ' onClick="doShowUser(' + data[i].user.id + ');"' +
+                                    ' src="' + data[i].user.avatar_image.url + '">' +
+                            '</div>' +
+                            '<div id="' + data[i].id + '-dtl" class="post-content">' +
+                                '<h5 class="post-name"><span>' + data[i].user.username + '</span></h5>' +
+                                parseText( data[i] ) +
+                                '<p class="post-time">' +
+                                    '<em onClick="showHideActions(' + data[i].id + ', \'-x\');">' + humanized_time_span(data[i].created_at) + '</em>' +
+                                '</p>' +
+                            '</div>' +
+                        '</div>';
+            }
         }
-        document.getElementById( 'chat_posts' ).innerHTML = html;
+        document.getElementById('chat_posts').innerHTML = html;
         toggleClassIfExists('conversation','hide','show');
         markChannelRead( marker_name, marker_id );
     }
@@ -192,7 +194,7 @@ function writeChannelPost( text, channel_id, destinations, in_reply_to ) {
             }
         });
         $.ajax({
-            url: window.apiURL + '/channels/' + channel_id + '/messages',
+            url: window.apiURL + '/channels/' + channel_id + '/messages?include_annotations=1',
             crossDomain: true,
             data: buildJSONChannelObject(text, destinations, in_reply_to),
             type: 'POST',

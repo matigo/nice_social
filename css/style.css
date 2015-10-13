@@ -890,11 +890,16 @@ nav:not(.mm-menu) { display: none; }
     -webkit-overflow-scrolling: touch;
     -webkit-transform: translate3d(0, 0, 0);
 }
-#chat_posts.chat.show .post-item.post-minimum {
-    height: 1px;
-    overflow: hidden;
-    padding: 1px 0 0;
+#chat_posts.chat.show .post-item.post-collapsed {
+    cursor: pointer;
+    text-align: center;
 }
+#chat_posts.chat.show .post-item.post-collapsed.item {
+    display: block;
+    text-align: center;
+    width: 100%;
+}
+#chat_posts.chat.show .post-item.post-minimum { display: none; }
 @media all and (min-device-width:768px) {  .post-list { max-width: 480px; } }
 .post-list .mobile-hide { display: none; }
 @media all and (min-device-width:768px) {  .post-list .mobile-hide { display: inline-block; } }
