@@ -620,7 +620,7 @@ function buildJSONPost( text, in_reply_to ) {
             /* Build the Public-facing Post */
             text = '';
             if ( post_title !== '' ) {
-                text = 'New Post: [' + post_title + '](http://longposts.com/{post_id}) #adnblog';
+                text = 'New Post: [' + post_title + '](https://longposts.net/p/{post_id}) #adnblog';
             } else {
                 var idx = 0,
                     max = 235;
@@ -630,7 +630,7 @@ function buildJSONPost( text, in_reply_to ) {
                     }
                 }
                 if ( idx === 0 || idx > max ) { idx = max; }
-                text = post_body.substring(0, idx) + '… [Read More](http://longposts.com/{post_id}) #adnblog';
+                text = post_body.substring(0, idx) + '… [Read More](https://longposts.net/p/{post_id}) #adnblog';
             }
         }
 
