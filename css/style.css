@@ -930,6 +930,8 @@ nav:not(.mm-menu) { display: none; }
     padding-top: 5px;
     text-align: center;
     vertical-align: top;
+    height: 60px;
+    width: 60px;
     max-width: 60px;
 }
 @media all and (min-device-width:768px) {
@@ -948,10 +950,11 @@ nav:not(.mm-menu) { display: none; }
     background: #fff;
     border: 1px solid #ccc;
     border-radius: 50px;
-    height: auto;
+    height: 50px;
+    width: 50px;
     max-height: 50px;
-    padding: 2px;
     max-width: 50px;
+    padding: 2px;
     width: 60%;
 }
 @media all and (min-device-width:768px) {
@@ -1329,7 +1332,8 @@ nav:not(.mm-menu) { display: none; }
     margin: 0 15px;
     padding: 2px;
     max-width: 75px;
-    height: auto;
+    height: 75px;
+    width: 75px;
 }
 .pm-content .post-item .post-content {
     background: #fff;
