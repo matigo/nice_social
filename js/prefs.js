@@ -643,7 +643,7 @@ function fillPrefsWindow( opt ) {
             }
 
             html += '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
-                           ' onClick="fillPrefsWindow(\'prefs\');"><i class="fa fa-reply"></i> ' + getLangString('back') + '</button>';
+                           ' onClick="fillPrefsWindow(\'main\');"><i class="fa fa-reply"></i> ' + getLangString('back') + '</button>';
             break;
 
         default:

@@ -426,7 +426,7 @@ function buildPMItem( post_type, post_id ) {
     return html;
 }
 function parseRecentText( post ) {
-    var html = post.recent_message.html + ' ',
+    var html = post.recent_message.html.replaceAll('<a href=', '<a target="_blank" href=', '') + ' ',
         name = '',
         cStr = ' style="font-weight: bold; cursor: pointer;"';
     var replaceHtmlEntites = (function() {

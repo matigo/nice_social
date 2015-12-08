@@ -701,7 +701,10 @@ nav:not(.mm-menu) { display: none; }
     opacity: 1;
     visibility: visible;
 }
-.profile .names h3 { color: #fff; }
+.profile .names h3 {
+    color: #fff;
+    text-shadow: 2px 1px #000;
+}
 .profile .info {
     padding: 0 10px;
     margin-bottom: 10px;
@@ -928,10 +931,11 @@ nav:not(.mm-menu) { display: none; }
     display: inline-block;
     margin-left: 0;
     padding-top: 5px;
-    text-align: center;
+    text-align: left;
     vertical-align: top;
     height: 60px;
     width: 60px;
+    max-height: 60px;
     max-width: 60px;
 }
 @media all and (min-device-width:768px) {
@@ -939,6 +943,7 @@ nav:not(.mm-menu) { display: none; }
     .post-list .post-item .post-avatar,
     .chat .post-item .post-avatar {
         margin-left: 10px;
+        max-height: 75px;
         max-width: 75px;
         text-align: left;
     }
@@ -954,18 +959,17 @@ nav:not(.mm-menu) { display: none; }
     width: 50px;
     max-height: 50px;
     max-width: 50px;
-    padding: 2px;
-    width: 60%;
 }
 @media all and (min-device-width:768px) {
     .post-list .pulse-item .pulse-avatar .avatar-round,
     .post-list .post-item .post-avatar .avatar-round,
     .chat .post-item .post-avatar .avatar-round {
         border-radius: 50px;
-        height: auto;
+        height: 50px;
         max-height: 50px;
         max-width: 50px;
-        width: 75%;
+        padding: 2px;
+        width: 50px;
     }
 }
 .post-list .post-item .post-avatar img.avatar-round.recent-acct { border: 2px solid #d9534f; }

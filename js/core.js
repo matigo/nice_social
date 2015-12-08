@@ -770,6 +770,7 @@ function parseUserProfile( data ) {
 
         // Set the Header Information
         document.getElementById( 'usr-banner' ).style.backgroundImage = 'url("' + data.cover_image.url + '")';
+        document.getElementById( 'usr-banner' ).style.backgroundSize = 'cover';
         document.getElementById( 'usr-avatar' ).innerHTML = '<img class="avatar-square" src="' + data.avatar_image.url + '">';
         document.getElementById( 'usr-names' ).innerHTML =  '<h3>' + data.username + '</h3>' +
                                                             '<h4 style="color:#' + h4color + '">' + data.name + '</h4>' +
@@ -1096,12 +1097,13 @@ function isValidClient( post ) {
     if ( account_age <= 7 ) { if ( mute_client.indexOf(post_client) >= 0 ) { rVal = false; } }
     return rVal;
 }
-function buildNode( post_id, tl_ref, data, type, html ) {
+function buildNode( post_id, tl_ref, data, type, html, account_id ) {
     var elem = document.createElement("div");
     elem.setAttribute('id', post_id + tl_ref);
     elem.setAttribute('name', post_id);
     elem.setAttribute('class', type + '-item');
     elem.setAttribute('data-content', data);
+    if ( account_id !== null ) { elem.setAttribute('data-account', account_id); }
     elem.innerHTML = html;
 
     return elem;
@@ -1375,9 +1377,10 @@ function redrawInteractions() {
                 for ( _id in window.coredata['net.app.interactions'] ) {
                     if ( checkElementExists( _id + '-i') === false ) {
                         var event_at = window.coredata['net.app.interactions'][ _id ].event_date;
+                        var account = window.coredata['net.app.interactions'][ _id ].user.id;
                         var last_id = getPreviousElementByTime( event_at, 'interact', '-i' );
                         var html = buildInteractionItem( _id );
-                        document.getElementById('interact').insertBefore( buildNode( _id, '-i', event_at, 'pulse', html),
+                        document.getElementById('interact').insertBefore( buildNode( _id, '-i', event_at, 'pulse', html, account),
                                                                           document.getElementById(last_id) );
                     }
                 }
@@ -1452,6 +1455,7 @@ function redrawPosts() {
 
         for ( post_id in window.coredata['net.app.global'] ) {
             if ( window.coredata['net.app.global'][post_id] !== false ) {
+                var account = window.coredata['net.app.global'][post_id].user.id;
                 action_at = window.coredata['net.app.global'][post_id].created_at;
                 is_mention = isMention( window.coredata['net.app.global'][post_id] );
                 is_follow = (window.coredata['net.app.global'][post_id].user.you_follow
@@ -1469,7 +1473,8 @@ function redrawPosts() {
                                 if ( postText !== '' ) {
                                     document.getElementById('home').insertBefore( buildNode(post_id, '-h',
                                                                                             action_at, 'post', 
-                                                                                            postText.replaceAll('[TL]', '-h', '')),
+                                                                                            postText.replaceAll('[TL]', '-h', ''),
+                                                                                            account),
                                                                                   document.getElementById(last_id) );
 
                                 }
@@ -1487,7 +1492,8 @@ function redrawPosts() {
                                 if ( postText !== '' ) {
                                     document.getElementById('mentions').insertBefore( buildNode( post_id, '-m',
                                                                                                  action_at, 'post',
-                                                                                                 postText.replaceAll('[TL]', '-m', '')),
+                                                                                                 postText.replaceAll('[TL]', '-m', ''),
+                                                                                                 account),
                                                                                       document.getElementById(last_id) );
                                 }
                             }
@@ -1502,7 +1508,7 @@ function redrawPosts() {
                                     var event_at = window.coredata['net.app.interactions'][ _id ].event_date;
                                     var last_id = getPreviousElementByTime( event_at, 'mentions', '-m' );
                                     var html = buildInteractionItem( _id );
-                                    document.getElementById('mentions').insertBefore( buildNode( _id, '-m', event_at, 'pulse', html),
+                                    document.getElementById('mentions').insertBefore( buildNode( _id, '-m', event_at, 'pulse', html, account),
                                                                                       document.getElementById(last_id) );
                                 }
                             }
@@ -1520,7 +1526,8 @@ function redrawPosts() {
                                 if ( postText !== '' ) {
                                     document.getElementById('global').insertBefore( buildNode(post_id, '-g',
                                                                                               action_at, 'post',
-                                                                                              postText.replaceAll('[TL]', '-g', '')),
+                                                                                              postText.replaceAll('[TL]', '-g', ''),
+                                                                                              account),
                                                                                     document.getElementById(last_id) );
                                 }
                             }
@@ -3184,7 +3191,7 @@ function reportAccount( account_id ) {
 function parseReport( data ) {
     if ( data ) {
         if ( data.id > 0 ) {
-            showHidePostsFromAccount( data.id, false );
+            showHidePostsFromAccount( data.id, true );
             saveStorage( data.id + '_rank', 0.1, true );
             saveStorage( data.id + '_human', 'N', true );
             saveStorage('msgTitle', getLangString('spammer_title'), true);
@@ -3204,6 +3211,28 @@ function showHidePostsFromAccount( account_id, hide ) {
             for (e in elems) {
                 var elementExists = document.getElementById(elems[e].id);
                 if ( elementExists ) { document.getElementById(elems[e].id).style.display = ((hide === true) ? 'none' : 'block'); }
+            }
+        }
+    }
+    if ( hide ) {
+        for (i in window.timelines) {
+            if ( window.timelines.hasOwnProperty(i) ) {
+                if ( window.timelines[i] ) {
+                    var elems = document.getElementById(i);
+                    if ( elems !== null || elems !== undefined ) { 
+                        for ( var idx = 0; idx < elems.children.length; idx++ ) {
+                            var acct_id = $('#' + elems.children[idx].id).data("account");
+                            if ( acct_id === account_id ) {
+                                var elName = elems.children[idx].id.slice(0, elems.children[idx].id.indexOf("-"));
+                                var els = document.getElementsByName(elName);
+                                for (e in els) {
+                                    var elementExists = document.getElementById(els[e].id);
+                                    if ( elementExists ) { document.getElementById(els[e].id).style.display = ((hide === true) ? 'none' : 'block'); }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
