@@ -1377,10 +1377,9 @@ function redrawInteractions() {
                 for ( _id in window.coredata['net.app.interactions'] ) {
                     if ( checkElementExists( _id + '-i') === false ) {
                         var event_at = window.coredata['net.app.interactions'][ _id ].event_date;
-                        var account = window.coredata['net.app.interactions'][ _id ].user.id;
                         var last_id = getPreviousElementByTime( event_at, 'interact', '-i' );
                         var html = buildInteractionItem( _id );
-                        document.getElementById('interact').insertBefore( buildNode( _id, '-i', event_at, 'pulse', html, account),
+                        document.getElementById('interact').insertBefore( buildNode( _id, '-i', event_at, 'pulse', html, null),
                                                                           document.getElementById(last_id) );
                     }
                 }

@@ -1100,6 +1100,15 @@ nav:not(.mm-menu) { display: none; }
 .chat .post-item .post-content span {
     font-weight: normal;
 }
+
+#userlist.post-list.tl-userlist .post-item .pulse-content em,
+.post-list .pulse-item .pulse-content em {
+    display: block;
+    font-style: italic;
+    font-weight: normal;
+    text-align: right;
+    width: 100%;
+}
 #user_posts .post-item .post-content em,
 .post-list .pulse-item .pulse-content item em,
 .post-list .post-item .post-content em,

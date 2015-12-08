@@ -59,6 +59,7 @@ function buildInteractionItem( pagination_id ) {
         icon = '',
         text = '',
         what = '',
+        info = '',
         when = '<span id="' + t_id + '" name="' + pagination_id + '-time">' + getTimestamp( data.event_date ).toLowerCase() + '</span>';
 
     switch ( data.action ) {
@@ -71,12 +72,34 @@ function buildInteractionItem( pagination_id ) {
             icon = 'fa-retweet';
             text = '<item>' + parseText( data.objects[0] ) + '</item>';
             what = ' <span onClick="doShowConv(' + data.objects[0].id + ');">' + getLangString('reposted_post') + ' ' + when + '.</span>';
+            if ( data.users.length > 1 ) {
+                switch ( data.users.length ) {
+                    case 2:
+                        info = '<em onclick="doShowUser(' + data.users[1].id + ');">@' + data.users[1].username + ' reposted this, too!</em>';
+                        break;
+                    
+                    default:
+                        info = '<em onclick="doShowUser(' + data.users[1].id + ');">@' + data.users[1].username + ' and ' +
+                               (data.users.length - 2) + ' more reposted this, too!</em>';
+                }
+            }
             break;
 
         case 'star':
             icon = 'fa-star';
             text = '<item>' + parseText( data.objects[0] ) + '</item>';
             what = ' <span onClick="doShowConv(' + data.objects[0].id + ');">' + getLangString('starred_post') + ' ' + when + '.</span>';
+            if ( data.users.length > 1 ) {
+                switch ( data.users.length ) {
+                    case 2:
+                        info = '<em onclick="doShowUser(' + data.users[1].id + ');">@' + data.users[1].username + ' starred this, too!</em>';
+                        break;
+                    
+                    default:
+                        info = '<em onclick="doShowUser(' + data.users[1].id + ');">@' + data.users[1].username + ' and ' +
+                               (data.users.length - 2) + ' more starred this, too!</em>';
+                }
+            }
             break;
     }
 
@@ -90,7 +113,7 @@ function buildInteractionItem( pagination_id ) {
                 '<i class="fa ' + icon + '"></i> ' + 
                 '<span class="post-mention" style="font-weight: bold; cursor: pointer;"' +
                              ' onclick="doShowUser(' + data.users[0].id + ');">@' + data.users[0].username + '</span>' +
-                what + text +
+                what + text + info +
             '</div>';
     return html;
 }
