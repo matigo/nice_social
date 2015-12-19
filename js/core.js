@@ -1461,7 +1461,9 @@ function redrawPosts() {
                             || (window.coredata['net.app.global'][post_id].user.id === my_id)
                             || false);
                 you_muted = (window.coredata['net.app.global'][post_id].user.id === my_id) ? false : window.coredata['net.app.global'][post_id].user.you_muted;
+                if ( you_muted === undefined ) { you_muted = false;}
                 postText = '';
+                
 
                 if ( window.timelines.home ) {
                     if ( checkElementExists(post_id + '-h') === false ) {
