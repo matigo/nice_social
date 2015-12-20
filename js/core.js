@@ -698,12 +698,15 @@ function parseUserUsage( data ) {
         var html = '',
             col_max = (data.max_count <= 0) ? 1 : data.max_count,
             pst_max = 0,
-            col_pct = 0;
+            col_pct = 0,
+            num_txt = '';
 
         for ( var i = 0; i < ds.length; i++ ) {
             col_pct = ((ds[i].post_count + ds[i].broadcasts) / col_max) * 100;
             pst_max = ((ds[i].post_count + ds[i].broadcasts) <= 0 ) ? 1 : (ds[i].post_count + ds[i].broadcasts);
-            html += '<span class="item" style="height: ' + col_pct + '%;">' +
+            num_txt = (ds[i].post_count + ds[i].broadcasts) + (((ds[i].post_count + ds[i].broadcasts) === 1) ? ' post' : ' posts');
+            
+            html += '<span class="item" style="height: ' + col_pct + '%;" title="' + num_txt + '">' +
                         '<red style="height: ' + ((ds[i].broadcasts / pst_max) * 100) + '%;">&nbsp;</red>' +
                         '<blue>&nbsp;</blue>' +
                     '</span>';
