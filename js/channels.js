@@ -218,6 +218,7 @@ function parseChannelPost( data ) {
         window.coredata['net.app.core.pm'][ ds.channel_id ].recent_message = ds;
         window.coredata['net.app.core.pm'][ ds.channel_id ].recent_message_id = ds.id;
         window.coredata['net.app.core.pm'][ ds.channel_id ].counts.messages++;
+        markChannelRead( 'channel:' + ds.channel_id, ds.id );
 
         var el = document.getElementById(ds.channel_id + '-pms');
         el.parentNode.removeChild(el);
