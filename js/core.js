@@ -241,10 +241,6 @@ function getFileObjectByType( file ) {
 }
 function continueLoadProcess() {
     if ( prepApp() ) {
-        window.setInterval(function(){
-            getGlobalItems();
-            redrawList();
-        }, 1000);
         window.setInterval(function(){ collectRankSummary(); }, 60*60*1000);
         window.setInterval(function(){ updateTimestamps(); }, 15000);
         window.setInterval(function(){ testInfiniteLoop(); }, 1000);
@@ -447,7 +443,8 @@ function prepApp() {
                   71: { 'key': 'font_family', 'value': 'Helvetica', 'useStore': false },
                   72: { 'key': 'font_size', 'value': 14, 'useStore': false },
 
-                  90: { 'key': 'net.app.global-ts', 'value': 0, 'useStore': true }
+                  90: { 'key': 'net.app.global-ts', 'value': 0, 'useStore': true },
+                  99: { 'key': 'app_ready', 'value': false, 'useStore': false }
                  };
     for ( idx in items ) {
         if ( readStorage( items[idx].key, items[idx].useStore ) === false ) { saveStorage( items[idx].key, items[idx].value, items[idx].useStore ); }
@@ -481,6 +478,7 @@ function prepApp() {
 
     var token = getADNAccessToken();
     if ( token !== false ) { testADNAccessToken(); } else { window.activate = true; }
+    saveStorage('app_ready', true, false);
     return true;
 }
 function sendPost() {
@@ -872,6 +870,14 @@ function canRefreshGlobal() {
     }
     return false;
 }
+function overrideADNAction() {
+    var rrate = parseInt(readStorage('refresh_rate')),
+        rlast = parseInt(readStorage('refresh_last', true));
+    var seconds = new Date().getTime() / 1000;
+    if ( rlast === undefined || isNaN(rlast) ) { rlast = 0; }
+    if ( (seconds-rlast) >= (rrate * 2) ) { return true; }
+    return false;
+}
 function getGlobalRecents( since_id ) {
     if ( since_id === undefined || isNaN(since_id) ) { since_id = 0; }
     var recents = parseInt(readStorage('recents', true));
@@ -915,9 +921,10 @@ function parseSinceID( meta ) {
     return rVal;
 }
 function getGlobalItems() {
+    var doOR = overrideADNAction();
     if ( window.activate === false ) { return false; }
     if ( canRefreshGlobal() === false ) { return false; }
-    if ( readStorage('adn_action', true) === 'Y' ) { return false; }
+    if ( readStorage('adn_action', true) === 'Y' && doOR === false ) { return false; }
     var ts = new Date().getTime();
     saveStorage('last_global_query', ts, true);
 
