@@ -243,7 +243,7 @@ function continueLoadProcess() {
     if ( prepApp() ) {
         window.setInterval(function(){ collectRankSummary(); }, 60*60*1000);
         window.setInterval(function(){ updateTimestamps(); }, 15000);
-        window.setInterval(function(){ testInfiniteLoop(); }, 1000);
+        window.setInterval(function(){ testInfiniteLoop(); }, 15000);
 
         /* Add the Moment.js Resources if Required */
         loadMomentIfRequired();
@@ -261,10 +261,8 @@ function testInfiniteLoop() {
         var curr_ts = new Date().getTime();
         if ( (curr_ts - last_ts) > (refresh_rate * 1000) ) {
             if ( (curr_ts - last_ts) >= (refresh_rate * 2000) ) {
-                var ts = new Date().getTime();
-                saveStorage('last_global_query', ts, true);
-                window.setInterval(function(){ getGlobalItems(); }, 1000);
                 console.log('[' + curr_ts + '] Restarting getGlobalItems');
+                getGlobalItems();
             }
         }
     }
