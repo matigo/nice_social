@@ -21,6 +21,21 @@ function readStorage( key, useStore ) {
         }
     }
 }
+function saveJSONCache( key, value ) {
+    if ( !key || !value ) { return false; }
+    if ( value === null ) { return false; }
+
+    if ( hasStorage() ) {  localStorage.setItem( key, value );  }
+}
+function readJSONCache( key ) {
+    if ( !key ) { return false; }
+
+    if ( hasStorage() ) { 
+        return localStorage.getItem(key) || false;
+    } else { 
+        return false;
+    }
+}
 function deleteStorage( key ) {
     if ( !key ) { return false; }
     

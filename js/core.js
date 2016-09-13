@@ -465,6 +465,14 @@ function prepApp() {
         }
     }
 
+    /* Load Any Previous Lists We Might Have Saved */
+    var lu = readJSONCache( 'list_users' );
+    if ( lu !== false ) { window.users = JSON.parse(lu); }
+    var gl = readJSONCache( 'list_global' );
+    if ( gl !== false ) { window.coredata['net.app.global'] = JSON.parse(gl); }
+    var pm = readJSONCache( 'list_pms' );
+    if ( pm !== false ) { window.coredata['net.app.core.pm'] = JSON.parse(pm); }
+
     /* Set the Navigation Checkmarks Where Appropriate */
     setRefreshInterval( readStorage('refresh_rate') );
     setPostsPerColumn( readStorage('column_max') );
@@ -864,6 +872,7 @@ function canRefreshGlobal() {
     if ( rlast === undefined || isNaN(rlast) ) { rlast = 0; }
     if ( (seconds-rlast) >= rrate ) {
         saveStorage('refresh_last', seconds, true);
+        cacheCoreData();
         return true;
     }
     return false;
@@ -1277,7 +1286,10 @@ function showHideTL( tl ) {
     }
 }
 function showTimelines() {
-    var buffer = '<div id="0[TL]" class="post-item" style="border: 0; min-height: 75px;" data-content="2000-01-01T00:00:00Z"></div>';
+    var buffer = '<div id="0[TL]" class="post-item" style="border: 0; min-height: 75px; padding: 25px 0;" data-content="2000-01-01T00:00:00Z">' +
+                     '<center style="font-size: 250%;"><i class="fa fa-spin fa-adn"></i></center>' +
+                     '<center>Loading Timeline ...</center>' +
+                 '</div>';
     var redraw = false;
     if ( checkElementExists('userlist') ) {
         var elem = document.getElementById('userlist');
@@ -1424,6 +1436,7 @@ function redrawPMs() {
                                 var html = buildPMItem('net.app.core.pm', post_id);
                                 var last_id = getPreviousElementByTime(pm_list[idx], 'pms', '-pms' );
                                 if ( last_id !== false ) {
+                                    if ( document.getElementById('0-p').innerHTML != '' ) { document.getElementById('0-p').innerHTML = ''; }
                                     document.getElementById('pms').insertBefore( buildNode(post_id, '-pms', pm_list[idx], 'post', html),
                                                                                  document.getElementById(last_id) );
                                 }
@@ -1434,6 +1447,7 @@ function redrawPMs() {
                             var html = buildPMItem('net.app.core.pm', post_id);
                             var last_id = getPreviousElementByTime(pm_list[idx], 'pms', '-pms' );
                             if ( last_id !== false ) {
+                                if ( document.getElementById('0-p').innerHTML != '' ) { document.getElementById('0-p').innerHTML = ''; }
                                 document.getElementById('pms').insertBefore( buildNode(post_id, '-pms', pm_list[idx], 'post', html),
                                                                              document.getElementById(last_id) );
                             }
@@ -1470,8 +1484,10 @@ function redrawPosts() {
                             || false);
                 you_muted = (window.coredata['net.app.global'][post_id].user.id === my_id) ? false : window.coredata['net.app.global'][post_id].user.you_muted;
                 if ( you_muted === undefined ) { you_muted = false;}
+                if ( window.coredata['net.app.global'][post_id].visible === undefined ) {
+                    window.coredata['net.app.global'][post_id]['visible'] = false;
+                }
                 postText = '';
-                
 
                 if ( window.timelines.home ) {
                     if ( checkElementExists(post_id + '-h') === false ) {
@@ -1480,6 +1496,8 @@ function redrawPosts() {
                             if ( last_id !== false ) {
                                 if ( postText === '' ) { postText = getPostText(post_id); }
                                 if ( postText !== '' ) {
+                                    if ( document.getElementById('0-h').innerHTML != '' ) { document.getElementById('0-h').innerHTML = ''; }
+                                    window.coredata['net.app.global'][post_id].visible = true;
                                     document.getElementById('home').insertBefore( buildNode(post_id, '-h',
                                                                                             action_at, 'post', 
                                                                                             postText.replaceAll('[TL]', '-h', ''),
@@ -1499,6 +1517,8 @@ function redrawPosts() {
                             if ( last_id !== false ) {
                                 if ( postText === '' ) { postText = getPostText(post_id); }
                                 if ( postText !== '' ) {
+                                    if ( document.getElementById('0-m').innerHTML != '' ) { document.getElementById('0-m').innerHTML = ''; }
+                                    window.coredata['net.app.global'][post_id].visible = true;
                                     document.getElementById('mentions').insertBefore( buildNode( post_id, '-m',
                                                                                                  action_at, 'post',
                                                                                                  postText.replaceAll('[TL]', '-m', ''),
@@ -1514,6 +1534,7 @@ function redrawPosts() {
                         if ( window.coredata.hasOwnProperty('net.app.interactions') ) {
                             for ( _id in window.coredata['net.app.interactions'] ) {
                                 if ( checkElementExists( _id + '-m') === false ) {
+                                    if ( document.getElementById('0-m').innerHTML != '' ) { document.getElementById('0-m').innerHTML = ''; }
                                     var event_at = window.coredata['net.app.interactions'][ _id ].event_date;
                                     var last_id = getPreviousElementByTime( event_at, 'mentions', '-m' );
                                     var html = buildInteractionItem( _id );
@@ -1533,6 +1554,8 @@ function redrawPosts() {
                             if ( last_id !== false ) {
                                 if ( postText === '' ) { postText = getPostText(post_id); }
                                 if ( postText !== '' ) {
+                                    if ( document.getElementById('0-g').innerHTML != '' ) { document.getElementById('0-g').innerHTML = ''; }
+                                    window.coredata['net.app.global'][post_id].visible = true;
                                     document.getElementById('global').insertBefore( buildNode(post_id, '-g',
                                                                                               action_at, 'post',
                                                                                               postText.replaceAll('[TL]', '-g', ''),
@@ -1544,6 +1567,59 @@ function redrawPosts() {
                     }
                 }
             }
+        }
+    }
+}
+function cacheCoreData() {
+    var lists = ['net.app.core.pm', 'net.app.global'];
+    for ( var i = 0; i < lists.length; i++ ) {
+        if ( window.coredata.hasOwnProperty(lists[i]) ) {
+            var list_key = '';
+            var cnt = 0;
+            var mnt = 0;
+            var ds = {};
+
+            switch ( lists[i] ) {
+                case 'net.app.core.pm':
+                    var last_ts = readStorage('net.app.core.pm-ts', true);
+                    var pm_list = sortPMList();
+                    list_key = 'list_pms';
+
+                    for ( var idx = (pm_list.length - 1); idx >= 0; idx-- ) {
+                        var post_id = '';
+                        for ( _id in window.coredata['net.app.core.pm'] ) {
+                            if ( window.coredata['net.app.core.pm'][ _id ].recent_message.created_at === pm_list[idx] ) {
+                                post_id = _id;
+                                break;
+                            }
+                        }
+
+                        if ( post_id !== '' && cnt <= 50 ) {
+                            ds[ post_id ] = window.coredata['net.app.core.pm'][ post_id ];
+                            cnt++;
+                        }
+                    }
+                    break;
+
+                case 'net.app.global':
+                    list_key = 'list_global';
+                    var post_list = [];
+                    for ( post_id in window.coredata['net.app.global'] ) {
+                        if ( window.coredata['net.app.global'][post_id].visible !== undefined && window.coredata['net.app.global'][post_id].visible ) {
+                            post_list.push( post_id );
+                        }
+                    }
+                    post_list.sort();
+                    for ( var idx = post_list.length - 1; idx >= 0; idx-- ) {
+                        var is_mention = isMention( window.coredata['net.app.global'][post_list[idx]] );
+                        if ( cnt <= 50 || (is_mention && mnt <= 50) ) { ds[ post_list[idx] ] = window.coredata['net.app.global'][ post_list[idx] ]; }
+                        if ( is_mention ) { mnt++; }
+                        cnt++;
+                    }
+                    break;
+            }
+
+            if ( ds !== undefined ) { saveJSONCache( list_key, JSON.stringify(ds) ); }
         }
     }
 }
@@ -1696,7 +1772,7 @@ function constructDialog( dialog_id ) {
                             '<span><i class="fa fa-times-circle-o"></i></span>' +
                         '</div>' +
                         '<div class="title_btn"><button onclick="doConvReply();">' + getLangString('reply') + '</button></div>' +
-                        '<div id="chat_posts" class="chat"></div>' +
+                        '<div id="chat_posts" class="chat pms"></div>' +
                     '</div>';
             break;
 
@@ -1811,8 +1887,11 @@ function parseAccountNames( data ) {
                                       name: ds.name,
                                       username: ds.username,
                                       score: (( ds.follows_you ) ? 2 : 0) + (( ds.is_follower ) ? 2 : 0) + 1
-                                     }
+                                     };
         }
+
+        // Save the Updated Users List to the LocalStorage (if Applicable)
+        if ( window.users !== undefined ) { saveJSONCache('list_users', JSON.stringify(window.users)); }
     }
 }
 function listNames( startWith ) {
@@ -2377,7 +2456,7 @@ function showImage( image_url ) {
     if ( image_url != '' ) {
         var screen_height = window.innerHeight || docuemnt.body.clientHeight;
         var max_height = Math.floor(screen_height * 0.8 ) - 40;
-        var css_style = 'max-height: ' + max_height + 'px;';
+        var css_style = 'max-height: ' + max_height + 'px; max-width: 100%; width: auto;';
 
         document.getElementById('img-show').innerHTML = '<img src="' + image_url + '" style="' + css_style + '" />';
         $('#gallery').css('height', (max_height + 50) + 'px');

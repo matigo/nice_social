@@ -16,7 +16,6 @@ function fillPrefsWindow( opt ) {
             var items = { 'streams': { 'label': getLangString('btnReads'), 'icon': "fa-bullhorn", 'action': "fillPrefsWindow('streams');" },
                           'prefs'  : { 'label': getLangString('btnPrefs'), 'icon': "fa-sliders", 'action': "fillPrefsWindow('prefs');" },
                           'accts'  : { 'label': getLangString('btnAccts'), 'icon': "fa-users", 'action': "fillPrefsWindow('accts');"},
-                          'tools'  : { 'label': getLangString('btnTools'), 'icon': "fa-wrench", 'action': "fillPrefsWindow('tools');"},
                           'logout' : { 'label': getLangString('btnLeave'), 'icon': "fa-sign-out", 'action': "doLogout();" }
                         };
             if ( readStorage('debug_on', false) === 'Y' ) {
@@ -69,79 +68,10 @@ function fillPrefsWindow( opt ) {
                     '<button style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
                            ' onClick="fillPrefsWindow(\'main\');"><i class="fa fa-reply"></i> ' + getLangString('back') + '</button>';
             break;
-        
-        case 'tools':
-            var uname = readStorage('username');
-            var items = { 'archive': { 'label': getLangString('btnArchs'), 'icon': "fa-cloud-download" },
-                          'files':   { 'label': getLangString('btnFiles'), 'icon': "fa-th-list" },
-                          'follows': { 'label': getLangString('btnFolls'), 'icon': "fa-users" },
-                          'proxy':   { 'label': getLangString('btnProxy'), 'icon': "fa-rocket" }
-                        };
-            html += '<strong class="lbltxt">' + getLangString('tools_title') + '</strong>';
-            for ( item in items ) {
-                html += '<button id="btn-tl-' + item + '" class="btn btn-prefs" style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
-                               ' onClick="fillPrefsWindow(\'' + item + '\')">' +
-                            '<i class="fa ' + items[item].icon + '"></i>' +
-                            '<span>' + items[item].label + '</span>' +
-                        '</button>';
-            }
-            html += '<br><br>' +
-                    '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' + getLangString('xproxy_title') + '</strong>' +
-                    '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' + getLangString('xproxy_line1') + '</p>' +
-                    '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' + getLangString('xproxy_line2') + '</p>' +
-                    '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
-                           ' onClick="fillPrefsWindow(\'main\');"><i class="fa fa-reply"></i> ' + getLangString('back') + '</button>';
-            break;
-
-        case 'archive':
-        case 'files':
-            html += '<strong class="lbltxt">' + getLangString('err_implement') + '</strong>' +
-                    '<br><br>' +
-                    '<button style="background-color: ' + bgColor + '; color: ' + frColor + '"' +
-                           ' onClick="fillPrefsWindow(\'tools\');"><i class="fa fa-reply"></i> ' + getLangString('back') + '</button>';
-            break;
 
         case 'follows':
             showFullUserList();
             doShowPrefs();
-            break;
-
-        case 'proxy':
-            var spacer = '';
-            var items = { 0: { 'label': getLangString('proxy_title'),
-                               'notes': getLangString('proxy_label'),
-                               'icon' : "fa-rocket",
-                               'items': { 'nice_proxy': { 'label': getLangString('enable'), 'type': "yn", 'js': "" }
-                                         }
-                              }
-                         };
-            for ( idx in items ) {
-                html += spacer +
-                        '<strong class="lbltxt" style="width: 95%; padding: 0 2.5%;">' +
-                            '<i class="fa ' + items[idx].icon + '"></i> ' + items[idx].label +
-                        '</strong>';
-                if ( items[idx].notes !== '' ) {
-                    html += '<em class="lbltxt" style="display: block; width: 95%; padding: 0 2.5%;">' + items[idx].notes + '</em>';
-                }
-                for ( i in items[idx].items ) {
-                    html += '<label class="lbltxt">' + items[idx].items[i].label + '</label>' +
-                            getButtonValue( 'btn-opt-' + i,
-                                            i,
-                                            items[idx].items[i].type,
-                                            'toggleOption(\'' + i + '\', \'' + items[idx].items[i].type + '\');' +
-                                            ( ( items[idx].items[i].js == "" ) ? '' : ' ' + items[idx].items[i].js)
-                                           );
-                }
-                spacer = '<br><br>';
-            }
-            html += '<br><br>' +
-                    '<strong class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' + getLangString('yproxy_title') + '</strong>' +
-                    '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' + getLangString('yproxy_line1') + '</p>' +
-                    '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' + getLangString('yproxy_line2') + '</p>' +
-                    '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' + getLangString('yproxy_line3') + '</p>' +
-                    '<p class="lbltxt" style="width: 95%; text-align: justify; padding: 0 2.5%;">' + getLangString('yproxy_line4') + '</p>' +
-                    '<button style="display: block; background-color: ' + bgColor + '; color: ' + frColor + '"' +
-                           ' onClick="fillPrefsWindow(\'tools\');"><i class="fa fa-reply"></i> ' + getLangString('back') + '</button>';
             break;
 
         case 'color':

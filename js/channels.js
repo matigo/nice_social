@@ -302,29 +302,17 @@ function parsePMData( data ) {
                 pObj['recent_message']['created_at'] = '';
             }
 
-            if ( readStorage('nice_proxy') === 'Y' ) {
-                for ( _id in pObj['accounts'] ) {
-                    if ( window.users.hasOwnProperty(_id) === false ) {
-                        window.users[ _id ] = { avatar_url: '',
-                                                      name: pObj['accounts'][_id].username,
-                                                  username: pObj['accounts'][_id].username,
-                                                     score: 5
-                                                };
+            if ( pObj.hasOwnProperty('writers') ) {
+                for ( _id in pObj['writers']['user_ids'] ) {
+                    var uid = parseInt(pObj['writers']['user_ids'][_id]);
+                    if ( window.users.hasOwnProperty(uid) === false && uid !== my_id ) {
+                        user_list.push(pObj['writers']['user_ids'][_id]);
                     }
                 }
-            } else {
-                if ( pObj.hasOwnProperty('writers') ) {
-                    for ( _id in pObj['writers']['user_ids'] ) {
-                        var uid = parseInt(pObj['writers']['user_ids'][_id]);
-                        if ( window.users.hasOwnProperty(uid) === false && uid !== my_id ) {
-                            user_list.push(pObj['writers']['user_ids'][_id]);
-                        }
-                    }
-                }
-                if ( user_list.length > 100 ) {
-                    getAccountNames( user_list );
-                    user_list = [];
-                }
+            }
+            if ( user_list.length > 100 ) {
+                getAccountNames( user_list );
+                user_list = [];
             }
             window.coredata[ data[i].type ][ data[i].id ] = pObj;
             window.coredata[ data[i].type + '-ts' ] = Math.floor(Date.now() / 1000);
@@ -362,42 +350,31 @@ function buildPMItem( post_type, post_id ) {
     if ( writers <= 1 ) { return false; }
 
     /* Construct the User List */
-    if ( readStorage('nice_proxy') === 'Y' ) {
-        for ( user_id in data.accounts ) {
-            if ( user_id !== my_id ) {
-                if ( user_list !== '' ) { user_list += ', '; }
-                user_list += data.accounts[user_id].username;
-            }
-        }
-        if ( user_list !== '' ) { user_list += ' &amp; ' + getLangString('you'); }
-
-    } else {
-        var writer_list = [];
-        for ( var i = 0; i < data.writers.user_ids.length; i++ ) {
-            if ( writer_list.indexOf(data.writers.user_ids[i]) === -1 ) { writer_list.push(data.writers.user_ids[i]); }
-        }
-        if ( data.hasOwnProperty('owner') ) {
-            if ( writer_list.indexOf(data.owner.id) === -1 ) { writer_list.push(data.owner.id); }
-        }
-        if ( data.hasOwnProperty('recent_message') ) {
-            if ( data.recent_message.is_deleted !== true ) {
-                if ( writer_list.indexOf(data.recent_message.user.id) === -1 ) { writer_list.push(data.recent_message.user.id); }
-            }
-        }
-
-        for ( var i = 0; i < writer_list.length; i++ ) {
-            if ( writer_list[i] !== my_id ) {
-                if ( user_list !== '' ) { user_list += ', '; }
-                if ( window.users.hasOwnProperty(writer_list[i]) ) {
-                    user_name = window.users[writer_list[i]].username;
-                } else {
-                    user_name = writer_list[i];
-                }
-                user_list += user_name;
-            }
-        }
-        user_list = user_list.ireplaceAll(', , ', ', ') + ' &amp; ' + getLangString('you');
+    var writer_list = [];
+    for ( var i = 0; i < data.writers.user_ids.length; i++ ) {
+        if ( writer_list.indexOf(data.writers.user_ids[i]) === -1 ) { writer_list.push(data.writers.user_ids[i]); }
     }
+    if ( data.hasOwnProperty('owner') ) {
+        if ( writer_list.indexOf(data.owner.id) === -1 ) { writer_list.push(data.owner.id); }
+    }
+    if ( data.hasOwnProperty('recent_message') ) {
+        if ( data.recent_message.is_deleted !== true ) {
+            if ( writer_list.indexOf(data.recent_message.user.id) === -1 ) { writer_list.push(data.recent_message.user.id); }
+        }
+    }
+
+    for ( var i = 0; i < writer_list.length; i++ ) {
+        if ( writer_list[i] !== my_id ) {
+            if ( user_list !== '' ) { user_list += ', '; }
+            if ( window.users.hasOwnProperty(writer_list[i]) ) {
+                user_name = window.users[writer_list[i]].username;
+            } else {
+                user_name = writer_list[i];
+            }
+            user_list += user_name;
+        }
+    }
+    user_list = user_list.ireplaceAll(', , ', ', ') + ' &amp; ' + getLangString('you');
 
     /* Determine the Post Type and Build Accordingly */
     switch ( post_type ) {
@@ -408,19 +385,21 @@ function buildPMItem( post_type, post_id ) {
                              ' src="' + ( data.recent_message.user.avatar_image.url || data.user.avatar_image.url ) + '"';
             }
 
-            html =  '<div id="' + data.id + '-po" class="post-avatar">' +
-                        '<img class="avatar-round"' + avatar + '>' +
-                    '</div>' +
-                    '<div id="' + data.id + '-dtl" class="post-content">' +
-                        '<h5 class="post-name" style="cursor: pointer;" onClick="doShowChan(' + data.id + ');">' +
-                            '<span id="' + data.id + '-ni">' + user_list + msgs + '</span>' +
-                        '</h5>' +
-                        parseRecentText( data ) +
-                        '<p class="post-time">' +
-                            '<em id="' + data.id + '-time-pms" name="' + data.id + '-time"' +
-                                 ' onClick="doShowChan(' + data.id + ');">' + post_time + '</em>' +
-                        '</p>' +
-                    '</div>';
+            if ( user_list != ' &amp; ' + getLangString('you') ) {
+                html =  '<div id="' + data.id + '-po" class="post-avatar">' +
+                            '<img class="avatar-round"' + avatar + '>' +
+                        '</div>' +
+                        '<div id="' + data.id + '-dtl" class="post-content">' +
+                            '<h5 class="post-name" style="cursor: pointer;" onClick="doShowChan(' + data.id + ');">' +
+                                '<span id="' + data.id + '-ni">' + user_list + msgs + '</span>' +
+                            '</h5>' +
+                            parseRecentText( data ) +
+                            '<p class="post-time">' +
+                                '<em id="' + data.id + '-time-pms" name="' + data.id + '-time"' +
+                                     ' onClick="doShowChan(' + data.id + ');">' + post_time + '</em>' +
+                            '</p>' +
+                        '</div>';
+            }
             break;
     }
 
