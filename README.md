@@ -1,6 +1,8 @@
 # Nice.Social
 ### An Open-Source Web Client for App.Net
 
+> Note: App.net shut down on March 17, 2017. While this code will no longer work with that network, you may be able to adapt it for pnut.io. The project will remain available on GitHub indefinitely, though.
+
 App.net is a social platform that enables people to accomplish a lot of goals, but it's most well-known for its microblogging community *(and slightly storied history)*. Nice.Social is a web application that was created to provide a tool that anybody could use to see a Filtered, mostly Spam-Free Global timeline in addition to their own in a single location. Nice.Social is an interactive tool, but can be used as a way to passively observe community interactions as well.
 
 This code does not send any personal data to 3rd-party servers. All information is kept solely in the web browser or sent directly to the App.net servers. A NiceRank Index is downloaded from api.nice.social at launch and every hour afterwards to provide a list of accounts and their NiceRank scores. NiceRank is how the web application can effectively filter the Global Timeline to show primarily human-powered accounts and their interactions.
