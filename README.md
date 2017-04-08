@@ -13,13 +13,15 @@ Want to see this code in action? Drop it in at directory on your computer or hea
 
 Want to see some documentation? Visit the Wiki or, if you'd rather have it local, clone the documentation to your computer:
 
-    `$git clone https://github.com/matigo/nice_social.wiki.git`
+```
+$git clone https://github.com/matigo/nice_social.wiki.git
+```
 
-###Usage
+### Usage
 
 Using this code really couldn't be easier. Put the files somewhere. Access the `index.html` file. Everything is done through JavaScript and jQuery.
 
-###Customisation
+### Customisation
 
 In order to use this website to interact with the App.Net API, you will need to enter an Application Client ID into file named `config.json`. Copy the `config.sample.json` file to `config.json` and customise it to your heart's content. You can [get a Client ID for free with your App.Net account](https://account.app.net/developer/apps/) regardless of whether you have a free, paid, or developer account. Don't worry about the exclamation mark message unless you do not see the "Create App" button.
 
@@ -39,13 +41,15 @@ If you're running the tool from a directory, you will only be able to watch the 
 
 With that out of the way, if you haven't already, you can copy or rename the `config.sample.json` file to `config.json` and edit it to have your Client ID. Replace `[YOUR_API_TOKEN]` with the API Token (Client ID) granted by App.net. For example:
 
-    `apiToken: 'abcdefghijklmnopqrstuvwxyz0123456789',`
+```
+apiToken: 'abcdefghijklmnopqrstuvwxyz0123456789'
+```
 
 That's all there is to it. No special libraries, compiling, or other complex steps are required. Heck, this alone was complicated enough.
 
 Questions? Get in touch with [@matigo](https://alpha.app.net/matigo) on App.net.
 
-###API Reference
+### API Reference
 
 * https://api.nice.social/user/nicesummary :: NiceRank Account Summary
 * https://api.app.net/{various endpoints} :: App.Net Interactions
@@ -54,7 +58,7 @@ Questions? Get in touch with [@matigo](https://alpha.app.net/matigo) on App.net.
 
 None of your personal data is shared with any of my servers. Your data is none of my business. Don't believe me? You can check the code yourself or ask someone nicely `:)`
 
-###Contributors
+### Contributors
 
 The list below is not very long. Let's make it impressive! Help Nice.Social by contributing some code, bug reports, and/or chocolate chip cookies and add your name below.
 
@@ -69,6 +73,6 @@ The list below is not very long. Let's make it impressive! Help Nice.Social by c
 * [@0xmf - Mark Fernandes](https://alpha.app.net/0xmf) (IE Champion Tester)
 * [@pme - Peter M. Emery](https://alpha.app.net/pme) (Brutally Honest Tester)
 
-###License
+### License
 
 This project is run under the MIT License. This is a permissive, free software license, meaning that it permits reuse within proprietary software provided all copies of the licensed software include a copy of the MIT License terms and the copyright notice. Such proprietary software retains its proprietary nature even though it incorporates software under the MIT License. This license is also GPL-compatible, meaning that the GPL permits combination and redistribution with software that uses the MIT License.
